@@ -1,0 +1,112 @@
+@import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glass {
+    background: rgba(15, 21, 36, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(125, 211, 252, 0.1);
+    box-shadow: 0 0 30px rgba(125, 211, 252, 0.05);
+  }
+
+  .glass-elevated {
+    background: rgba(15, 21, 36, 0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(125, 211, 252, 0.12);
+    box-shadow: 0 0 40px rgba(125, 211, 252, 0.06);
+  }
+}
+
+@layer base {
+  .theme {
+    --font-heading: var(--font-sans);
+    --font-sans: var(--font-sans);
+  }
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+  }
+  /* Glacier — glassmorphism (Frozen Light) */
+  .dark {
+    --background: #0a0e1a;
+    --foreground: #e8eef6;
+    --card: rgba(15, 21, 36, 0.6);
+    --card-foreground: #e8eef6;
+    --popover: rgba(15, 21, 36, 0.75);
+    --popover-foreground: #e8eef6;
+    --primary: #7dd3fc;
+    --primary-foreground: #0a0e1a;
+    --secondary: rgba(200, 160, 240, 0.12);
+    --secondary-foreground: #c8a0f0;
+    --muted: rgba(255, 255, 255, 0.06);
+    --muted-foreground: #9aa4b2;
+    --accent: rgba(200, 160, 240, 0.15);
+    --accent-foreground: #d8c4f5;
+    --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(0.985 0 0);
+    --border: rgba(125, 211, 252, 0.12);
+    --input: rgba(255, 255, 255, 0.08);
+    --ring: rgba(125, 211, 252, 0.35);
+    --chart-1: #7dd3fc;
+    --chart-2: #c8a0f0;
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: rgba(15, 21, 36, 0.55);
+    --sidebar-foreground: #e8eef6;
+    --sidebar-primary: #7dd3fc;
+    --sidebar-primary-foreground: #0a0e1a;
+    --sidebar-accent: rgba(125, 211, 252, 0.08);
+    --sidebar-accent-foreground: #e8eef6;
+    --sidebar-border: rgba(125, 211, 252, 0.1);
+    --sidebar-ring: rgba(125, 211, 252, 0.3);
+  }
+  * {
+    border-color: var(--border);
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

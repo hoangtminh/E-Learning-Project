@@ -1,0 +1,270 @@
+// E-Learning — learning_system_v2 (Prisma)
+// DATABASE_URL in .env (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GlobalRole {
+  user
+  instructor
+  admin
+}
+
+enum CourseVisibility {
+  public
+  private
+  sale
+}
+
+enum ClassroomMemberRole {
+  owner
+  admin
+  member
+}
+
+enum ClassroomMemberStatus {
+  pending
+  active
+  rejected
+  blocked
+}
+
+enum ConversationType {
+  classroom
+  direct
+  group
+}
+
+enum LiveSessionStatus {
+  scheduled
+  live
+  ended
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String?
+  name         String?
+  avatarUrl    String?
+  role         GlobalRole  @default(user)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  ownedClassrooms      Classroom[]           @relation("ClassroomOwner")
+  classroomMemberships ClassroomMember[]
+  coursesOwned         Course[]              @relation("CourseInstructor")
+  courseMembers        CourseMember[]
+  courseInvitesSent    CourseInvitation[]    @relation("InviteInviter")
+  courseInvitesRecv    CourseInvitation[]    @relation("InviteInvitee")
+  notes                Note[]
+  progress             UserProgress[]
+  messages             Message[]
+  taskSubmissions      TaskSubmission[]
+  liveSessionsHosted   LiveSession[]         @relation("LiveHost")
+}
+
+model Course {
+  id          String           @id @default(cuid())
+  title       String
+  slug        String           @unique
+  description String?
+  price       Decimal?         @db.Decimal(10, 2)
+  visibility  CourseVisibility @default(public)
+  instructorId String
+  instructor   User            @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  sections    Section[]
+  members     CourseMember[]
+  invitations CourseInvitation[]
+  linkedIn    ClassroomLinkedCourse[]
+  notes       Note[]
+  progress    UserProgress[]
+}
+
+model Section {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  order     Int      @default(0)
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  sectionId   String
+  section     Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  title       String
+  order       Int      @default(0)
+  contentType String   // youtube | vimeo | hls | file | text
+  contentUrl  String?
+  body        String?
+  durationSec Int?
+
+  notes    Note[]
+  progress UserProgress[]
+}
+
+model CourseMember {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([courseId, userId])
+}
+
+model CourseInvitation {
+  id         String   @id @default(cuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  inviterId  String
+  inviter    User     @relation("InviteInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  inviteeId  String
+  invitee    User     @relation("InviteInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  acceptedAt DateTime?
+}
+
+model Classroom {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  inviteCode  String   @unique
+  ownerId     String
+  owner       User     @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members       ClassroomMember[]
+  linkedCourses ClassroomLinkedCourse[]
+  tasks         ClassroomTask[]
+  conversations Conversation[]
+  liveSessions  LiveSession[]
+}
+
+model ClassroomMember {
+  id          String                 @id @default(cuid())
+  classroomId String
+  classroom   Classroom              @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        ClassroomMemberRole    @default(member)
+  status      ClassroomMemberStatus  @default(pending)
+  joinedAt    DateTime?
+
+  @@unique([classroomId, userId])
+}
+
+model ClassroomLinkedCourse {
+  id          String    @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  linkedAt    DateTime  @default(now())
+
+  @@unique([classroomId, courseId])
+}
+
+model ClassroomTask {
+  id          String    @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueAt       DateTime?
+  createdAt   DateTime  @default(now())
+
+  submissions TaskSubmission[]
+}
+
+model TaskSubmission {
+  id        String        @id @default(cuid())
+  taskId    String
+  task      ClassroomTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileUrl   String?
+  content   String?
+  grade     Decimal?      @db.Decimal(5, 2)
+  feedback  String?
+  submittedAt DateTime    @default(now())
+
+  @@unique([taskId, userId])
+}
+
+model Conversation {
+  id          String             @id @default(cuid())
+  type        ConversationType
+  name        String?
+  classroomId String?
+  classroom   Classroom?         @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+
+  messages Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body           String
+  createdAt      DateTime     @default(now())
+}
+
+model Note {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId        String?
+  course          Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  lessonId        String?
+  lesson          Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  body            String
+  videoTimestampSec Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model UserProgress {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId          String
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonId          String
+  lesson            Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lastWatchedSecond Int      @default(0)
+  completed         Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+}
+
+model LiveSession {
+  id          String            @id @default(cuid())
+  classroomId String
+  classroom   Classroom         @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  hostId      String
+  host        User              @relation("LiveHost", fields: [hostId], references: [id], onDelete: Cascade)
+  title       String?
+  roomToken   String?           // PeerJS / signaling room id
+  startsAt    DateTime?
+  endsAt      DateTime?
+  status      LiveSessionStatus @default(scheduled)
+  createdAt   DateTime          @default(now())
+}

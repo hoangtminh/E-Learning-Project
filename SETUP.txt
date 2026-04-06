@@ -1,0 +1,20 @@
+E-Learning monorepo (IT4409)
+
+Backend (NestJS + Prisma + PostgreSQL)
+1. cd backend
+2. Copy .env.example to .env and set DATABASE_URL, JWT_SECRET
+3. npx prisma migrate dev --name init
+4. npm run start:dev
+   API: http://localhost:4000  |  Health: GET /health  |  Socket.io same origin
+
+Frontend (Next.js 14 App Router)
+1. cd frontend
+2. Copy .env.example to .env.local (adjust NEXT_PUBLIC_API_URL if needed)
+3. npm run dev
+   App: http://localhost:3000
+
+Auth flow (dev)
+- Register: POST /auth/register then FE stores JWT in access_token cookie for middleware.
+- Instructor routes: set role instructor in DB or extend register DTO for seed users.
+
+Prisma is pinned to v6 so DATABASE_URL stays in prisma/schema.prisma (Prisma 7 uses a different config shape).
