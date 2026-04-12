@@ -21,7 +21,7 @@ async function bootstrap() {
     origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   });
 
   await app.listen(process.env.PORT ?? 8080);

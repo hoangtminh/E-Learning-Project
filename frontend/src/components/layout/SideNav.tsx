@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { href: '/',             icon: 'dashboard',    label: 'Dashboard' },
   { href: '/courses',      icon: 'storefront',   label: 'Course Store' },
-  { href: '/my-courses',   icon: 'library_books',label: 'My Courses',  filled: true },
+  { href: '/my-courses/1',   icon: 'library_books',label: 'My Courses',  filled: true },
   { href: '/classrooms',   icon: 'groups',       label: 'Classrooms' },
   { href: '/messages',     icon: 'chat',         label: 'Chats' },
   { href: '/assignments',  icon: 'assignment',   label: 'Assignments' },
