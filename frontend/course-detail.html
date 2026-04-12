@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<!-- Chi Tiết Khóa Học (Impressive) - Glacier E-learning -->
+<html class="light" lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Chi Tiết Khóa Học - Advanced Cybersecurity | Glacier E-learning</title>
+  <meta name="description" content="Nắm vững các kỹ năng an toàn mạng nâng cao, phát hiện mối đe dọa và chiến lược bảo mật toàn diện với khóa học chuyên sâu của Glacier."/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-background":             "#252f43",
+            "surface-container-highest": "#cfddff",
+            "on-tertiary-fixed-variant": "#55327a",
+            "inverse-primary":           "#7bd1fa",
+            "on-secondary-fixed-variant":"#2c596f",
+            "primary-fixed":             "#7bd1fa",
+            "inverse-surface":           "#040e21",
+            "surface-container":         "#e0e8ff",
+            "tertiary-container":        "#d6adff",
+            "secondary":                 "#346176",
+            "secondary-fixed":           "#b1ddf7",
+            "on-surface":                "#252f43",
+            "on-primary-fixed":          "#003041",
+            "on-error":                  "#ffefee",
+            "outline":                   "#6d778e",
+            "background":                "#f5f6ff",
+            "surface-bright":            "#f5f6ff",
+            "on-tertiary-fixed":         "#361059",
+            "on-secondary-container":    "#215065",
+            "tertiary":                  "#6f4b94",
+            "error-dim":                 "#9f0519",
+            "error-container":           "#fb5151",
+            "surface-container-high":    "#d8e2ff",
+            "primary":                   "#006382",
+            "inverse-on-surface":        "#939db6",
+            "tertiary-fixed":            "#d6adff",
+            "on-secondary":              "#e6f5ff",
+            "outline-variant":           "#a3adc7",
+            "surface-container-lowest":  "#ffffff",
+            "primary-fixed-dim":         "#6cc3eb",
+            "primary-dim":               "#005672",
+            "on-primary-fixed-variant":  "#004f69",
+            "surface":                   "#f5f6ff",
+            "surface-tint":              "#006382",
+            "surface-dim":               "#c4d4fb",
+            "secondary-dim":             "#27556a",
+            "tertiary-dim":              "#623f87",
+            "secondary-container":       "#b1ddf7",
+            "surface-container-low":     "#edf0ff",
+            "primary-container":         "#7bd1fa",
+            "tertiary-fixed-dim":        "#c8a0f0",
+            "on-tertiary":               "#fbefff",
+            "on-tertiary-container":     "#4c2970",
+            "on-secondary-fixed":        "#063d51",
+            "on-primary":                "#e5f5ff",
+            "error":                     "#b31b25",
+            "on-primary-container":      "#00465d",
+            "on-surface-variant":        "#525b72",
+            "secondary-fixed-dim":       "#a3cfe8",
+            "surface-variant":           "#cfddff",
+            "on-error-container":        "#570008"
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+            lg:      "1rem",
+            xl:      "1.5rem",
+            full:    "9999px"
+          },
+          fontFamily: {
+            headline: ["Inter"],
+            body:     ["Inter"],
+            label:    ["Inter"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f5f6ff; }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(125, 211, 252, 0.2);
+    }
+    .glass-panel-elevated {
+      background: rgba(255, 255, 255, 0.80);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(125, 211, 252, 0.25);
+    }
+    .glass-dark {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(125, 211, 252, 0.15);
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* Background gradient blobs */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(at 0% 0%,   rgba(125, 211, 252, 0.18) 0px, transparent 55%),
+        radial-gradient(at 100% 0%, rgba(200, 160, 240, 0.12) 0px, transparent 55%),
+        radial-gradient(at 60% 80%, rgba(0, 99, 130, 0.08)   0px, transparent 55%);
+      z-index: 0;
+    }
+    main, aside, header { position: relative; z-index: 1; }
+
+    /* Sidebar */
+    #sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    #sidebar.collapsed { width: 80px; }
+    #sidebar.collapsed .sidebar-text,
+    #sidebar.collapsed .sidebar-header-text { display: none; }
+    #sidebar.collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+    #sidebar.collapsed .sidebar-header { justify-content: center; padding-left: 0; padding-right: 0; }
+
+    /* Main content responds to sidebar toggle */
+    #main-content { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    /* Sticky buy card */
+    .sticky-card { position: sticky; top: 84px; }
+
+    /* Curriculum accordion */
+    .section-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .section-content.open { max-height: 2000px; }
+    .chevron { transition: transform 0.3s ease; }
+    .chevron.rotated { transform: rotate(180deg); }
+
+    /* Video play button pulse */
+    @keyframes pulse-ring {
+      0%   { transform: scale(1);   opacity: 0.7; }
+      70%  { transform: scale(1.5); opacity: 0;   }
+      100% { transform: scale(1.5); opacity: 0;   }
+    }
+    .play-pulse::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: rgba(125, 211, 252, 0.5);
+      animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+
+    /* Progress ring */
+    .progress-ring-fill {
+      stroke-dashoffset: calc(251.2 - (251.2 * 65) / 100);
+      transition: stroke-dashoffset 1s ease;
+    }
+
+    /* Tab underline */
+    .tab-btn { position: relative; }
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0; right: 0;
+      height: 2px;
+      background: #006382;
+      transform: scaleX(0);
+      transition: transform 0.25s ease;
+      border-radius: 9999px;
+    }
+    .tab-btn.active::after { transform: scaleX(1); }
+    .tab-btn.active { color: #006382; }
+
+    /* Scrollbar hide */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Star rating */
+    .star-filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20; }
+
+    /* Lesson row hover */
+    .lesson-row:hover .lesson-play { opacity: 1; transform: scale(1); }
+    .lesson-play { opacity: 0; transform: scale(0.8); transition: all 0.2s ease; }
+  </style>
+</head>
+<body class="text-on-surface min-h-screen">
+
+<!-- ═══════════════════════════════════════════════
+     SIDE NAV BAR
+═══════════════════════════════════════════════ -->
+<aside
+  id="sidebar"
+  class="fixed left-0 top-0 h-full flex flex-col z-50 w-64 border-r border-sky-300/10 bg-slate-900/75 backdrop-blur-2xl shadow-2xl font-inter text-sm font-medium hidden md:flex"
+>
+  <!-- Logo -->
+  <div class="sidebar-header flex items-center gap-3 px-6 py-8">
+    <div class="w-10 h-10 rounded-xl bg-sky-400/20 border border-sky-400/30 flex items-center justify-center flex-shrink-0">
+      <span class="material-symbols-outlined text-sky-400" style="font-variation-settings:'FILL' 1;">ac_unit</span>
+    </div>
+    <div class="sidebar-header-text">
+      <h1 class="text-2xl font-black text-sky-400 tracking-tight leading-none">Glacier</h1>
+      <p class="text-[10px] uppercase tracking-[0.2em] text-sky-300/60 font-bold">E-Learning</p>
+    </div>
+  </div>
+
+  <!-- Nav Links -->
+  <nav class="flex-1 px-3 space-y-1">
+    <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all duration-300" href="#">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span class="sidebar-text">Dashboard</span>
+    </a>
+    <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all duration-300" href="#">
+      <span class="material-symbols-outlined">storefront</span>
+      <span class="sidebar-text">Course Store</span>
+    </a>
+    <!-- Active: My Courses -->
+    <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg bg-sky-300/20 text-sky-300 border-r-2 border-sky-300 transition-all duration-300" href="#">
+      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">library_books</span>
+      <span class="sidebar-text">My Courses</span>
+    </a>
+    <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all duration-300" href="#">
+      <span class="material-symbols-outlined">groups</span>
+      <span class="sidebar-text">Classrooms</span>
+    </a>
+    <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all duration-300" href="#">
+      <span class="material-symbols-outlined">chat</span>
+      <span class="sidebar-text">Chats</span>
+    </a>
+    <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all duration-300" href="#">
+      <span class="material-symbols-outlined">assignment</span>
+      <span class="sidebar-text">Assignments</span>
+    </a>
+    <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all duration-300" href="#">
+      <span class="material-symbols-outlined">live_tv</span>
+      <span class="sidebar-text">Live Study</span>
+    </a>
+  </nav>
+
+  <!-- Bottom area -->
+  <div class="px-4 py-4 border-t border-sky-300/10 space-y-1">
+    <button class="w-full mb-3 py-3 px-4 rounded-xl bg-sky-400/10 border border-sky-400/30 text-sky-300 hover:bg-sky-400/20 transition-all font-semibold flex items-center justify-center gap-2 text-sm">
+      <span class="material-symbols-outlined text-sm">add</span>
+      <span class="sidebar-text">New Study Session</span>
+    </button>
+    <a class="nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all" href="#">
+      <span class="material-symbols-outlined">settings</span>
+      <span class="sidebar-text">Settings</span>
+    </a>
+    <a class="nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all" href="#">
+      <span class="material-symbols-outlined">account_circle</span>
+      <span class="sidebar-text">Profile</span>
+    </a>
+    <button
+      class="nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 hover:text-sky-100 hover:bg-white/5 transition-all w-full"
+      onclick="toggleSidebar()"
+    >
+      <span class="material-symbols-outlined" id="toggle-icon">menu_open</span>
+      <span class="sidebar-text">Toggle Sidebar</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<main class="md:ml-64 min-h-screen flex flex-col" id="main-content">
+
+  <!-- TOP NAV BAR -->
+  <header class="flex justify-between items-center w-full px-6 py-3 sticky top-0 z-40 bg-slate-900/60 backdrop-blur-xl border-b border-sky-300/10 shadow-[0_0_30px_rgba(125,211,252,0.05)] font-inter antialiased h-16">
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-sm">
+      <span class="material-symbols-outlined text-sky-300 md:hidden cursor-pointer">menu</span>
+      <a href="#" class="text-slate-400 hover:text-sky-300 transition-colors hidden md:block">My Courses</a>
+      <span class="material-symbols-outlined text-slate-600 text-sm hidden md:block">chevron_right</span>
+      <span class="text-sky-300 font-semibold hidden md:block truncate max-w-xs">Advanced Cybersecurity &amp; Network Defense</span>
+    </div>
+    <!-- Right Controls -->
+    <div class="flex items-center gap-3">
+      <button class="p-2 rounded-full text-slate-400 hover:bg-sky-300/10 hover:text-sky-300 transition-colors duration-200">
+        <span class="material-symbols-outlined">search</span>
+      </button>
+      <button class="p-2 rounded-full text-slate-400 hover:bg-sky-300/10 hover:text-sky-300 transition-colors duration-200 relative">
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-slate-900"></span>
+      </button>
+      <div class="h-8 w-[1px] bg-sky-300/20 mx-1"></div>
+      <div class="flex items-center gap-3 cursor-pointer">
+        <div class="text-right hidden sm:block">
+          <p class="text-xs font-semibold text-sky-100">Minh Anh</p>
+          <p class="text-[10px] text-slate-400">Học viên Premium</p>
+        </div>
+        <img
+          alt="User Avatar"
+          class="w-8 h-8 rounded-full border border-sky-400/30 object-cover"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4bXoPMqC9OzuAatl-Uqzs5YIFpKrCzUhC0K_-jTOPqUoRbh6x0Sptw4Wax-hRpMS9VzILlsUtTS2f-wSPyFPUKhiokiyy40Cq_ObyAZF1g1sv72B_r8ApugPHhEPiSgdS_dw_XJpUm1vSoh7XuXErjkKiI5qxSdVublen5l0xdO_rpLWjy9EF5ZWqEXsQ7QCqLwcbxGg6u3ykFBBCrw99BkbI_KCcsUW_HSZAmUka3bFqw_63A1-xuEzpPqKZewyaP4PEDiqwEwdl"
+        />
+      </div>
+    </div>
+  </header>
+
+  <!-- ─────────────────────────────────────────────
+       HERO BANNER
+  ───────────────────────────────────────────── -->
+  <section class="relative w-full overflow-hidden" style="min-height: 400px;">
+    <!-- Background image -->
+    <img
+      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzSG5WgMwmYcg9d0BesgTRKe-NbPZAnaUymKQoqWZV1eJDmt-gOTnJtNSuCVrpFthyZTAISu0R5JT1VFzifhS8JhOY2ZRKGDEqZbnjUuIEeGHCQwaV1NfSmLTO1VfBDMsPr1uQkVBdP0SLWjWhOMuabB6adMamcHN9gBt0G37bO3CWWMPa-2A039N3bwmA0ysu5AzGdg33gYnup-RidAr0Ab1OmF7J4_Z5gL7OnHZHOikCdw6h4TiADlvitCFMLEjbo0xHUMhOK0NU"
+      alt="Cybersecurity course hero"
+      class="absolute inset-0 w-full h-full object-cover scale-105"
+      style="filter: saturate(0.7) brightness(0.45);"
+    />
+    <!-- Layered gradients -->
+    <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent"></div>
+    <!-- Glassmorphic accent glow -->
+    <div class="absolute top-1/2 left-1/3 -translate-y-1/2 w-72 h-72 bg-sky-400/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-20 flex flex-col gap-6">
+      <!-- Badges row -->
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-400/90 text-slate-950 text-[10px] font-black uppercase tracking-wider">
+          <span class="material-symbols-outlined text-xs" style="font-variation-settings:'FILL' 1;">verified</span>
+          Chứng chỉ
+        </span>
+        <span class="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white text-[10px] font-bold uppercase tracking-wider">Intermediate</span>
+        <span class="px-3 py-1 rounded-full bg-tertiary/80 text-on-tertiary text-[10px] font-bold uppercase tracking-wider">Cybersecurity</span>
+        <span class="px-3 py-1 rounded-full bg-emerald-500/80 text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+          <span class="material-symbols-outlined text-xs" style="font-variation-settings:'FILL' 1;">trending_up</span>
+          Best Seller
+        </span>
+      </div>
+
+      <!-- Title & Meta -->
+      <div class="max-w-2xl">
+        <h1 class="text-3xl md:text-5xl font-black text-white leading-tight tracking-tight">
+          Advanced Cybersecurity<br/>
+          <span class="text-sky-300">&amp; Network Defense</span>
+          <span class="text-white"> 2024</span>
+        </h1>
+        <p class="mt-4 text-lg text-slate-300 leading-relaxed max-w-xl">
+          Làm chủ các kỹ thuật tấn công &amp; phòng thủ mạng hiện đại, bảo mật hệ thống doanh nghiệp, phân tích mối đe dọa và chiến lược ứng phó sự cố.
+        </p>
+      </div>
+
+      <!-- Rating & Stats row -->
+      <div class="flex flex-wrap items-center gap-6">
+        <!-- Stars -->
+        <div class="flex items-center gap-2">
+          <div class="flex">
+            <span class="material-symbols-outlined text-amber-400 text-xl star-filled">star</span>
+            <span class="material-symbols-outlined text-amber-400 text-xl star-filled">star</span>
+            <span class="material-symbols-outlined text-amber-400 text-xl star-filled">star</span>
+            <span class="material-symbols-outlined text-amber-400 text-xl star-filled">star</span>
+            <span class="material-symbols-outlined text-amber-400 text-xl star-filled">star_half</span>
+          </div>
+          <span class="text-amber-400 font-black text-lg">4.8</span>
+          <span class="text-slate-400 text-sm">(3.2k đánh giá)</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-300 text-sm">
+          <span class="material-symbols-outlined text-base">group</span>
+          <span><strong class="text-white font-bold">12,480</strong> học viên</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-300 text-sm">
+          <span class="material-symbols-outlined text-base">schedule</span>
+          <span><strong class="text-white font-bold">42</strong> giờ nội dung</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-300 text-sm">
+          <span class="material-symbols-outlined text-base">update</span>
+          <span>Cập nhật <strong class="text-white font-bold">Tháng 10, 2024</strong></span>
+        </div>
+      </div>
+
+      <!-- Instructor -->
+      <div class="flex items-center gap-3">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEaD6AYiPTA5D20zrCZ26iXsbBTk7A7n0Re-vB5zoaLF1WPwpiZyeZ_M6A5mWWe2YuY1IWgUkuTM7XS6njCXVZQXaCx-QYfjVj6OP_45Etglz_LF4PfWTX5kR73GixfBzh7aWCAAGsacJALg2ROk4zALBi7Uc7bGNr22lqlIUDqp8_2DLtT0juDR9fo7PYopJws8INS5QmSYWskox6VFaHwdfvcWbYFE6DZrJVzWy3QrQohA3aHSXcYJk2uZb6s-FbDm0SkXnLJ1gj"
+          alt="Instructor"
+          class="w-10 h-10 rounded-full border-2 border-sky-400/40 object-cover"
+        />
+        <div>
+          <p class="text-xs text-slate-400">Giảng viên</p>
+          <p class="text-white font-semibold text-sm">TS. Nguyễn Văn Khoa</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────
+       MAIN BODY: Two-column layout
+  ───────────────────────────────────────────── -->
+  <div class="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+    <!-- ─── LEFT COLUMN (2/3 width) ─── -->
+    <div class="lg:col-span-2 space-y-10">
+
+      <!-- STUDENT PROGRESS BANNER (for enrolled students) -->
+      <div class="glass-panel-elevated rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 border border-primary/20 shadow-lg shadow-primary/5">
+        <!-- Circular Progress -->
+        <div class="relative flex-shrink-0">
+          <svg width="90" height="90" viewBox="0 0 90 90" class="-rotate-90">
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#e0e8ff" stroke-width="8"/>
+            <circle
+              cx="45" cy="45" r="40"
+              fill="none"
+              stroke="#006382"
+              stroke-width="8"
+              stroke-linecap="round"
+              stroke-dasharray="251.2"
+              stroke-dashoffset="87.9"
+              class="transition-all duration-1000"
+            />
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-xl font-black text-primary">65%</span>
+          </div>
+        </div>
+        <!-- Info -->
+        <div class="flex-1 text-center md:text-left">
+          <h3 class="text-lg font-bold text-on-surface">Bạn đang học khóa này</h3>
+          <p class="text-sm text-on-surface-variant mt-1">Đã hoàn thành <strong class="text-primary">26 / 40 bài học</strong> · Còn <strong class="text-primary">~15 giờ</strong> để kết thúc</p>
+          <div class="w-full bg-surface-container rounded-full h-2 mt-3 mb-1 overflow-hidden">
+            <div class="h-full bg-primary rounded-full w-[65%] shadow-[0_0_12px_rgba(0,99,130,0.3)]"></div>
+          </div>
+          <p class="text-[11px] text-on-surface-variant">Bài học tiếp theo: <span class="font-semibold text-primary">Bài 27 – Penetration Testing Frameworks</span></p>
+        </div>
+        <!-- CTA -->
+        <button class="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/25 hover:bg-primary-dim transition-all active:scale-95 flex items-center gap-2 whitespace-nowrap">
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">play_circle</span>
+          Tiếp tục học
+        </button>
+      </div>
+
+      <!-- TAB NAVIGATION -->
+      <div>
+        <div class="flex gap-6 border-b border-outline-variant/30 pb-0 overflow-x-auto no-scrollbar" id="tab-nav">
+          <button
+            class="tab-btn active pb-3 text-sm font-semibold text-on-surface whitespace-nowrap"
+            onclick="switchTab('overview')"
+            id="tab-overview"
+          >Tổng quan</button>
+          <button
+            class="tab-btn pb-3 text-sm font-semibold text-on-surface-variant hover:text-on-surface whitespace-nowrap"
+            onclick="switchTab('curriculum')"
+            id="tab-curriculum"
+          >Nội dung khóa học</button>
+          <button
+            class="tab-btn pb-3 text-sm font-semibold text-on-surface-variant hover:text-on-surface whitespace-nowrap"
+            onclick="switchTab('instructor')"
+            id="tab-instructor"
+          >Giảng viên</button>
+          <button
+            class="tab-btn pb-3 text-sm font-semibold text-on-surface-variant hover:text-on-surface whitespace-nowrap"
+            onclick="switchTab('reviews')"
+            id="tab-reviews"
+          >Đánh giá</button>
+        </div>
+
+        <!-- ── TAB: OVERVIEW ── -->
+        <div id="panel-overview" class="pt-8 space-y-8">
+
+          <!-- What you'll learn -->
+          <div class="glass-panel rounded-2xl p-6 md:p-8 border border-primary/10">
+            <h2 class="text-xl font-bold text-on-surface mb-6 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">emoji_objects</span>
+              Bạn sẽ học được gì?
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="flex gap-3 items-start">
+                <span class="material-symbols-outlined text-primary flex-shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span class="text-sm text-on-surface-variant leading-relaxed">Phân tích và phát hiện các mối đe dọa mạng tinh vi</span>
+              </div>
+              <div class="flex gap-3 items-start">
+                <span class="material-symbols-outlined text-primary flex-shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span class="text-sm text-on-surface-variant leading-relaxed">Triển khai kiến trúc Zero Trust trong doanh nghiệp</span>
+              </div>
+              <div class="flex gap-3 items-start">
+                <span class="material-symbols-outlined text-primary flex-shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span class="text-sm text-on-surface-variant leading-relaxed">Kỹ thuật Penetration Testing (Ethical Hacking)</span>
+              </div>
+              <div class="flex gap-3 items-start">
+                <span class="material-symbols-outlined text-primary flex-shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span class="text-sm text-on-surface-variant leading-relaxed">Xây dựng quy trình ứng phó sự cố (Incident Response)</span>
+              </div>
+              <div class="flex gap-3 items-start">
+                <span class="material-symbols-outlined text-primary flex-shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span class="text-sm text-on-surface-variant leading-relaxed">Bảo mật hạ tầng Cloud (AWS, Azure, GCP)</span>
+              </div>
+              <div class="flex gap-3 items-start">
+                <span class="material-symbols-outlined text-primary flex-shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span class="text-sm text-on-surface-variant leading-relaxed">Phân tích mã độc &amp; kỹ thuật Reverse Engineering</span>
+              </div>
+              <div class="flex gap-3 items-start">
+                <span class="material-symbols-outlined text-primary flex-shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span class="text-sm text-on-surface-variant leading-relaxed">Chuẩn bị cho chứng chỉ CompTIA Security+ &amp; CEH</span>
+              </div>
+              <div class="flex gap-3 items-start">
+                <span class="material-symbols-outlined text-primary flex-shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span class="text-sm text-on-surface-variant leading-relaxed">Thiết lập SIEM &amp; hệ thống giám sát bảo mật</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Course Highlights Bento -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="glass-panel rounded-xl p-4 flex flex-col items-center text-center gap-2">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary">play_lesson</span>
+              </div>
+              <span class="text-2xl font-black text-on-surface">40</span>
+              <span class="text-xs text-on-surface-variant font-medium">Bài học video</span>
+            </div>
+            <div class="glass-panel rounded-xl p-4 flex flex-col items-center text-center gap-2">
+              <div class="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-tertiary">schedule</span>
+              </div>
+              <span class="text-2xl font-black text-on-surface">42h</span>
+              <span class="text-xs text-on-surface-variant font-medium">Video nội dung</span>
+            </div>
+            <div class="glass-panel rounded-xl p-4 flex flex-col items-center text-center gap-2">
+              <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-secondary">quiz</span>
+              </div>
+              <span class="text-2xl font-black text-on-surface">12</span>
+              <span class="text-xs text-on-surface-variant font-medium">Bài kiểm tra</span>
+            </div>
+            <div class="glass-panel rounded-xl p-4 flex flex-col items-center text-center gap-2">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-emerald-600">workspace_premium</span>
+              </div>
+              <span class="text-2xl font-black text-on-surface">1</span>
+              <span class="text-xs text-on-surface-variant font-medium">Chứng chỉ</span>
+            </div>
+          </div>
+
+          <!-- Requirements -->
+          <div>
+            <h2 class="text-xl font-bold text-on-surface mb-4">Yêu cầu đầu vào</h2>
+            <ul class="space-y-2">
+              <li class="flex gap-3 items-center text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-outline text-base flex-shrink-0">arrow_right</span>
+                Kiến thức cơ bản về mạng máy tính (TCP/IP, DNS, HTTP/S)
+              </li>
+              <li class="flex gap-3 items-center text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-outline text-base flex-shrink-0">arrow_right</span>
+                Đã hoàn thành khóa học "Networking Fundamentals" hoặc tương đương
+              </li>
+              <li class="flex gap-3 items-center text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-outline text-base flex-shrink-0">arrow_right</span>
+                Quen thuộc với hệ điều hành Linux (command line cơ bản)
+              </li>
+              <li class="flex gap-3 items-center text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-outline text-base flex-shrink-0">arrow_right</span>
+                Máy tính với RAM tối thiểu 8GB để chạy các máy ảo lab
+              </li>
+            </ul>
+          </div>
+
+          <!-- Description excerpt -->
+          <div>
+            <h2 class="text-xl font-bold text-on-surface mb-4">Mô tả khóa học</h2>
+            <div class="text-sm text-on-surface-variant leading-relaxed space-y-3">
+              <p>
+                Trong bối cảnh các cuộc tấn công mạng ngày càng tinh vi và phức tạp, khóa học này cung cấp cho bạn bộ kỹ năng toàn diện – từ hiểu rõ tâm lý &amp; kỹ thuật của hacker, đến xây dựng hàng phòng thủ vững chắc cho tổ chức của mình.
+              </p>
+              <p>
+                Với hơn <strong class="text-on-surface">42 giờ nội dung video chất lượng cao</strong>, các bài lab thực hành trong môi trường ảo hóa hoàn chỉnh và 12 bài kiểm tra đánh giá, bạn sẽ sẵn sàng cho các chứng chỉ quốc tế hàng đầu như CompTIA Security+, CEH, và OSCP.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TAB: CURRICULUM ── -->
+        <div id="panel-curriculum" class="pt-8 space-y-4 hidden">
+
+          <!-- Summary bar -->
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm text-on-surface-variant"><strong class="text-on-surface">8 phần học</strong> · <strong class="text-on-surface">40 bài giảng</strong> · <strong class="text-on-surface">42 giờ</strong> tổng thời lượng</p>
+            <button class="text-primary text-sm font-semibold hover:underline" onclick="expandAll()">Mở rộng tất cả</button>
+          </div>
+
+          <!-- Section 1 -->
+          <div class="glass-panel rounded-2xl overflow-hidden">
+            <button
+              class="w-full flex items-center justify-between px-6 py-4 hover:bg-primary/5 transition-colors"
+              onclick="toggleSection(this)"
+            >
+              <div class="flex items-center gap-3 text-left">
+                <span class="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-black flex items-center justify-center flex-shrink-0">1</span>
+                <div>
+                  <h3 class="font-bold text-on-surface text-sm">Nền tảng An toàn Thông tin</h3>
+                  <p class="text-[11px] text-on-surface-variant">5 bài · 4h 30m</p>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-on-surface-variant chevron rotated">expand_more</span>
+            </button>
+            <div class="section-content open border-t border-outline-variant/10">
+              <!-- Lesson rows -->
+              <div class="lesson-row flex items-center gap-4 px-6 py-3.5 hover:bg-primary/5 transition-colors cursor-pointer border-b border-outline-variant/5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-emerald-600 text-sm" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-on-surface truncate">Bài 1 – Tổng quan về An toàn Thông tin</p>
+                  <p class="text-[11px] text-on-surface-variant">Video · 45 phút</p>
+                </div>
+                <span class="lesson-play material-symbols-outlined text-primary text-lg">play_circle</span>
+                <span class="text-[11px] text-on-surface-variant whitespace-nowrap">45:00</span>
+              </div>
+              <div class="lesson-row flex items-center gap-4 px-6 py-3.5 hover:bg-primary/5 transition-colors cursor-pointer border-b border-outline-variant/5 bg-primary/5">
+                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings:'FILL' 1;">play_circle</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-primary truncate">Bài 2 – Mô hình CIA Triad &amp; Các nguyên tắc bảo mật</p>
+                  <p class="text-[11px] text-primary/60">Đang học · Video · 52 phút</p>
+                </div>
+                <span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap">Đang xem</span>
+                <span class="text-[11px] text-on-surface-variant whitespace-nowrap">52:00</span>
+              </div>
+              <div class="lesson-row flex items-center gap-4 px-6 py-3.5 hover:bg-primary/5 transition-colors cursor-pointer border-b border-outline-variant/5">
+                <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-on-surface-variant text-sm">lock</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-on-surface truncate">Bài 3 – Các loại hình tấn công mạng phổ biến</p>
+                  <p class="text-[11px] text-on-surface-variant">Video · 38 phút</p>
+                </div>
+                <span class="lesson-play material-symbols-outlined text-primary text-lg">play_circle</span>
+                <span class="text-[11px] text-on-surface-variant whitespace-nowrap">38:00</span>
+              </div>
+              <div class="lesson-row flex items-center gap-4 px-6 py-3.5 hover:bg-primary/5 transition-colors cursor-pointer border-b border-outline-variant/5">
+                <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-on-surface-variant text-sm">quiz</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-on-surface truncate">Bài kiểm tra nhanh – Phần 1</p>
+                  <p class="text-[11px] text-on-surface-variant">Quiz · 15 câu hỏi</p>
+                </div>
+                <span class="lesson-play material-symbols-outlined text-primary text-lg">arrow_forward</span>
+                <span class="text-[11px] text-on-surface-variant whitespace-nowrap">~15 phút</span>
+              </div>
+              <div class="lesson-row flex items-center gap-4 px-6 py-3.5 hover:bg-primary/5 transition-colors cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-on-surface-variant text-sm">lock</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-on-surface truncate">Bài 4 – Xây dựng môi trường Lab (VirtualBox / VMware)</p>
+                  <p class="text-[11px] text-on-surface-variant">Video · 1h 05m</p>
+                </div>
+                <span class="lesson-play material-symbols-outlined text-primary text-lg">play_circle</span>
+                <span class="text-[11px] text-on-surface-variant whitespace-nowrap">1:05:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2 -->
+          <div class="glass-panel rounded-2xl overflow-hidden">
+            <button
+              class="w-full flex items-center justify-between px-6 py-4 hover:bg-primary/5 transition-colors"
+              onclick="toggleSection(this)"
+            >
+              <div class="flex items-center gap-3 text-left">
+                <span class="w-7 h-7 rounded-lg bg-tertiary/10 text-tertiary text-xs font-black flex items-center justify-center flex-shrink-0">2</span>
+                <div>
+                  <h3 class="font-bold text-on-surface text-sm">Penetration Testing Basics</h3>
+                  <p class="text-[11px] text-on-surface-variant">6 bài · 6h 15m</p>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-on-surface-variant chevron">expand_more</span>
+            </button>
+            <div class="section-content border-t border-outline-variant/10">
+              <div class="lesson-row flex items-center gap-4 px-6 py-3.5 hover:bg-primary/5 transition-colors cursor-pointer border-b border-outline-variant/5">
+                <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-on-surface-variant text-sm">lock</span>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-on-surface">Bài 6 – Quy trình Penetration Testing theo PTES</p>
+                  <p class="text-[11px] text-on-surface-variant">Video · 58 phút</p>
+                </div>
+                <span class="text-[11px] text-on-surface-variant whitespace-nowrap">58:00</span>
+              </div>
+              <div class="lesson-row flex items-center gap-4 px-6 py-3.5 hover:bg-primary/5 transition-colors cursor-pointer border-b border-outline-variant/5">
+                <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-on-surface-variant text-sm">lock</span>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-on-surface">Bài 7 – Reconnaissance &amp; Information Gathering</p>
+                  <p class="text-[11px] text-on-surface-variant">Video · 1h 20m</p>
+                </div>
+                <span class="text-[11px] text-on-surface-variant whitespace-nowrap">1:20:00</span>
+              </div>
+              <div class="lesson-row flex items-center gap-4 px-6 py-3.5 hover:bg-primary/5 transition-colors cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-on-surface-variant text-sm">lock</span>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-on-surface">Bài 8 – Scanning &amp; Enumeration với Nmap &amp; Metasploit</p>
+                  <p class="text-[11px] text-on-surface-variant">Video · 1h 35m</p>
+                </div>
+                <span class="text-[11px] text-on-surface-variant whitespace-nowrap">1:35:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3 (collapsed preview) -->
+          <div class="glass-panel rounded-2xl overflow-hidden">
+            <button
+              class="w-full flex items-center justify-between px-6 py-4 hover:bg-primary/5 transition-colors"
+              onclick="toggleSection(this)"
+            >
+              <div class="flex items-center gap-3 text-left">
+                <span class="w-7 h-7 rounded-lg bg-secondary/10 text-secondary text-xs font-black flex items-center justify-center flex-shrink-0">3</span>
+                <div>
+                  <h3 class="font-bold text-on-surface text-sm">Cloud Security &amp; Zero Trust Architecture</h3>
+                  <p class="text-[11px] text-on-surface-variant">5 bài · 5h 10m</p>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-on-surface-variant chevron">expand_more</span>
+            </button>
+            <div class="section-content border-t border-outline-variant/10">
+              <div class="px-6 py-4 text-sm text-on-surface-variant">Mở rộng để xem chi tiết các bài học.</div>
+            </div>
+          </div>
+
+          <p class="text-center text-sm text-on-surface-variant pt-2">... và <strong class="text-primary">5 phần học</strong> khác (Incident Response, Malware Analysis, SIEM, Forensics, Capstone Lab)</p>
+        </div>
+
+        <!-- ── TAB: INSTRUCTOR ── -->
+        <div id="panel-instructor" class="pt-8 hidden">
+          <div class="glass-panel-elevated rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8">
+            <!-- Avatar + stats -->
+            <div class="flex flex-col items-center gap-4 flex-shrink-0">
+              <img
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEaD6AYiPTA5D20zrCZ26iXsbBTk7A7n0Re-vB5zoaLF1WPwpiZyeZ_M6A5mWWe2YuY1IWgUkuTM7XS6njCXVZQXaCx-QYfjVj6OP_45Etglz_LF4PfWTX5kR73GixfBzh7aWCAAGsacJALg2ROk4zALBi7Uc7bGNr22lqlIUDqp8_2DLtT0juDR9fo7PYopJws8INS5QmSYWskox6VFaHwdfvcWbYFE6DZrJVzWy3QrQohA3aHSXcYJk2uZb6s-FbDm0SkXnLJ1gj"
+                alt="Instructor TS. Nguyễn Văn Khoa"
+                class="w-28 h-28 rounded-2xl object-cover shadow-xl border-2 border-primary/20"
+              />
+              <div class="grid grid-cols-2 gap-3 w-full text-center">
+                <div class="bg-surface-container rounded-xl p-3">
+                  <p class="text-xl font-black text-primary">4.8</p>
+                  <p class="text-[10px] text-on-surface-variant font-medium">Đánh giá TB</p>
+                </div>
+                <div class="bg-surface-container rounded-xl p-3">
+                  <p class="text-xl font-black text-on-surface">32k</p>
+                  <p class="text-[10px] text-on-surface-variant font-medium">Học viên</p>
+                </div>
+                <div class="bg-surface-container rounded-xl p-3">
+                  <p class="text-xl font-black text-on-surface">8</p>
+                  <p class="text-[10px] text-on-surface-variant font-medium">Khóa học</p>
+                </div>
+                <div class="bg-surface-container rounded-xl p-3">
+                  <p class="text-xl font-black text-tertiary">15+</p>
+                  <p class="text-[10px] text-on-surface-variant font-medium">Năm KN</p>
+                </div>
+              </div>
+            </div>
+            <!-- Bio -->
+            <div class="flex-1">
+              <h2 class="text-2xl font-black text-on-surface">TS. Nguyễn Văn Khoa</h2>
+              <p class="text-primary font-semibold text-sm mt-1">Chuyên gia An toàn Thông tin · Cố vấn Bảo mật Doanh nghiệp</p>
+              <div class="flex flex-wrap gap-2 mt-3 mb-5">
+                <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold">CISSP</span>
+                <span class="px-3 py-1 rounded-full bg-tertiary/10 text-tertiary text-[11px] font-bold">CEH</span>
+                <span class="px-3 py-1 rounded-full bg-secondary/10 text-secondary text-[11px] font-bold">OSCP</span>
+                <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold">AWS Security</span>
+              </div>
+              <p class="text-sm text-on-surface-variant leading-relaxed">
+                Tiến sĩ Khoa học Máy tính, Đại học Bách Khoa TP.HCM. Với hơn 15 năm kinh nghiệm trong lĩnh vực an toàn thông tin, ông từng là chuyên gia bảo mật cấp cao tại các tập đoàn công nghệ quốc tế như Microsoft Vietnam và Cisco. Hiện là Giám đốc Bảo mật (CISO) của một tập đoàn viễn thông lớn và là giảng viên thỉnh giảng tại các trường đại học hàng đầu.
+              </p>
+              <p class="text-sm text-on-surface-variant leading-relaxed mt-3">
+                Phong cách giảng dạy của ông kết hợp giữa lý thuyết nền tảng vững chắc và các tình huống thực chiến từ kinh nghiệm thực tế, giúp học viên không chỉ nắm lý thuyết mà còn có khả năng xử lý các sự cố bảo mật trong môi trường doanh nghiệp thực sự.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TAB: REVIEWS ── -->
+        <div id="panel-reviews" class="pt-8 hidden space-y-6">
+
+          <!-- Rating Overview -->
+          <div class="glass-panel rounded-2xl p-6 flex flex-col md:flex-row items-center gap-8">
+            <!-- Big score -->
+            <div class="flex flex-col items-center text-center flex-shrink-0">
+              <span class="text-7xl font-black text-primary leading-none">4.8</span>
+              <div class="flex mt-2">
+                <span class="material-symbols-outlined text-amber-400 star-filled">star</span>
+                <span class="material-symbols-outlined text-amber-400 star-filled">star</span>
+                <span class="material-symbols-outlined text-amber-400 star-filled">star</span>
+                <span class="material-symbols-outlined text-amber-400 star-filled">star</span>
+                <span class="material-symbols-outlined text-amber-400 star-filled">star_half</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant mt-1 font-medium">Xếp hạng khóa học</p>
+            </div>
+            <!-- Bar chart -->
+            <div class="flex-1 w-full space-y-2">
+              <div class="flex items-center gap-3">
+                <div class="flex">
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                </div>
+                <div class="flex-1 h-2.5 bg-surface-container rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-400 rounded-full" style="width:72%"></div>
+                </div>
+                <span class="text-xs text-on-surface-variant w-8 text-right">72%</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="flex">
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-slate-300 text-sm star-filled">star</span>
+                </div>
+                <div class="flex-1 h-2.5 bg-surface-container rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-400 rounded-full" style="width:20%"></div>
+                </div>
+                <span class="text-xs text-on-surface-variant w-8 text-right">20%</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="flex">
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-slate-300 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-slate-300 text-sm star-filled">star</span>
+                </div>
+                <div class="flex-1 h-2.5 bg-surface-container rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-400 rounded-full" style="width:6%"></div>
+                </div>
+                <span class="text-xs text-on-surface-variant w-8 text-right">6%</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="flex">
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-slate-300 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-slate-300 text-sm star-filled">star</span>
+                  <span class="material-symbols-outlined text-slate-300 text-sm star-filled">star</span>
+                </div>
+                <div class="flex-1 h-2.5 bg-surface-container rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-400 rounded-full" style="width:2%"></div>
+                </div>
+                <span class="text-xs text-on-surface-variant w-8 text-right">2%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Individual Reviews -->
+          <div class="space-y-4">
+            <!-- Review 1 -->
+            <div class="glass-panel rounded-2xl p-6">
+              <div class="flex items-start gap-4">
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkKyccVRS5noct4UmO5W_HEzTjednofcJWldd6r0NhskSjWcbuv6m9uCgE0XfI8POL-tlK2F3gqDaHcD9-kUR9PpZ4XZ10HWM2lss5rwtrR2iBohUW4Sw-d1KFrcJ_oDY2A2JPzg1-bKbcMCVD-fTXuY43h4I2sVCn4AyAjIUiLZwi5JKKuNuDNkaCoVOb3Vs4KtjZVHEIpxDg8S5Ex8vIETJPEXwqVwnbCcs2_HbOiEbIceJCr_aci28SIDrF6zvvLrrtBVNa8Raz"
+                  alt="Reviewer"
+                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                />
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-bold text-on-surface text-sm">Trần Minh Tuấn</h4>
+                      <p class="text-[11px] text-on-surface-variant">14 tháng 10, 2024</p>
+                    </div>
+                    <div class="flex">
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                    </div>
+                  </div>
+                  <p class="text-sm text-on-surface-variant leading-relaxed mt-2">
+                    Khóa học cực kỳ chất lượng! Giảng viên giải thích rõ ràng, có nhiều ví dụ thực tế. Phần lab hands-on về Metasploit thực sự rất hữu ích. Đây là khoản đầu tư xứng đáng nhất cho sự nghiệp của tôi. Đã pass CompTIA Security+ sau khi hoàn thành!
+                  </p>
+                  <div class="flex items-center gap-4 mt-3">
+                    <button class="flex items-center gap-1 text-[11px] text-on-surface-variant hover:text-primary transition-colors">
+                      <span class="material-symbols-outlined text-sm">thumb_up</span>
+                      Hữu ích (24)
+                    </button>
+                    <button class="text-[11px] text-on-surface-variant hover:text-primary transition-colors">Báo cáo</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review 2 -->
+            <div class="glass-panel rounded-2xl p-6">
+              <div class="flex items-start gap-4">
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5wPWpl3tY7Cy0j9hxx4C70BrgTn2cA8I_SUGbHI5rBRnqy9Kd_vrTEDENCSIMQ41gDMRwbstoDC60vdofK56HtUajcWGpaFCIiim7EQPZy48me3It31esNQZFXdjG5oWbFITTllWlKCVAjCNfyXm7erq5F-sYmJvdMAWtaZbpArAnB3F7DhUyky3xeHq0DvHmffLdHSm1ONaEsAFemjM7hdKwKhBjVkw5qHJpe7wrHxNClC-jSLnfjiCUV7kCk8EYAjpLG5a_Z8QX"
+                  alt="Reviewer"
+                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                />
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-bold text-on-surface text-sm">Lê Thị Hương</h4>
+                      <p class="text-[11px] text-on-surface-variant">28 tháng 9, 2024</p>
+                    </div>
+                    <div class="flex">
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                      <span class="material-symbols-outlined text-amber-400 text-sm star-filled">star</span>
+                      <span class="material-symbols-outlined text-slate-200 text-sm star-filled">star</span>
+                    </div>
+                  </div>
+                  <p class="text-sm text-on-surface-variant leading-relaxed mt-2">
+                    Nội dung rất đầy đủ và được tổ chức tốt. Tuy nhiên tốc độ một số bài hơi chậm đối với người đã có nền tảng. Hy vọng có thêm bài tập CTF để thực hành thêm. Nhìn chung vẫn rất đáng học!
+                  </p>
+                  <div class="flex items-center gap-4 mt-3">
+                    <button class="flex items-center gap-1 text-[11px] text-on-surface-variant hover:text-primary transition-colors">
+                      <span class="material-symbols-outlined text-sm">thumb_up</span>
+                      Hữu ích (11)
+                    </button>
+                    <button class="text-[11px] text-on-surface-variant hover:text-primary transition-colors">Báo cáo</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="w-full py-3 glass-panel rounded-xl text-primary font-semibold text-sm hover:bg-primary/5 transition-colors">
+            Xem tất cả 3.200 đánh giá
+          </button>
+        </div>
+
+      </div><!-- end tab panels -->
+
+    </div><!-- end left column -->
+
+    <!-- ─── RIGHT COLUMN: Sticky Buy/Enroll Card ─── -->
+    <div class="lg:col-span-1">
+      <div class="sticky-card space-y-5">
+
+        <!-- Main Card -->
+        <div class="glass-panel-elevated rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 border border-primary/15">
+
+          <!-- Video Preview -->
+          <div class="relative h-44 overflow-hidden cursor-pointer group" onclick="playPreview()">
+            <img
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzSG5WgMwmYcg9d0BesgTRKe-NbPZAnaUymKQoqWZV1eJDmt-gOTnJtNSuCVrpFthyZTAISu0R5JT1VFzifhS8JhOY2ZRKGDEqZbnjUuIEeGHCQwaV1NfSmLTO1VfBDMsPr1uQkVBdP0SLWjWhOMuabB6adMamcHN9gBt0G37bO3CWWMPa-2A039N3bwmA0ysu5AzGdg33gYnup-RidAr0Ab1OmF7J4_Z5gL7OnHZHOikCdw6h4TiADlvitCFMLEjbo0xHUMhOK0NU"
+              alt="Course preview thumbnail"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div class="absolute inset-0 bg-slate-950/50 flex items-center justify-center group-hover:bg-slate-950/40 transition-colors">
+              <div class="relative w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-2xl play-pulse">
+                <span class="material-symbols-outlined text-primary text-3xl ml-1" style="font-variation-settings:'FILL' 1;">play_arrow</span>
+              </div>
+            </div>
+            <div class="absolute bottom-3 left-0 right-0 text-center">
+              <span class="text-white text-[11px] font-bold bg-slate-950/60 backdrop-blur-md px-3 py-1 rounded-full">▶ Xem video giới thiệu · 3:42</span>
+            </div>
+          </div>
+
+          <!-- Pricing & CTA -->
+          <div class="p-6 space-y-5">
+            <!-- Price -->
+            <div class="flex items-end gap-3">
+              <span class="text-4xl font-black text-on-surface">₫1.299.000</span>
+              <div class="mb-1">
+                <span class="text-sm text-on-surface-variant line-through">₫2.599.000</span>
+                <span class="ml-2 text-sm font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">-50%</span>
+              </div>
+            </div>
+            <!-- Countdown -->
+            <div class="flex items-center gap-2 p-3 rounded-xl bg-error/5 border border-error/20">
+              <span class="material-symbols-outlined text-error text-lg">timer</span>
+              <div>
+                <p class="text-xs font-bold text-error">Giá ưu đãi kết thúc sau:</p>
+                <p class="text-sm font-black text-error" id="countdown">01 ngày 14:32:08</p>
+              </div>
+            </div>
+            <!-- Primary CTA -->
+            <button class="w-full py-4 bg-primary text-white font-black text-base rounded-2xl shadow-xl shadow-primary/30 hover:bg-primary-dim transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">bolt</span>
+              Đăng ký ngay
+            </button>
+            <!-- Secondary CTA -->
+            <button class="w-full py-3 border-2 border-primary text-primary font-bold rounded-2xl hover:bg-primary/5 transition-all active:scale-[0.98]">
+              Thử miễn phí 7 ngày
+            </button>
+            <!-- Guarantee -->
+            <p class="text-center text-[11px] text-on-surface-variant flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-sm text-emerald-600" style="font-variation-settings:'FILL' 1;">verified_user</span>
+              Đảm bảo hoàn tiền trong 30 ngày
+            </p>
+          </div>
+
+          <!-- Course includes -->
+          <div class="px-6 pb-6 space-y-3 border-t border-outline-variant/20 pt-5">
+            <h4 class="text-sm font-bold text-on-surface">Khóa học bao gồm:</h4>
+            <div class="space-y-2.5">
+              <div class="flex items-center gap-3 text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base text-primary">ondemand_video</span>
+                <span>42 giờ video theo yêu cầu</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base text-primary">terminal</span>
+                <span>Môi trường Lab thực hành ảo</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base text-primary">description</span>
+                <span>18 tài liệu &amp; cheat sheets</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base text-primary">quiz</span>
+                <span>12 bài kiểm tra &amp; 3 bài thi thử</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base text-primary">all_inclusive</span>
+                <span>Truy cập trọn đời trên mọi thiết bị</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base text-primary">workspace_premium</span>
+                <span>Chứng chỉ hoàn thành khóa học</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Share / Wishlist row -->
+          <div class="px-6 pb-6 flex gap-3">
+            <button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-outline-variant/40 text-sm text-on-surface-variant hover:bg-surface-container transition-colors">
+              <span class="material-symbols-outlined text-sm">bookmark</span>
+              Lưu
+            </button>
+            <button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-outline-variant/40 text-sm text-on-surface-variant hover:bg-surface-container transition-colors">
+              <span class="material-symbols-outlined text-sm">share</span>
+              Chia sẻ
+            </button>
+            <button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-outline-variant/40 text-sm text-on-surface-variant hover:bg-surface-container transition-colors">
+              <span class="material-symbols-outlined text-sm">card_gift</span>
+              Tặng
+            </button>
+          </div>
+        </div>
+
+        <!-- Related / Recommended -->
+        <div class="glass-panel rounded-2xl p-4 space-y-3">
+          <h4 class="text-sm font-bold text-on-surface px-2">Khóa học liên quan</h4>
+          <div class="flex gap-3 hover:bg-primary/5 p-2 rounded-xl transition-colors cursor-pointer group">
+            <img
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKHijFMHOx0bIFYYQrZnot196AFa7OhCG6g6THug372jJSk0j6sNBmVt6nV5aPetnnjbKYY_b94N-WR6lqDd2J9SGHoUMnrLZ7uz7QVCq5A5kkd9hEYzMjfaA8LVtOn9zfGD_D4ylDtJfxrmhGM2O6RZwew0t6i4mJc1_NBOHQbl8szoljBhEsmcIOaqxsH5cZ93krU9JICraqFVKql8jS6McURJonNLQ8tnu9KKoE-Tv4Qfhi0VAMz2Ta9UGPqjzOTrW9H2v4on1S"
+              alt="Ethical Hacking"
+              class="w-16 h-12 rounded-lg object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold text-on-surface group-hover:text-primary transition-colors truncate">Ethical Hacking: Complete Guide</p>
+              <p class="text-[10px] text-on-surface-variant">4.6 ★ · ₫799.000</p>
+            </div>
+          </div>
+          <div class="flex gap-3 hover:bg-primary/5 p-2 rounded-xl transition-colors cursor-pointer group">
+            <img
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDswEDQ066iTZQviul9gS07MDXaKky7Jg4B3KlXc10oYITBpe2RuY0k7tjQEQvQwoBXknOOKw_T7MeJReJaQd9t2EcbAUbkr_Yn-2ZvAM7FfdfHs9_GAcQJlrA0PdcrVTuQGKjEVLSDuvqtE63HMfd0oz-W2KLCxQ0KQmyCHANQnUiqyh9KYbirEaxjae3N8PMCuUD5WdwuUTZ0vexUacLwaz0yqX1wTJfFi7z38Gr-xdcKHcobdtbbpsk-zvox6nNEY9-N2l-z-93O"
+              alt="Cloud Security"
+              class="w-16 h-12 rounded-lg object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold text-on-surface group-hover:text-primary transition-colors truncate">AWS Cloud Security Masterclass</p>
+              <p class="text-[10px] text-on-surface-variant">4.7 ★ · ₫1.099.000</p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end sticky-card -->
+    </div><!-- end right column -->
+
+  </div><!-- end two-column body -->
+
+  <!-- FOOTER -->
+  <footer class="w-full py-12 border-t border-sky-400/10 bg-slate-950 mt-8">
+    <div class="max-w-7xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-8">
+      <div class="flex flex-col items-center md:items-start">
+        <span class="text-lg font-bold text-sky-300">Glacier</span>
+        <p class="font-['Inter'] text-xs text-slate-500 mt-2">© 2024 Glacier E-Learning. All rights reserved.</p>
+      </div>
+      <div class="flex gap-8">
+        <a class="font-['Inter'] text-xs text-slate-500 hover:text-sky-200 transition-colors" href="#">Privacy Policy</a>
+        <a class="font-['Inter'] text-xs text-slate-500 hover:text-sky-200 transition-colors" href="#">Terms of Service</a>
+        <a class="font-['Inter'] text-xs text-slate-500 hover:text-sky-200 transition-colors" href="#">Contact Support</a>
+        <a class="font-['Inter'] text-xs text-slate-500 hover:text-sky-200 transition-colors" href="#">Blog</a>
+      </div>
+      <div class="flex gap-4">
+        <a class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-sky-400/10 transition-colors" href="#">
+          <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+        </a>
+        <a class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-sky-400/10 transition-colors" href="#">
+          <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+</main><!-- end main -->
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-900/90 backdrop-blur-xl border-t border-sky-300/10 flex items-center justify-around z-50">
+  <button class="flex flex-col items-center gap-1 text-slate-400">
+    <span class="material-symbols-outlined">dashboard</span>
+    <span class="text-[10px]">Home</span>
+  </button>
+  <button class="flex flex-col items-center gap-1 text-sky-300">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">library_books</span>
+    <span class="text-[10px] font-bold">Courses</span>
+  </button>
+  <button class="flex flex-col items-center gap-1 text-slate-400">
+    <span class="material-symbols-outlined">chat</span>
+    <span class="text-[10px]">Chats</span>
+  </button>
+  <button class="flex flex-col items-center gap-1 text-slate-400">
+    <span class="material-symbols-outlined">account_circle</span>
+    <span class="text-[10px]">Profile</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+  /* ── Tab switching ── */
+  const tabs = ['overview', 'curriculum', 'instructor', 'reviews'];
+
+  function switchTab(name) {
+    tabs.forEach(t => {
+      document.getElementById('panel-' + t).classList.add('hidden');
+      const btn = document.getElementById('tab-' + t);
+      btn.classList.remove('active');
+      btn.classList.add('text-on-surface-variant');
+      btn.classList.remove('text-on-surface');
+    });
+    document.getElementById('panel-' + name).classList.remove('hidden');
+    const activeBtn = document.getElementById('tab-' + name);
+    activeBtn.classList.add('active');
+    activeBtn.classList.remove('text-on-surface-variant');
+    activeBtn.classList.add('text-on-surface');
+  }
+
+  /* ── Curriculum accordion ── */
+  function toggleSection(btn) {
+    const content = btn.nextElementSibling;
+    const chevron = btn.querySelector('.chevron');
+    const isOpen = content.classList.contains('open');
+    content.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('rotated', !isOpen);
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.section-content').forEach(c => c.classList.add('open'));
+    document.querySelectorAll('.chevron').forEach(c => c.classList.add('rotated'));
+  }
+
+  /* ── Countdown timer ── */
+  function updateCountdown() {
+    const end = new Date();
+    end.setDate(end.getDate() + 1);
+    end.setHours(end.getHours() + 14, end.getMinutes() + 32, 8, 0);
+
+    const now = new Date();
+    const diff = end - now;
+    if (diff <= 0) { document.getElementById('countdown').textContent = 'Đã hết hạn'; return; }
+
+    const d  = Math.floor(diff / 86400000);
+    const h  = Math.floor((diff % 86400000) / 3600000);
+    const m  = Math.floor((diff % 3600000)  / 60000);
+    const s  = Math.floor((diff % 60000)    / 1000);
+    document.getElementById('countdown').textContent =
+      `${d} ngày ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  /* ── Toggle Sidebar ── */
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const main    = document.getElementById('main-content');
+    const icon    = document.getElementById('toggle-icon');
+
+    sidebar.classList.toggle('collapsed');
+
+    if (sidebar.classList.contains('collapsed')) {
+      main.style.marginLeft = '80px';
+      icon.textContent = 'menu';
+    } else {
+      main.style.marginLeft = '256px';
+      icon.textContent = 'menu_open';
+    }
+  }
+
+  /* ── Play preview stub ── */
+  function playPreview() {
+    alert('Video giới thiệu sẽ phát tại đây (demo)');
+  }
+</script>
+
+</body>
+</html>
