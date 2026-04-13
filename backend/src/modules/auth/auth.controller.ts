@@ -1,16 +1,17 @@
 import {
-  Body,
   Controller,
-  Get,
   Post,
-  Req,
+  Body,
+  Get,
+  Request,
   UseGuards,
+  Req,
 } from '@nestjs/common';
-import { Request } from 'express';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { Public } from './strategies/public.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 type AuthenticatedRequest = Request & {
   user: {
@@ -22,21 +23,23 @@ type AuthenticatedRequest = Request & {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
+  @Public() // Mark this endpoint as public
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
+  @Public() // Mark this endpoint as public
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('me')
-  me(@Req() req: AuthenticatedRequest) {
-    return this.authService.getMe(req.user.userId);
+  @Get('me') // Endpoint for getUser() in frontend
+  getMe(@Request() req) {
+    return req.user;
   }
 }
