@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { TopNav } from '@/components/layout/TopNav';
-import { cn } from '@/lib/utils';
-import axios from 'axios';
+import { apiDelete, apiGet, apiPatch, apiPost } from '@/api/client';
+
+type Classroom = {
+  id: string;
+  title: string;
+  description: string | null;
+  createdAt: string;
+};
 
 // Mock data for aesthetic UI parts that DB does not provide yet
 const mockRecentActivity = [
@@ -31,14 +37,18 @@ const mockImages = [
 ];
 
 export default function ClassroomsPage() {
-  const [cohorts, setCohorts] = useState<any[]>([]);
+  const [cohorts, setCohorts] = useState<Classroom[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchClassrooms = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/classrooms`);
-      setCohorts(res.data);
+      const res = await apiGet<Classroom[]>('/classrooms');
+      if (res.success && res.data) {
+        setCohorts(res.data);
+      } else {
+        console.error('Fetch classrooms failed:', res.error);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -55,7 +65,10 @@ export default function ClassroomsPage() {
     if (!title) return;
     const desc = prompt('Nhập mô tả (không bắt buộc):');
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/classrooms`, { title, description: desc });
+      const res = await apiPost('/classrooms', { title, description: desc });
+      if (!res.success) {
+        throw new Error(res.error || 'Tạo lớp thất bại');
+      }
       fetchClassrooms();
     } catch (e) {
       console.error(e);
@@ -67,7 +80,10 @@ export default function ClassroomsPage() {
     const title = prompt('Nhập tên mới:', oldTitle);
     if (!title) return;
     try {
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/classrooms/${id}`, { title });
+      const res = await apiPatch(`/classrooms/${id}`, { title });
+      if (!res.success) {
+        throw new Error(res.error || 'Cập nhật thất bại');
+      }
       fetchClassrooms();
     } catch (e) {
       console.error(e);
@@ -77,7 +93,10 @@ export default function ClassroomsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Bạn có chắc chắn muốn xóa lớp học này?')) return;
     try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/classrooms/${id}`);
+      const res = await apiDelete(`/classrooms/${id}`);
+      if (!res.success) {
+        throw new Error(res.error || 'Xóa thất bại');
+      }
       fetchClassrooms();
     } catch (e) {
       console.error(e);
