@@ -1,19 +1,16 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { AuthProvider } from '@/contexts/AuthContext';
 import './globals.css';
 
 const inter = Inter({
-  subsets: ['latin', 'vietnamese'],
-  variable: '--font-inter',
-  display: 'swap',
+  variable: '--font-sans',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: 'Glacier E-Learning',
-    template: '%s | Glacier E-Learning',
-  },
-  description: 'Nền tảng học trực tuyến Glacier – Nâng cao kỹ năng, thay đổi tương lai.',
+  title: 'Glacier Learning - Học Tập Không Giới Hạn',
+  description: 'Nền tảng học tập trực tuyến hàng đầu',
 };
 
 export default function RootLayout({
@@ -22,15 +19,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className="h-full">
+    <html lang='vi' className={`${inter.variable} h-full antialiased`}>
       <head>
         <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap'
+          rel='stylesheet'
         />
       </head>
-      <body className={`${inter.variable} min-h-full antialiased`}>
-        {children}
+      <body className='min-h-full flex flex-col font-sans'>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
