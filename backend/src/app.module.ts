@@ -1,12 +1,21 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ClassroomsModule } from './classrooms/classrooms.module';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SocketModule } from './socket/socket.module';
-
 @Module({
-  imports: [PrismaModule, SocketModule],
+  imports: [PrismaModule, AuthModule, ClassroomsModule, SocketModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}
