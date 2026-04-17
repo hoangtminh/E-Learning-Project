@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const linked = [
     {
@@ -70,10 +71,14 @@ export function Header() {
           <Button
             variant='ghost'
             className='text-slate-600 hover:text-sky-500 hover:bg-transparent font-medium'
+            onClick={() => router.push('/login')}
           >
             Sign In
           </Button>
-          <Button className='bg-sky-500 text-white hover:bg-sky-500/90 rounded-lg shadow-lg shadow-sky-500/20 font-semibold'>
+          <Button
+            className='bg-sky-500 text-white hover:bg-sky-500/90 rounded-lg shadow-lg shadow-sky-500/20 font-semibold'
+            onClick={() => router.push('/register')}
+          >
             Join for Free
           </Button>
         </div>
