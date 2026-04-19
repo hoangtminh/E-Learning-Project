@@ -15,7 +15,7 @@ const authRoutes = ['/login', '/register'];
 // Define the default route to redirect authenticated users to
 const defaultMainRoute = '/dashboard';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAuthenticated = request.cookies.has('access_token');
