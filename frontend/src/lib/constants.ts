@@ -6,6 +6,9 @@ export const ROUTES = {
   register: "/register",
   dashboard: "/dashboard",
   courses: "/courses",
+  learning: "/learning",
   instructorStudio: "/instructor/studio",
   notes: "/dashboard/notes",
+  assignments: "/dashboard/assignments",
+  chat: "/dashboard/chat",
 } as const;
