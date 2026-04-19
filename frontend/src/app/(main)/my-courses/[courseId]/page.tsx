@@ -1,4 +1,3 @@
-import { TopNav } from '@/components/layout/TopNav';
 import { CourseHero } from '@/components/course/CourseHero';
 import { CourseProgressBanner } from '@/components/course/CourseProgressBanner';
 import { CourseTabs } from '@/components/course/CourseTabs';
@@ -45,49 +44,23 @@ const course = {
 
 export default function CourseDetailPage() {
   return (
-    <>
-      <TopNav
-        breadcrumbs={[
-          { label: 'My Courses', href: '/my-courses' },
-          { label: 'Advanced Cybersecurity & Network Defense' },
-        ]}
-      />
-
+    <div>
       {/* Hero Banner */}
       <CourseHero course={course} />
 
       {/* Main Body */}
-      <div className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className='flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10'>
         {/* Left column */}
-        <div className="lg:col-span-2 space-y-10">
+        <div className='lg:col-span-2 space-y-10'>
           <CourseProgressBanner course={course} />
           <CourseTabs courseId={course.id} />
         </div>
 
         {/* Right column — Buy card */}
-        <div className="lg:col-span-1">
+        <div className='lg:col-span-1'>
           <CourseBuyCard course={course} />
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="w-full py-12 border-t border-sky-400/10 bg-slate-950 mt-8">
-        <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col items-center md:items-start">
-            <span className="text-lg font-bold text-sky-300">Glacier</span>
-            <p className="text-xs text-slate-500 mt-2">
-              © 2024 Glacier E-Learning. All rights reserved.
-            </p>
-          </div>
-          <div className="flex gap-8">
-            {['Privacy Policy', 'Terms of Service', 'Contact Support', 'Blog'].map((link) => (
-              <a key={link} href="#" className="text-xs text-slate-500 hover:text-sky-200 transition-colors">
-                {link}
-              </a>
-            ))}
-          </div>
-        </div>
-      </footer>
-    </>
+    </div>
   );
 }

@@ -10,10 +10,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { ChevronRight, Snowflake } from 'lucide-react';
 
 const NAV_ITEMS = [
   { name: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
   { name: 'Courses', icon: 'school', path: '/courses' },
+  { name: 'My Courses', icon: 'book', path: '/my-courses' },
+  { name: 'Classrooms', icon: 'groups', path: '/classrooms' },
   { name: 'Video Call', icon: 'video_camera_front', path: '/call' },
   { name: 'Community', icon: 'forum', path: '/community' },
   { name: 'Settings', icon: 'settings', path: '/settings' },
@@ -35,7 +38,7 @@ export function MainSidebar() {
         {!isCollapsed && (
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className='absolute -right-4.5 top-4.5 bg-sky-500 border-white border text-white rounded-full p-0.5 shadow-md hover:bg-sky-400 z-50 flex items-center justify-center transition-colors'
+            className='absolute -right-4.5 top-3 bg-sky-500 border-white border text-white rounded-full p-0.5 shadow-md hover:bg-sky-400 z-50 flex items-center justify-center transition-colors'
           >
             <span className='material-symbols-outlined text-sm'>
               {isCollapsed ? 'chevron_right' : 'chevron_left'}
@@ -44,12 +47,23 @@ export function MainSidebar() {
         )}
 
         {/* Logo */}
-        <div
-          className='h-16 flex items-center justify-center border-b border-white/10 shrink-0'
-          onClick={() => (isCollapsed ? setIsCollapsed(!isCollapsed) : null)}
-        >
-          <div className='w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-sky-500/20 shrink-0'>
-            G
+
+        <div className='h-14 flex items-center justify-center border-b border-white/10 shrink-0'>
+          <div className='w-9 h-9 rounded-xl bg-sky-400/20 border border-sky-400/30 flex items-center justify-center shrink-0 hover:cursor-pointer'>
+            {isCollapsed ? (
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className='bg-sky-500 border-white border text-white rounded-full p-0.5 shadow-md hover:bg-sky-400 z-50 flex items-center justify-center transition-colors'
+              >
+                <ChevronRight className='text-sm' />
+              </button>
+            ) : (
+              <Snowflake
+                className='text-sky-400'
+                size={22} // Standard size to match a 10rem/40px container
+                fill='currentColor' // Use this if you want the 'FILL 1' look
+              />
+            )}
           </div>
           <AnimatePresence>
             {!isCollapsed && (

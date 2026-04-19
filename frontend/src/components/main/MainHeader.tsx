@@ -1,20 +1,101 @@
 'use client';
 
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import { apiGet } from '@/api/client';
 
-export function MainHeader() {
+interface MainHeaderProps {
+  breadcrumbs?: { label: string; href?: string }[];
+}
+
+export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
   const pathname = usePathname();
-  // Hàm định dạng đường dẫn thành Title hiển thị đơn giản
-  const pageTitle =
-    pathname.split('/').filter(Boolean).pop()?.toUpperCase() || 'DASHBOARD';
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>(
+    {},
+  );
+
+  const segments = pathname.split('/').filter(Boolean);
+
+  useEffect(() => {
+    const currentSegments = pathname.split('/').filter(Boolean);
+    const fetchDynamicLabels = async () => {
+      const newLabels: Record<string, string> = {};
+      let hasNew = false;
+      for (let i = 0; i < currentSegments.length; i++) {
+        if (currentSegments[i] === 'classrooms' && currentSegments[i + 1]) {
+          const id = currentSegments[i + 1];
+          try {
+            const res = await apiGet<any>(`/classrooms/${id}`);
+            if (res.success && res.data) {
+              newLabels[id] = res.data.title;
+              hasNew = true;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+      if (hasNew) {
+        setDynamicLabels((prev) => ({ ...prev, ...newLabels }));
+      }
+    };
+
+    fetchDynamicLabels();
+  }, [pathname]);
+
+  const defaultBreadcrumbs = [
+    ...segments.map((segment, index) => {
+      const href = '/' + segments.slice(0, index + 1).join('/');
+      let label = segment.replace(/-/g, ' ');
+
+      // Kiểm tra nếu segment giống định dạng của UUID hoặc dài hơn 20 kí tự
+      const isIdPattern =
+        segment.length >= 24 || /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(segment);
+
+      if (dynamicLabels[segment]) {
+        label = dynamicLabels[segment];
+      } else if (isIdPattern) {
+        label = 'Đang tải...';
+      }
+
+      return { label, href };
+    }),
+  ];
+
+  const displayBreadcrumbs =
+    breadcrumbs && breadcrumbs.length > 0 ? breadcrumbs : defaultBreadcrumbs;
 
   return (
-    <header className='h-16 bg-[#88b6cf] backdrop-blur-xl border-b border-sky-100 shadow-sm flex items-center justify-between px-8 z-10 sticky top-0 shrink-0'>
-      <div className='flex items-center gap-4'>
-        <h2 className='text-xl font-bold text-slate-900 tracking-tight'>
-          {pageTitle}
-        </h2>
+    <header className='h-14 bg-[#7DD3FC] backdrop-blur-xl border-b border-sky-100 shadow-sm flex items-center justify-between px-8 z-10 sticky top-0 shrink-0'>
+      <div className='flex items-center gap-2'>
+        <nav
+          className='flex items-center gap-2 capitalize'
+          aria-label='Breadcrumb'
+        >
+          {displayBreadcrumbs.map((crumb, i) => (
+            <span key={i} className='flex items-center gap-2'>
+              {i > 0 && (
+                <span className='material-symbols-outlined text-slate-800 text-sm'>
+                  chevron_right
+                </span>
+              )}
+              {crumb.href && i < displayBreadcrumbs.length - 1 ? (
+                <Link
+                  href={crumb.href}
+                  className='text-slate-900 hover:text-slate-900 font-semibold text-lg transition-colors'
+                >
+                  {crumb.label}
+                </Link>
+              ) : (
+                <h2 className='text-xl font-bold text-slate-900 tracking-tight truncate max-w-xs'>
+                  {crumb.label}
+                </h2>
+              )}
+            </span>
+          ))}
+        </nav>
       </div>
       <div className='flex items-center gap-5'>
         <div className='relative'>
