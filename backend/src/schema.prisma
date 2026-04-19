@@ -48,7 +48,7 @@ enum ConversationType {
 // --- MODELS ---
 
 model User {
-  id               String   @id @default(uuid()) 
+  id               String   @id @default(uuid())
   email            String   @unique
   passwordHash     String   @map("password_hash")
   fullName         String?  @map("full_name")
@@ -72,7 +72,7 @@ model User {
 }
 
 model Classroom {
-  id          String   @id @default(uuid()) 
+  id          String   @id @default(uuid())
   title       String
   description String?  @db.Text
   inviteCode  String?  @unique @map("invite_code")
@@ -91,9 +91,9 @@ model Classroom {
 }
 
 model ClassroomMember {
-  id          String        @id @default(uuid()) 
-  classroomId String        @map("classroom_id") 
-  userId      String        @map("user_id") 
+  id          String        @id @default(uuid())
+  classroomId String        @map("classroom_id")
+  userId      String        @map("user_id")
   role        ClassroomRole @default(member)
   joinedAt    DateTime      @default(now()) @map("joined_at")
 
@@ -105,9 +105,9 @@ model ClassroomMember {
 }
 
 model ClassroomJoinRequest {
-  id          String   @id @default(uuid()) 
-  classroomId String   @map("classroom_id") 
-  userId      String   @map("user_id") 
+  id          String   @id @default(uuid())
+  classroomId String   @map("classroom_id")
+  userId      String   @map("user_id")
   createdAt   DateTime @default(now()) @map("created_at")
 
   classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
@@ -118,8 +118,8 @@ model ClassroomJoinRequest {
 }
 
 model Course {
-  id           String           @id @default(uuid()) 
-  ownerId      String           @map("owner_id") 
+  id           String           @id @default(uuid())
+  ownerId      String           @map("owner_id")
   title        String
   description  String?          @db.Text
   thumbnailUrl String?          @map("thumbnail_url")
@@ -138,9 +138,9 @@ model Course {
 }
 
 model CourseMember {
-  id         String   @id @default(uuid()) 
-  courseId   String   @map("course_id") 
-  userId     String   @map("user_id") 
+  id         String   @id @default(uuid())
+  courseId   String   @map("course_id")
+  userId     String   @map("user_id")
   enrolledAt DateTime @default(now()) @map("enrolled_at")
 
   course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -151,9 +151,9 @@ model CourseMember {
 }
 
 model CourseInvitation {
-  id        String   @id @default(uuid()) 
-  courseId  String   @map("course_id") 
-  userId    String   @map("user_id") 
+  id        String   @id @default(uuid())
+  courseId  String   @map("course_id")
+  userId    String   @map("user_id")
   invitedAt DateTime @default(now()) @map("invited_at")
 
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -163,8 +163,8 @@ model CourseInvitation {
 }
 
 model Section {
-  id         String   @id @default(uuid()) 
-  courseId   String   @map("course_id") 
+  id         String   @id @default(uuid())
+  courseId   String   @map("course_id")
   title      String?
   orderIndex Int?     @map("order_index")
 
@@ -175,8 +175,8 @@ model Section {
 }
 
 model Lesson {
-  id         String       @id @default(uuid()) 
-  sectionId  String       @map("section_id") 
+  id         String       @id @default(uuid())
+  sectionId  String       @map("section_id")
   title      String?
   type       ContentType?
   contentUrl String?      @map("content_url")
@@ -191,9 +191,9 @@ model Lesson {
 }
 
 model UserProgress {
-  id                String   @id @default(uuid()) 
-  userId            String   @map("user_id") 
-  lessonId          String   @map("lesson_id") 
+  id                String   @id @default(uuid())
+  userId            String   @map("user_id")
+  lessonId          String   @map("lesson_id")
   lastWatchedSecond Int      @default(0) @map("last_watched_second")
   isCompleted       Boolean  @default(false) @map("is_completed")
   updatedAt         DateTime @updatedAt @map("updated_at")
@@ -206,8 +206,8 @@ model UserProgress {
 }
 
 model Conversation {
-  id          String            @id @default(uuid()) 
-  classroomId String?           @map("classroom_id") 
+  id          String            @id @default(uuid())
+  classroomId String?           @map("classroom_id")
   type        ConversationType?
   title       String?
   createdAt   DateTime          @default(now()) @map("created_at")
@@ -220,9 +220,9 @@ model Conversation {
 }
 
 model ConversationMember {
-  id             String       @id @default(uuid()) 
-  conversationId String       @map("conversation_id") 
-  userId         String       @map("user_id") 
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  userId         String       @map("user_id")
   joinedAt       DateTime     @default(now()) @map("joined_at")
 
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -232,9 +232,9 @@ model ConversationMember {
 }
 
 model Message {
-  id             String       @id @default(uuid()) 
-  conversationId String       @map("conversation_id") 
-  senderId       String       @map("sender_id") 
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  senderId       String       @map("sender_id")
   content        String?      @db.Text
   fileUrl        String?      @map("file_url")
   createdAt      DateTime     @default(now()) @map("created_at")
@@ -246,9 +246,9 @@ model Message {
 }
 
 model ClassroomTask {
-  id          String    @id @default(uuid()) 
-  classroomId String    @map("classroom_id") 
-  creatorId   String    @map("creator_id") 
+  id          String    @id @default(uuid())
+  classroomId String    @map("classroom_id")
+  creatorId   String    @map("creator_id")
   title       String?
   description String?   @db.Text
   deadline    DateTime?
@@ -262,9 +262,9 @@ model ClassroomTask {
 }
 
 model TaskSubmission {
-  id          String        @id @default(uuid()) 
-  taskId      String        @map("task_id") 
-  studentId   String        @map("student_id") 
+  id          String        @id @default(uuid())
+  taskId      String        @map("task_id")
+  studentId   String        @map("student_id")
   content     String?       @db.Text
   fileUrl     String?       @map("file_url")
   submittedAt DateTime      @default(now()) @map("submitted_at")
@@ -277,8 +277,8 @@ model TaskSubmission {
 }
 
 model ClassroomLinkedCourse {
-  classroomId String    @map("classroom_id") 
-  courseId    String    @map("course_id") 
+  classroomId String    @map("classroom_id")
+  courseId    String    @map("course_id")
 
   classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -288,10 +288,10 @@ model ClassroomLinkedCourse {
 }
 
 model Note {
-  id             String     @id @default(uuid()) 
-  userId         String     @map("user_id") 
-  lessonId       String     @map("lesson_id") 
-  classroomId    String?    @map("classroom_id") 
+  id             String     @id @default(uuid())
+  userId         String     @map("user_id")
+  lessonId       String     @map("lesson_id")
+  classroomId    String?    @map("classroom_id")
   content        String     @db.Text
   videoTimestamp Int?       @map("video_timestamp")
   createdAt      DateTime   @default(now()) @map("created_at")
