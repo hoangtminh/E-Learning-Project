@@ -67,6 +67,7 @@ model User {
   createdTasks        ClassroomTask[]      @relation("TaskCreator")
   taskSubmissions     TaskSubmission[]     @relation("TaskStudent")
   notes               Note[]
+  createdCalls        Call[]               @relation("CallCreator")
 
   @@map("users")
 }
@@ -304,4 +305,19 @@ model Note {
   @@index([userId, lessonId])
   @@index([userId, classroomId])
   @@map("notes")
+}
+
+model Call {
+  id               String    @id @default(uuid())
+  creatorId        String    @map("creator_id")
+  title            String?   @db.VarChar(255)
+  status           String    @default("ongoing") @db.VarChar(50)
+  participantCount Int       @default(0) @map("participant_count")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  endedAt          DateTime? @map("ended_at")
+
+  creator          User      @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([status]) // Đánh index để truy vấn nhanh các phòng đang "ongoing"
+  @@map("calls")
 }

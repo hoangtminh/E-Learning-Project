@@ -8,6 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { PrismaService } from '../prisma/prisma.service';
 
 @WebSocketGateway(3001, {
   cors: {
@@ -23,11 +24,13 @@ export class WebrtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private roomToUsers: Map<string, string[]> = new Map();
   private socketToRoom: Map<string, string> = new Map();
 
+  constructor(private prisma: PrismaService) {}
+
   handleConnection(client: Socket) {
     console.log(`WebRTC Client connected: ${client.id}`);
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     const roomId = this.socketToRoom.get(client.id);
     if (roomId) {
       let users = this.roomToUsers.get(roomId) || [];
@@ -42,12 +45,21 @@ export class WebrtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Báo cho các client khác trong room biết user này đã rời khỏi để họ dọn dẹp RTCPeerConnection
       this.server.to(roomId).emit('user-left', client.id);
+
+      try {
+        await this.prisma.call.update({
+          where: { id: roomId },
+          data: { participantCount: { decrement: 1 } },
+        });
+      } catch (err) {
+        console.error('Lỗi khi trừ participantCount', err);
+      }
     }
     console.log(`WebRTC Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('join-room')
-  joinRoom(
+  async joinRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { roomId: string },
   ) {
@@ -63,6 +75,15 @@ export class WebrtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
     usersInRoom.push(client.id);
     this.roomToUsers.set(roomId, usersInRoom);
     console.log(`Client ${client.id} joined WebRTC room ${roomId}`);
+
+    try {
+      await this.prisma.call.update({
+        where: { id: roomId },
+        data: { participantCount: { increment: 1 } },
+      });
+    } catch (err) {
+      console.error('Lỗi khi cộng participantCount', err);
+    }
   }
 
   @SubscribeMessage('offer')
@@ -90,11 +111,26 @@ export class WebrtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { target: string; candidate: any },
   ) {
-    this.server
-      .to(payload.target)
-      .emit('ice-candidate', {
-        caller: client.id,
-        candidate: payload.candidate,
-      });
+    this.server.to(payload.target).emit('ice-candidate', {
+      caller: client.id,
+      candidate: payload.candidate,
+    });
+  }
+
+  @SubscribeMessage('chat-message')
+  handleChatMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: {
+      roomId: string;
+      message: string;
+      senderId: string;
+      senderName: string;
+    },
+  ) {
+    this.server.to(payload.roomId).emit('chat-message', {
+      ...payload,
+      timestamp: new Date().toISOString(),
+    });
   }
 }
