@@ -3,9 +3,10 @@ import { apiPost, apiGet } from './client';
 export type AuthResponse = {
   accessToken: string;
   user: {
-    id: string;
+    userId: string;
     email: string;
-    fullName: string | null;
+    fullname: string | null;
+    imageUrl: string | null | undefined;
   };
 };
 

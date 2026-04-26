@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,19 +10,32 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { ChevronRight, Snowflake } from 'lucide-react';
+import {
+  ChevronRight,
+  ChevronLeft,
+  Snowflake,
+  LayoutDashboard,
+  GraduationCap,
+  BookOpen,
+  Users,
+  Video,
+  MessagesSquare,
+  MessageSquare,
+  Settings,
+} from 'lucide-react';
 
 const NAV_ITEMS = [
-  { name: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
-  { name: 'Courses', icon: 'school', path: '/courses' },
-  { name: 'My Courses', icon: 'book', path: '/my-courses' },
-  { name: 'Classrooms', icon: 'groups', path: '/classrooms' },
-  { name: 'Video Call', icon: 'video_camera_front', path: '/call' },
-  { name: 'Community', icon: 'forum', path: '/community' },
-  { name: 'Settings', icon: 'settings', path: '/settings' },
+  { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
+  { name: 'Courses', icon: <GraduationCap size={20} />, path: '/courses' },
+  { name: 'My Courses', icon: <BookOpen size={20} />, path: '/my-courses' },
+  { name: 'Classrooms', icon: <Users size={20} />, path: '/classrooms' },
+  { name: 'Video Call', icon: <Video size={20} />, path: '/call' },
+  { name: 'Chat', icon: <MessageSquare size={20} />, path: '/chat' },
+  { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
 ];
 
-export function MainSidebar() {
+
+const MainSidebar = memo(() => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -94,12 +107,11 @@ export function MainSidebar() {
                     : 'hover:bg-white/5 hover:text-white'
                 } ${isCollapsed ? 'justify-center' : 'px-4'}`}
               >
-                <span
-                  className='material-symbols-outlined shrink-0'
-                  style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
+                <div
+                  className='shrink-0'
                 >
                   {item.icon}
-                </span>
+                </div>
                 <span className={`${isCollapsed ? 'hidden' : 'block'}`}>
                   {item.name}
                 </span>
@@ -124,4 +136,8 @@ export function MainSidebar() {
       </motion.aside>
     </TooltipProvider>
   );
-}
+},)
+
+MainSidebar.displayName = 'MainSidebar';
+
+export { MainSidebar };

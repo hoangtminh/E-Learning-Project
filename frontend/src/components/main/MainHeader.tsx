@@ -1,10 +1,28 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  Search,
+  Bell,
+  Settings,
+  LogOut,
+  User,
+  ChevronRight,
+} from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { apiGet } from '@/api/client';
+import Link from 'next/link';
 
 interface MainHeaderProps {
   breadcrumbs?: { label: string; href?: string }[];
@@ -12,6 +30,8 @@ interface MainHeaderProps {
 
 export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>(
     {},
   );
@@ -68,7 +88,7 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
     breadcrumbs && breadcrumbs.length > 0 ? breadcrumbs : defaultBreadcrumbs;
 
   return (
-    <header className='h-14 bg-[#7DD3FC] backdrop-blur-xl border-b border-sky-100 shadow-sm flex items-center justify-between px-8 z-10 sticky top-0 shrink-0'>
+    <header className='h-14 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm flex items-center justify-between px-8 z-10 sticky top-0 shrink-0'>
       <div className='flex items-center gap-2'>
         <nav
           className='flex items-center gap-2 capitalize'
@@ -76,20 +96,17 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
         >
           {displayBreadcrumbs.map((crumb, i) => (
             <span key={i} className='flex items-center gap-2'>
-              {i > 0 && (
-                <span className='material-symbols-outlined text-slate-800 text-sm'>
-                  chevron_right
-                </span>
-              )}
+              {i > 0 && <ChevronRight className='size-4 text-slate-400' />}
+
               {crumb.href && i < displayBreadcrumbs.length - 1 ? (
                 <Link
                   href={crumb.href}
-                  className='text-slate-900 hover:text-slate-900 font-semibold text-lg transition-colors'
+                  className='text-slate-500 hover:text-slate-900 font-medium text-sm transition-colors'
                 >
                   {crumb.label}
                 </Link>
               ) : (
-                <h2 className='text-xl font-bold text-slate-900 tracking-tight truncate max-w-xs'>
+                <h2 className='text-sm font-semibold text-slate-900 truncate max-w-xs'>
                   {crumb.label}
                 </h2>
               )}
@@ -97,13 +114,11 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
           ))}
         </nav>
       </div>
-      <div className='flex items-center gap-5'>
-        <div className='relative'>
-          <span className='material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm'>
-            search
-          </span>
+      <div className='flex items-center gap-4'>
+        <div className='relative hidden md:block'>
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4' />
           <input
-            className='bg-slate-100 border border-slate-200 rounded-full py-1.5 pl-9 pr-4 text-sm text-slate-700 focus:ring-2 focus:ring-sky-500/20 outline-none w-48 transition-all'
+            className='bg-slate-100 border-none rounded-full py-1.5 pl-9 pr-4 text-sm text-slate-700 focus:ring-2 focus:ring-sky-500/20 outline-none w-48 transition-all'
             placeholder='Tìm kiếm...'
             type='text'
           />
@@ -111,29 +126,58 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
         <Button
           variant='ghost'
           size='icon'
-          className='text-slate-500 hover:text-sky-500 bg-slate-100 hover:bg-sky-50 rounded-full'
+          className='text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded-full'
         >
-          <span className='material-symbols-outlined text-xl'>
-            notifications
-          </span>
+          <Bell className='size-5' />
         </Button>
-        <div className='flex items-center gap-3 border-l border-slate-200 pl-5'>
-          <div className='text-right hidden sm:block'>
-            <p className='text-sm font-bold text-slate-800 leading-tight'>
-              Admin
-            </p>
-            <p className='text-[10px] text-slate-500 font-medium'>
-              admin@glacier.com
-            </p>
-          </div>
-          <div className='w-10 h-10 rounded-full border-2 border-sky-200 overflow-hidden shadow-sm cursor-pointer'>
-            <img
-              src='https://lh3.googleusercontent.com/aida-public/AB6AXuCTGacKIl7Cr0IvXMarpaJA7tl0dNQTkmAJ9skYJiBuHrDT0sSKbJJiL6VHw8XfT82fZRGUTCFJQfc6QNU__2OsJycWuO6dXepscCiB7PeJXYeIlf42T8w_wrZW4WUaHWjmjkkV4uKxwZFqDVvVWLGRsDL_7r3_GJuHiD1Ugf3LB8t83QUug4IWyShjOf0y3T6pmjtbYMxZAgz6xgpsmU-YZ1ZeqL9z5CruGL2UzDgS62afS_SWhbsAhG9KpkXrkDaKfWAKzcoUqSb8'
-              alt='User Avatar'
-              className='w-full h-full object-cover'
-            />
-          </div>
-        </div>
+        <div className='h-6 w-px bg-slate-200 mx-1' />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className='flex items-center gap-3 cursor-pointer group'>
+              <div className='text-right hidden sm:block'>
+                <p className='text-sm font-semibold text-slate-800 leading-tight group-hover:text-sky-600 transition-colors'>
+                  {user?.name || 'User'}
+                </p>
+                <p className='text-[10px] text-slate-500 font-medium'>
+                  {user?.email || 'user@glacier.com'}
+                </p>
+              </div>
+              <Avatar className='h-9 w-9 border-2 border-slate-100 group-hover:border-sky-200 transition-all shadow-sm'>
+                <AvatarImage src={(user as any)?.avatar} alt={user?.name} />
+                <AvatarFallback className='bg-sky-50 text-sky-600 font-bold'>
+                  {user?.name?.charAt(0) || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align='end'
+            className='w-auto ring-1 ring-slate-500'
+          >
+            <DropdownMenuItem
+              className='cursor-pointer gap-2 hover:bg-sky-200 focus:bg-sky-200 focus:text-sky-600'
+              onClick={() => router.push('/profile')}
+            >
+              <User className='size-4' />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className='cursor-pointer gap-2 hover:bg-sky-200 focus:bg-sky-200 focus:text-sky-600'
+              onClick={() => router.push('/settings')}
+            >
+              <Settings className='size-4' />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant='destructive'
+              className='cursor-pointer gap-2 hover:bg-red-200'
+              onClick={logout}
+            >
+              <LogOut className='size-4 text-red-600' />
+              <span className='text-red-600'>Logout</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

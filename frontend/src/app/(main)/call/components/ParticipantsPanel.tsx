@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useCallContext } from '../contexts/CallContext';
+import { useCallContext } from '../../../../contexts/CallContext';
 
 function RemoteVideo({ stream, name }: { stream: MediaStream; name: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  
+
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
@@ -34,10 +34,12 @@ export default function ParticipantsPanel() {
   return (
     <div className='flex flex-col h-full p-3 overflow-y-auto'>
       <h3 className='font-bold text-on-surface mb-3 flex items-center gap-1.5 text-sm'>
-        <span className='material-symbols-outlined text-primary text-[18px]'>group</span>
+        <span className='material-symbols-outlined text-primary text-[18px]'>
+          group
+        </span>
         Người tham gia ({peersList.length + 1})
       </h3>
-      
+
       <div className='grid grid-cols-2 gap-2'>
         {peersList.map(([id, peer]) => (
           <RemoteVideo key={id} stream={peer.stream} name={peer.name} />

@@ -1,7 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useAuth } from './AuthContext';
 
 const ICE_SERVERS = {
   iceServers: [
@@ -53,12 +60,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [isMicOn, setIsMicOn] = useState(false);
   const [isCamOn, setIsCamOn] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [remotePeers, setRemotePeers] = useState<{ [socketId: string]: RemotePeer }>({});
-  
+  const [remotePeers, setRemotePeers] = useState<{
+    [socketId: string]: RemotePeer;
+  }>({});
+
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const peersRef = useRef<{ [socketId: string]: RTCPeerConnection }>({});
+  const { user } = useAuth();
 
   const initLocalMedia = async () => {
     try {
@@ -73,7 +83,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         stream.getAudioTracks().forEach((track) => {
           track.enabled = isMicOn;
         });
-        
+
         if (!isCamOn) {
           stream.getVideoTracks().forEach((track) => {
             track.stop();
@@ -122,7 +132,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const connectSocket = () => {
     if (!roomId) return;
-    
+
     socketRef.current = io('http://localhost:3001/webrtc');
 
     socketRef.current.on('connect', () => {
@@ -145,38 +155,47 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       });
     });
 
-    socketRef.current.on('offer', async (payload: { caller: string; sdp: any }) => {
-      const pc = createPeerConnection(payload.caller);
-      peersRef.current[payload.caller] = pc;
+    socketRef.current.on(
+      'offer',
+      async (payload: { caller: string; sdp: any }) => {
+        const pc = createPeerConnection(payload.caller);
+        peersRef.current[payload.caller] = pc;
 
-      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-
-      socketRef.current?.emit('answer', {
-        target: payload.caller,
-        caller: socketRef.current?.id,
-        sdp: pc.localDescription,
-      });
-    });
-
-    socketRef.current.on('answer', async (payload: { caller: string; sdp: any }) => {
-      const pc = peersRef.current[payload.caller];
-      if (pc) {
         await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-      }
-    });
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
 
-    socketRef.current.on('ice-candidate', async (payload: { caller: string; candidate: any }) => {
-      const pc = peersRef.current[payload.caller];
-      if (pc) {
-        try {
-          await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
-        } catch (e) {
-          console.error('Error adding ICE candidate', e);
+        socketRef.current?.emit('answer', {
+          target: payload.caller,
+          caller: socketRef.current?.id,
+          sdp: pc.localDescription,
+        });
+      },
+    );
+
+    socketRef.current.on(
+      'answer',
+      async (payload: { caller: string; sdp: any }) => {
+        const pc = peersRef.current[payload.caller];
+        if (pc) {
+          await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
         }
-      }
-    });
+      },
+    );
+
+    socketRef.current.on(
+      'ice-candidate',
+      async (payload: { caller: string; candidate: any }) => {
+        const pc = peersRef.current[payload.caller];
+        if (pc) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+          } catch (e) {
+            console.error('Error adding ICE candidate', e);
+          }
+        }
+      },
+    );
 
     socketRef.current.on('user-left', (socketId: string) => {
       if (peersRef.current[socketId]) {
@@ -247,15 +266,21 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       }
     } else {
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
         const newTrack = newStream.getVideoTracks()[0];
-        
+
         if (localStreamRef.current) {
-          localStreamRef.current.getVideoTracks().forEach(t => localStreamRef.current?.removeTrack(t));
+          localStreamRef.current
+            .getVideoTracks()
+            .forEach((t) => localStreamRef.current?.removeTrack(t));
           localStreamRef.current.addTrack(newTrack);
-          
-          Object.values(peersRef.current).forEach(pc => {
-            const sender = pc.getSenders().find(s => s.track?.kind === 'video' || s.track === null);
+
+          Object.values(peersRef.current).forEach((pc) => {
+            const sender = pc
+              .getSenders()
+              .find((s) => s.track?.kind === 'video' || s.track === null);
             if (sender) {
               sender.replaceTrack(newTrack);
             }
@@ -274,7 +299,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         roomId,
         message: msg,
         senderId: socketRef.current.id,
-        senderName: 'Bạn', // TODO: Lấy tên thật từ auth context
+        senderName: user?.email || 'Bạn',
+        timestamp: new Date().toISOString(),
       });
     }
   };

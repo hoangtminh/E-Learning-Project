@@ -12,7 +12,8 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @WebSocketGateway(3001, {
   cors: {
-    origin: '*',
+    origin: 'http://localhost:3000',
+    credentials: true,
   },
   namespace: '/webrtc', // Tạo một namespace riêng cho WebRTC để tách biệt với chat
 })
