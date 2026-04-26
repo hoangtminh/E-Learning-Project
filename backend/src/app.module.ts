@@ -10,6 +10,9 @@ import { ClassroomsModule } from './modules/classrooms/classrooms.module';
 import { ClassroomMembersModule } from './modules/classroom-members/classroom-members.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { CoursesModule } from './modules/courses/courses.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
+
 @Module({
   imports: [
     PrismaModule,
@@ -19,6 +22,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     ClassroomMembersModule,
     ChatModule,
     NotificationsModule,
+        CoursesModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [
@@ -29,4 +34,3 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     },
   ],
 })
-export class AppModule {}

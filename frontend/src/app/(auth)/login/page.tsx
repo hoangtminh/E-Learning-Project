@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   return (
     <div className='bg-slate-50 text-slate-900 min-h-screen flex flex-col relative font-sans'>
-      <main className='flex-grow flex flex-col md:flex-row h-screen'>
+      <main className='grow flex flex-col md:flex-row h-screen'>
         {/* Left Side: Login Form */}
         <section className='w-full md:w-[40%] flex flex-col justify-center px-8 md:px-16 lg:px-24 bg-slate-50 z-10 relative overflow-y-auto'>
           <div className='relative z-10 w-full max-w-md mx-auto py-12'>
@@ -182,7 +182,7 @@ export default function LoginPage() {
         </section>
 
         {/* Right Side: Immersive Visual */}
-        <section className='hidden md:flex w-full md:w-[60%] relative bg-[#040e21] items-center justify-center p-12 overflow-hidden'>
+        <section className='hidden md:flex w-full md:w-[60%] relative bg-primary-surface items-center justify-center p-12 overflow-hidden'>
           {' '}
           {/* Changed bg-inverse-surface to a specific color for consistency */}
           {/* Background Image */}
@@ -192,7 +192,7 @@ export default function LoginPage() {
               className='w-full h-full object-cover opacity-60'
               src='https://lh3.googleusercontent.com/aida-public/AB6AXuAcj7nUC5N9mBC6bm_i2tVj-DKzZtdKDOgc_hC8iBTatA3NpPe8_7wFih-0NVqopYXLtChwneZSmJfHw4pItX7Trg5VSpgM8jMgos7-2EsVZRmz0JPh42FrdkjUYVwU-dsrHFH4HScstCPVxchsLaI8RIwtUNKkCKaUID1BxLf4OqPJxk8hXumWZTlIVHQLBK6jDJ_LBbk0cJUiGk3LOZ4or1gYQkUu33G_l806CZmgAOq5OJBofzSUxLetpGz1IDO9f667FyQGHAdo'
             />
-            <div className='absolute inset-0 bg-gradient-to-tr from-[#040e21] via-[#040e21]/40 to-transparent'></div>
+            <div className='absolute inset-0 bg-linear-to-tr from-inverse-surface via-primary-surface/40 to-transparent'></div>
           </div>
           {/* Content Overlay */}
           <div className='relative z-10 max-w-2xl text-white'>
