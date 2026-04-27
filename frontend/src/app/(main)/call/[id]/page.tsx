@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallContext } from '../contexts/CallContext';
+import { useCallContext } from '../../../../contexts/CallContext';
 import ChatPanel from '../components/ChatPanel';
 import ParticipantsPanel from '../components/ParticipantsPanel';
 import BottomStatsBar from '../components/BottomStatsBar';
@@ -24,11 +24,21 @@ export default function CallRoom() {
     toggleVideo,
     localVideoRef,
     permissionError,
+    localStream,
   } = useCallContext();
 
   const [activeTab, setActiveTab] = useState<'participants' | 'chat'>(
     'participants',
   );
+
+  // Sync local stream with video element whenever it changes
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      if (localVideoRef.current.srcObject !== localStream) {
+        localVideoRef.current.srcObject = localStream;
+      }
+    }
+  }, [localStream, isJoined, localVideoRef]);
 
   // Initialize room and local media when component mounts
   useEffect(() => {

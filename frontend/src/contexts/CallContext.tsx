@@ -1,7 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useAuth } from './AuthContext';
 
 const ICE_SERVERS = {
   iceServers: [
@@ -12,7 +19,7 @@ const ICE_SERVERS = {
 };
 
 export interface RemotePeer {
-  stream: MediaStream;
+  stream?: MediaStream;
   name: string;
 }
 
@@ -54,21 +61,25 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [isMicOn, setIsMicOn] = useState(false);
   const [isCamOn, setIsCamOn] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [remotePeers, setRemotePeers] = useState<{ [socketId: string]: RemotePeer }>({});
   const [permissionError, setPermissionError] = useState<string | null>(null);
-  
+  const [remotePeers, setRemotePeers] = useState<{
+    [socketId: string]: RemotePeer;
+  }>({});
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const peersRef = useRef<{ [socketId: string]: RTCPeerConnection }>({});
- 
+  const { user } = useAuth();
+
   const initLocalMedia = async () => {
     try {
       setPermissionError(null);
       if (localStreamRef.current) return;
- 
+
       let stream: MediaStream | null = null;
- 
+
       try {
         // Try getting both video and audio
         stream = await navigator.mediaDevices.getUserMedia({
@@ -83,40 +94,49 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           setIsMicOn(true);
           setIsCamOn(false);
-          setPermissionError('Camera permission denied. You are in audio-only mode.');
+          setPermissionError(
+            'Camera permission denied. You are in audio-only mode.',
+          );
         } catch (e2) {
           console.warn('Audio failed too, trying video only...', e2);
           try {
             stream = await navigator.mediaDevices.getUserMedia({ video: true });
             setIsMicOn(false);
             setIsCamOn(true);
-            setPermissionError('Microphone permission denied. You are in video-only mode.');
+            setPermissionError(
+              'Microphone permission denied. You are in video-only mode.',
+            );
           } catch (e3) {
             console.error('All media permissions denied.', e3);
             setIsMicOn(false);
             setIsCamOn(false);
-            setPermissionError('All media permissions denied. You can still view and hear others.');
+            setPermissionError(
+              'All media permissions denied. You can still view and hear others.',
+            );
           }
         }
       }
- 
+
       if (stream) {
         localStreamRef.current = stream;
+        setLocalStream(stream);
         stream.getAudioTracks().forEach((track) => {
           track.enabled = isMicOn;
         });
-        
+
         if (!isCamOn) {
           stream.getVideoTracks().forEach((track) => track.stop());
         }
- 
+
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
       }
     } catch (err) {
       console.error('Error in initLocalMedia:', err);
-      setPermissionError('An unexpected error occurred while accessing media devices.');
+      setPermissionError(
+        'An unexpected error occurred while accessing media devices.',
+      );
     }
   };
 
@@ -134,11 +154,20 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       setRemotePeers((prev) => ({
         ...prev,
         [targetUserId]: {
+          ...prev[targetUserId],
           stream: event.streams[0],
-          name: `User-${targetUserId.substring(0, 5)}`,
+          name:
+            prev[targetUserId]?.name || `User-${targetUserId.substring(0, 5)}`,
         },
       }));
     };
+
+    const hasVideo = localStreamRef.current
+      ?.getVideoTracks()
+      .some((t) => t.readyState === 'live');
+    const hasAudio = localStreamRef.current
+      ?.getAudioTracks()
+      .some((t) => t.readyState === 'live');
 
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => {
@@ -146,12 +175,20 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
+    // Nếu thiếu video hoặc audio local, thêm transceiver để đảm bảo vẫn nhận được từ người khác
+    if (!hasVideo) {
+      pc.addTransceiver('video', { direction: 'recvonly' });
+    }
+    if (!hasAudio) {
+      pc.addTransceiver('audio', { direction: 'recvonly' });
+    }
+
     return pc;
   };
 
   const connectSocket = () => {
     if (!roomId) return;
-    
+
     socketRef.current = io('http://localhost:3001/webrtc');
 
     socketRef.current.on('connect', () => {
@@ -162,6 +199,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       users.forEach((userId) => {
         const pc = createPeerConnection(userId);
         peersRef.current[userId] = pc;
+
+        // Thêm user vào danh sách remotePeers ngay cả khi chưa có stream
+        setRemotePeers((prev) => ({
+          ...prev,
+          [userId]: { name: `User-${userId.substring(0, 5)}` },
+        }));
+
         pc.createOffer()
           .then((offer) => pc.setLocalDescription(offer))
           .then(() => {
@@ -174,38 +218,67 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       });
     });
 
-    socketRef.current.on('offer', async (payload: { caller: string; sdp: any }) => {
-      const pc = createPeerConnection(payload.caller);
-      peersRef.current[payload.caller] = pc;
-
-      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-
-      socketRef.current?.emit('answer', {
-        target: payload.caller,
-        caller: socketRef.current?.id,
-        sdp: pc.localDescription,
-      });
+    socketRef.current.on('user-joined', (userId: string) => {
+      console.log('User joined:', userId);
+      // Khi có user mới, chỉ cần thêm họ vào danh sách (người join sau sẽ tạo offer)
+      setRemotePeers((prev) => ({
+        ...prev,
+        [userId]: { name: `User-${userId.substring(0, 5)}` },
+      }));
     });
 
-    socketRef.current.on('answer', async (payload: { caller: string; sdp: any }) => {
-      const pc = peersRef.current[payload.caller];
-      if (pc) {
+    socketRef.current.on(
+      'offer',
+      async (payload: { caller: string; sdp: any }) => {
+        const pc = createPeerConnection(payload.caller);
+        peersRef.current[payload.caller] = pc;
+
+        // Đảm bảo user có trong danh sách remotePeers
+        setRemotePeers((prev) => ({
+          ...prev,
+          [payload.caller]: {
+            ...prev[payload.caller],
+            name:
+              prev[payload.caller]?.name ||
+              `User-${payload.caller.substring(0, 5)}`,
+          },
+        }));
+
         await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-      }
-    });
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
 
-    socketRef.current.on('ice-candidate', async (payload: { caller: string; candidate: any }) => {
-      const pc = peersRef.current[payload.caller];
-      if (pc) {
-        try {
-          await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
-        } catch (e) {
-          console.error('Error adding ICE candidate', e);
+        socketRef.current?.emit('answer', {
+          target: payload.caller,
+          caller: socketRef.current?.id,
+          sdp: pc.localDescription,
+        });
+      },
+    );
+
+    socketRef.current.on(
+      'answer',
+      async (payload: { caller: string; sdp: any }) => {
+        const pc = peersRef.current[payload.caller];
+        if (pc) {
+          await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
         }
-      }
-    });
+      },
+    );
+
+    socketRef.current.on(
+      'ice-candidate',
+      async (payload: { caller: string; candidate: any }) => {
+        const pc = peersRef.current[payload.caller];
+        if (pc) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+          } catch (e) {
+            console.error('Error adding ICE candidate', e);
+          }
+        }
+      },
+    );
 
     socketRef.current.on('user-left', (socketId: string) => {
       if (peersRef.current[socketId]) {
@@ -239,6 +312,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
+      setLocalStream(null);
     }
   };
 
@@ -276,15 +350,22 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       }
     } else {
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
         const newTrack = newStream.getVideoTracks()[0];
-        
+
         if (localStreamRef.current) {
-          localStreamRef.current.getVideoTracks().forEach(t => localStreamRef.current?.removeTrack(t));
+          localStreamRef.current
+            .getVideoTracks()
+            .forEach((t) => localStreamRef.current?.removeTrack(t));
           localStreamRef.current.addTrack(newTrack);
-          
-          Object.values(peersRef.current).forEach(pc => {
-            const sender = pc.getSenders().find(s => s.track?.kind === 'video' || s.track === null);
+          setLocalStream(new MediaStream(localStreamRef.current.getTracks())); // Trigger re-render with new track
+
+          Object.values(peersRef.current).forEach((pc) => {
+            const sender = pc
+              .getSenders()
+              .find((s) => s.track?.kind === 'video' || s.track === null);
             if (sender) {
               sender.replaceTrack(newTrack);
             }
@@ -303,7 +384,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         roomId,
         message: msg,
         senderId: socketRef.current.id,
-        senderName: 'Bạn', // TODO: Lấy tên thật từ auth context
+        senderName: user?.email || 'Bạn',
+        timestamp: new Date().toISOString(),
       });
     }
   };
@@ -325,7 +407,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         joinedAt,
         isMicOn,
         isCamOn,
-        localStream: localStreamRef.current,
+        localStream,
         remotePeers,
         messages,
         permissionError,

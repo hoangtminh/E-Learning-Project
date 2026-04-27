@@ -8,6 +8,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { SocketModule } from './socket/socket.module';
 import { ClassroomsModule } from './modules/classrooms/classrooms.module';
 import { ClassroomMembersModule } from './modules/classroom-members/classroom-members.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 @Module({
   imports: [
     PrismaModule,
@@ -15,6 +17,8 @@ import { ClassroomMembersModule } from './modules/classroom-members/classroom-me
     ClassroomsModule,
     SocketModule,
     ClassroomMembersModule,
+    ChatModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

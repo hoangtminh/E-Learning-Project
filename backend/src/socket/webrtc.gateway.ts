@@ -12,7 +12,8 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @WebSocketGateway(3001, {
   cors: {
-    origin: '*',
+    origin: 'http://localhost:3000',
+    credentials: true,
   },
   namespace: '/webrtc', // Tạo một namespace riêng cho WebRTC để tách biệt với chat
 })
@@ -74,6 +75,9 @@ export class WebrtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // Trả về danh sách socketId đang có trong phòng để client mới tạo RTCPeerConnection (Mesh Topology)
     client.emit('all-users', usersInRoom);
+
+    // Báo cho các client đang ở trong phòng biết có user mới vào
+    client.to(roomId).emit('user-joined', client.id);
 
     usersInRoom.push(client.id);
     this.roomToUsers.set(roomId, usersInRoom);

@@ -1,25 +1,34 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useCallContext } from '../contexts/CallContext';
+import { useCallContext } from '../../../../contexts/CallContext';
 
-function RemoteVideo({ stream, name }: { stream: MediaStream; name: string }) {
+function RemoteVideo({ stream, name }: { stream?: MediaStream; name: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  
+
   useEffect(() => {
-    if (videoRef.current) {
+    if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
   }, [stream]);
 
   return (
-    <div className='relative rounded-2xl overflow-hidden bg-surface-container-high shadow-sm aspect-video border border-outline-variant/30'>
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        className='w-full h-full object-cover'
-      />
+    <div className='relative rounded-2xl overflow-hidden bg-surface-container-high shadow-sm aspect-video border border-outline-variant/30 flex items-center justify-center'>
+      {stream ? (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          className='w-full h-full object-cover'
+        />
+      ) : (
+        <div className='flex flex-col items-center gap-1 text-on-surface-variant'>
+          <span className='material-symbols-outlined text-3xl opacity-50'>
+            account_circle
+          </span>
+          <span className='text-[10px]'>Không có tín hiệu</span>
+        </div>
+      )}
       <div className='absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-white'>
         {name}
       </div>
@@ -34,10 +43,12 @@ export default function ParticipantsPanel() {
   return (
     <div className='flex flex-col h-full p-3 overflow-y-auto'>
       <h3 className='font-bold text-on-surface mb-3 flex items-center gap-1.5 text-sm'>
-        <span className='material-symbols-outlined text-primary text-[18px]'>group</span>
+        <span className='material-symbols-outlined text-primary text-[18px]'>
+          group
+        </span>
         Người tham gia ({peersList.length + 1})
       </h3>
-      
+
       <div className='grid grid-cols-2 gap-2'>
         {peersList.map(([id, peer]) => (
           <RemoteVideo key={id} stream={peer.stream} name={peer.name} />

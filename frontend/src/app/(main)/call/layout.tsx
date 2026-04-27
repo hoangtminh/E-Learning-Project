@@ -1,6 +1,6 @@
 'use client';
 
-import { CallProvider } from './contexts/CallContext';
+import { CallProvider } from '@/contexts/CallContext';
 
 export default function CallLayout({
   children,

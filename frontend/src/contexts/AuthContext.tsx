@@ -19,9 +19,10 @@ import {
 import { setAuthToken } from '@/api/client';
 
 export interface User {
-  id: string;
+  userId: string;
   email: string;
-  name?: string;
+  fullname: string | null;
+  imageUrl: string | null | undefined;
   // Add other user properties here based on your backend response
 }
 
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.success && result.data) {
       setTokenCookie(result.data.accessToken);
       setAuthToken(result.data.accessToken);
-      setUser(result.data.user);
+      setUser(result?.data?.user as User);
     } else {
       throw new Error(result.error || 'Login failed');
     }
