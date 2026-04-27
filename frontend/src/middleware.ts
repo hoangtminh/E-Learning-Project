@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define the routes that unauthenticated users can access
-const publicRoutes = ['/', '/login', '/register'];
+const publicRoutes = [
+  '/',
+  '/login',
+  '/register',
+  '/resources',
+  '/pathway',
+  '/community',
+  '/courses',
+];
 const authRoutes = ['/login', '/register'];
 
 // Define the default route to redirect authenticated users to
