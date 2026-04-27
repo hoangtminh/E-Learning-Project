@@ -6,8 +6,70 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
+import { getCourses, CourseListItem } from '@/api/courses';
+
+// Fallback data when API returns no courses
+const fallbackCourses: CourseListItem[] = [
+  {
+    id: 'fallback-1',
+    title: 'Fullstack Web Development với React & Node.js',
+    description: 'Khóa học toàn diện về phát triển web fullstack',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDvL-3rWD6n1zTp6iNLoTplo5Tc13d92CXNgB694DGmIDFcAqxm20aWQ5zc2fWvYFhCDooaSoHvnZalMvXTNB8opUw6buL1VWStH1PbtrPyqBZ8MGsWdKNsloxManSL2fb1f3dsu-2bpINYJMZ3ha4nU7YJ2AcAjNdekAOYsiHuZMApDq13DRpgGIJQL6B4ItYPlA26VbvK5k2kqjRoRRiWmIB8yPbYH7XquZdb9jgCgMlcZMn8sMNf-V_sAQ1TOgpTkVcA5gtwTTur',
+    price: 199,
+    visibility: 'public',
+    createdAt: '',
+    owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
+    _count: { sections: 12, members: 1200 },
+  },
+  {
+    id: 'fallback-2',
+    title: 'Mastering Figma: Từ cơ bản đến nâng cao',
+    description: 'Thiết kế UI/UX chuyên nghiệp với Figma',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBJ1oczZRpMZH5RjaohLMt9Cr3CgGNUqwsSG2tMlPHCEupfVNqLi3BrC3xjLbpXOJS11lK6k7lCmNyJvIfHs2ZsMgtb68GDPsX_o73qR088CWFt_AO70Z51zyxGsuwozWeuOVYdt4-cQLPaPkLaPfNCPiobmezmgqbjm8s-jwLX69Yj-guDcrVrD9zBTCugKqg3iezOpCqUUET4DOIRBC8MAE574zV02gWVxZpaEVUzF_zwIqc0D9X5IcAPJmXit9MMTk29eP60tnvo',
+    price: 149,
+    visibility: 'public',
+    createdAt: '',
+    owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
+    _count: { sections: 8, members: 850 },
+  },
+  {
+    id: 'fallback-3',
+    title: 'Phân tích dữ liệu kinh doanh với Python',
+    description: 'Khóa học Data Science thực chiến',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB5m84Q-9rjedfa6f6DpNCsWN3Dmi-0-kENCNGiuixU3dkVWdCkAavD_Vz1Kn-5M9l1Gmk3cS-NLkvQhviQ2YQVOxPG7b75__aaxITshn1QWOzja-1E72Hvgi8QDNxJ8Kpru5UHMVe0WhpEv40QrRiev47-DVoekuhkXmkPRpwSCu4fFKZMCi7IBI0FV2tUb3AEKMs7CzcipYbXKhQDuv_D11IBsMESPyc3xZjlFBcJHb2kDkXyR1YMTbpmlxqrA3rWaMZKJdqGd2PF',
+    price: 210,
+    visibility: 'public',
+    createdAt: '',
+    owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
+    _count: { sections: 14, members: 540 },
+  },
+];
 
 export default function Home() {
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await getCourses({ limit: 6 });
+        if (res.success && res.data && res.data.data.length > 0) {
+          setCourses(res.data.data);
+        } else {
+          setCourses(fallbackCourses);
+        }
+      } catch {
+        setCourses(fallbackCourses);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCourses();
+  }, []);
+
   return (
     <div className='bg-white text-slate-900 selection:bg-sky-500/20 font-sans min-h-screen flex flex-col'>
       <main className='flex-1'>
@@ -163,182 +225,85 @@ export default function Home() {
           </motion.div>
 
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            {/* Course Card 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className='h-full'
-            >
-              <Card className='bg-white border border-slate-100 group rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-sky-500/5 hover:border-sky-500/20 transition-all duration-300 flex flex-col h-full'>
-                <div className='relative h-48 overflow-hidden'>
-                  <img
-                    className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                    alt='Web Development'
-                    src='https://lh3.googleusercontent.com/aida-public/AB6AXuDvL-3rWD6n1zTp6iNLoTplo5Tc13d92CXNgB694DGmIDFcAqxm20aWQ5zc2fWvYFhCDooaSoHvnZalMvXTNB8opUw6buL1VWStH1PbtrPyqBZ8MGsWdKNsloxManSL2fb1f3dsu-2bpINYJMZ3ha4nU7YJ2AcAjNdekAOYsiHuZMApDq13DRpgGIJQL6B4ItYPlA26VbvK5k2kqjRoRRiWmIB8yPbYH7XquZdb9jgCgMlcZMn8sMNf-V_sAQ1TOgpTkVcA5gtwTTur'
-                  />
-                  <div className='absolute top-4 left-4 bg-sky-50/70 backdrop-blur-md border border-sky-500/10 px-3 py-1 rounded-full text-[10px] font-bold text-sky-500 uppercase'>
-                    Phát triển Web
+            {isLoading
+              ? /* Skeleton loading cards */
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className='h-full'>
+                    <Card className='bg-white border border-slate-100 rounded-2xl overflow-hidden flex flex-col h-full animate-pulse'>
+                      <div className='h-48 bg-slate-200' />
+                      <CardContent className='p-6 space-y-4 grow flex flex-col'>
+                        <div className='h-6 bg-slate-200 rounded w-3/4' />
+                        <div className='h-4 bg-slate-100 rounded w-1/2' />
+                        <div className='pt-4 mt-auto border-t border-slate-50 flex justify-between items-center'>
+                          <div className='h-8 bg-slate-200 rounded w-24' />
+                          <div className='h-10 w-10 bg-slate-200 rounded-lg' />
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                </div>
-                <CardContent className='p-6 space-y-4 grow flex flex-col'>
-                  <h3 className='text-xl font-bold leading-tight text-slate-900 group-hover:text-sky-500 transition-colors'>
-                    Fullstack Web Development với React & Node.js
-                  </h3>
-                  <div className='flex items-center space-x-4 text-sm text-slate-500'>
-                    <div className='flex items-center space-x-1'>
-                      <span
-                        className='material-symbols-outlined text-[16px] text-amber-500'
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        star
-                      </span>
-                      <span className='font-semibold text-slate-900'>4.9</span>
-                      <span>(1.2k)</span>
-                    </div>
-                    <div className='flex items-center space-x-1'>
-                      <span className='material-symbols-outlined text-[16px]'>
-                        schedule
-                      </span>
-                      <span>48 Giờ</span>
-                    </div>
-                  </div>
-                  <div className='pt-4 mt-auto border-t border-slate-50 flex justify-between items-center'>
-                    <span className='text-2xl font-bold text-sky-500'>
-                      $199.00
-                    </span>
-                    <Button
-                      variant='secondary'
-                      size='icon'
-                      className='bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white rounded-lg transition-all shadow-sm'
-                    >
-                      <span className='material-symbols-outlined'>
-                        add_shopping_cart
-                      </span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Course Card 2 */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className='h-full'
-            >
-              <Card className='bg-white border border-slate-100 group rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-sky-500/5 hover:border-sky-500/20 transition-all duration-300 flex flex-col h-full'>
-                <div className='relative h-48 overflow-hidden'>
-                  <img
-                    className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                    alt='UI/UX Design'
-                    src='https://lh3.googleusercontent.com/aida-public/AB6AXuBJ1oczZRpMZH5RjaohLMt9Cr3CgGNUqwsSG2tMlPHCEupfVNqLi3BrC3xjLbpXOJS11lK6k7lCmNyJvIfHs2ZsMgtb68GDPsX_o73qR088CWFt_AO70Z51zyxGsuwozWeuOVYdt4-cQLPaPkLaPfNCPiobmezmgqbjm8s-jwLX69Yj-guDcrVrD9zBTCugKqg3iezOpCqUUET4DOIRBC8MAE574zV02gWVxZpaEVUzF_zwIqc0D9X5IcAPJmXit9MMTk29eP60tnvo'
-                  />
-                  <div className='absolute top-4 left-4 bg-sky-50/70 backdrop-blur-md border border-sky-500/10 px-3 py-1 rounded-full text-[10px] font-bold text-sky-500 uppercase'>
-                    Thiết kế UI/UX
-                  </div>
-                </div>
-                <CardContent className='p-6 space-y-4 grow flex flex-col'>
-                  <h3 className='text-xl font-bold leading-tight text-slate-900 group-hover:text-sky-500 transition-colors'>
-                    Mastering Figma: Từ cơ bản đến nâng cao
-                  </h3>
-                  <div className='flex items-center space-x-4 text-sm text-slate-500'>
-                    <div className='flex items-center space-x-1'>
-                      <span
-                        className='material-symbols-outlined text-[16px] text-amber-500'
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        star
-                      </span>
-                      <span className='font-semibold text-slate-900'>4.8</span>
-                      <span>(850)</span>
-                    </div>
-                    <div className='flex items-center space-x-1'>
-                      <span className='material-symbols-outlined text-[16px]'>
-                        schedule
-                      </span>
-                      <span>32 Giờ</span>
-                    </div>
-                  </div>
-                  <div className='pt-4 mt-auto border-t border-slate-50 flex justify-between items-center'>
-                    <span className='text-2xl font-bold text-sky-500'>
-                      $149.00
-                    </span>
-                    <Button
-                      variant='secondary'
-                      size='icon'
-                      className='bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white rounded-lg transition-all shadow-sm'
-                    >
-                      <span className='material-symbols-outlined'>
-                        add_shopping_cart
-                      </span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Course Card 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className='h-full'
-            >
-              <Card className='bg-white border border-slate-100 group rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-sky-500/5 hover:border-sky-500/20 transition-all duration-300 flex flex-col h-full'>
-                <div className='relative h-48 overflow-hidden'>
-                  <img
-                    className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                    alt='Data Science'
-                    src='https://lh3.googleusercontent.com/aida-public/AB6AXuB5m84Q-9rjedfa6f6DpNCsWN3Dmi-0-kENCNGiuixU3dkVWdCkAavD_Vz1Kn-5M9l1Gmk3cS-NLkvQhviQ2YQVOxPG7b75__aaxITshn1QWOzja-1E72Hvgi8QDNxJ8Kpru5UHMVe0WhpEv40QrRiev47-DVoekuhkXmkPRpwSCu4fFKZMCi7IBI0FV2tUb3AEKMs7CzcipYbXKhQDuv_D11IBsMESPyc3xZjlFBcJHb2kDkXyR1YMTbpmlxqrA3rWaMZKJdqGd2PF'
-                  />
-                  <div className='absolute top-4 left-4 bg-sky-50/70 backdrop-blur-md border border-sky-500/10 px-3 py-1 rounded-full text-[10px] font-bold text-sky-500 uppercase'>
-                    Data Science
-                  </div>
-                </div>
-                <CardContent className='p-6 space-y-4 grow flex flex-col'>
-                  <h3 className='text-xl font-bold leading-tight text-slate-900 group-hover:text-sky-500 transition-colors'>
-                    Phân tích dữ liệu kinh doanh với Python
-                  </h3>
-                  <div className='flex items-center space-x-4 text-sm text-slate-500'>
-                    <div className='flex items-center space-x-1'>
-                      <span
-                        className='material-symbols-outlined text-[16px] text-amber-500'
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        star
-                      </span>
-                      <span className='font-semibold text-slate-900'>4.7</span>
-                      <span>(540)</span>
-                    </div>
-                    <div className='flex items-center space-x-1'>
-                      <span className='material-symbols-outlined text-[16px]'>
-                        schedule
-                      </span>
-                      <span>56 Giờ</span>
-                    </div>
-                  </div>
-                  <div className='pt-4 mt-auto border-t border-slate-50 flex justify-between items-center'>
-                    <span className='text-2xl font-bold text-sky-500'>
-                      $210.00
-                    </span>
-                    <Button
-                      variant='secondary'
-                      size='icon'
-                      className='bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white rounded-lg transition-all shadow-sm'
-                    >
-                      <span className='material-symbols-outlined'>
-                        add_shopping_cart
-                      </span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                ))
+              : /* Dynamic course cards */
+                courses.map((course, index) => (
+                  <motion.div
+                    key={course.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.2 }}
+                    transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
+                    className='h-full'
+                  >
+                    <Card className='bg-white border border-slate-100 group rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-sky-500/5 hover:border-sky-500/20 transition-all duration-300 flex flex-col h-full'>
+                      <div className='relative h-48 overflow-hidden'>
+                        <img
+                          className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                          alt={course.title}
+                          src={
+                            course.thumbnailUrl ||
+                            'https://placehold.co/600x400/e0f2fe/0ea5e9?text=Course'
+                          }
+                        />
+                        <div className='absolute top-4 left-4 bg-sky-50/70 backdrop-blur-md border border-sky-500/10 px-3 py-1 rounded-full text-[10px] font-bold text-sky-500 uppercase'>
+                          {course._count.sections} Chương
+                        </div>
+                      </div>
+                      <CardContent className='p-6 space-y-4 grow flex flex-col'>
+                        <h3 className='text-xl font-bold leading-tight text-slate-900 group-hover:text-sky-500 transition-colors'>
+                          {course.title}
+                        </h3>
+                        <div className='flex items-center space-x-4 text-sm text-slate-500'>
+                          <div className='flex items-center space-x-1'>
+                            <span className='material-symbols-outlined text-[16px]'>
+                              person
+                            </span>
+                            <span>{course.owner.fullName || 'Instructor'}</span>
+                          </div>
+                          <div className='flex items-center space-x-1'>
+                            <span className='material-symbols-outlined text-[16px]'>
+                              group
+                            </span>
+                            <span>{course._count.members} học viên</span>
+                          </div>
+                        </div>
+                        <div className='pt-4 mt-auto border-t border-slate-50 flex justify-between items-center'>
+                          <span className='text-2xl font-bold text-sky-500'>
+                            {Number(course.price) === 0
+                              ? 'Miễn phí'
+                              : `$${Number(course.price).toFixed(2)}`}
+                          </span>
+                          <Button
+                            variant='secondary'
+                            size='icon'
+                            className='bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white rounded-lg transition-all shadow-sm'
+                          >
+                            <span className='material-symbols-outlined'>
+                              add_shopping_cart
+                            </span>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
           </div>
         </section>
 

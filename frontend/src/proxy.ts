@@ -9,6 +9,7 @@ const publicRoutes = [
   '/resources',
   '/pathway',
   '/community',
+  '/courses',
 ];
 const authRoutes = ['/login', '/register'];
 
