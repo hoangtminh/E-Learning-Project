@@ -9,8 +9,9 @@ import { SocketModule } from './socket/socket.module';
 import { ClassroomMembersModule } from './modules/classroom-members/classroom-members.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-import { ClassroomsModule } from './modules/classrooms/classrooms.module';
 import { CoursesModule } from './modules/courses/courses.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
+import { ClassroomsModule } from './modules/classrooms/classrooms.module';
 import { SectionsModule } from './modules/sections/sections.module';
 import { LessonsModule } from './modules/lessons/lessons.module';
 
@@ -22,11 +23,11 @@ import { LessonsModule } from './modules/lessons/lessons.module';
     CoursesModule,
     SectionsModule,
     LessonsModule,
-    ClassroomsModule,
     SocketModule,
     ClassroomMembersModule,
     ChatModule,
     NotificationsModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [

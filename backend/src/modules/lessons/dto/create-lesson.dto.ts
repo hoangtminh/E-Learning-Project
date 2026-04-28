@@ -8,12 +8,10 @@ import {
 } from 'class-validator';
 
 export enum ContentType {
-  video_embed = 'video_embed',
-  file_docx = 'file_docx',
-  file_pdf = 'file_pdf',
-  image_png = 'image_png',
-  image_jpg = 'image_jpg',
-  text_content = 'text_content',
+  video = 'video',
+  file = 'file',
+  image = 'image',
+  text = 'text',
 }
 
 export class CreateLessonDto {
@@ -36,5 +34,9 @@ export class CreateLessonDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  orderIndex?: number;
+  order?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  status: string;
 }

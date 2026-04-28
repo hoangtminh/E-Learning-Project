@@ -1,10 +1,4 @@
-import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { ContentType } from './create-lesson.dto';
 
 export class UpdateLessonDto {
@@ -27,5 +21,9 @@ export class UpdateLessonDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  orderIndex?: number;
+  order?: number;
+
+  @IsString()
+  @IsOptional()
+  status?: string;
 }

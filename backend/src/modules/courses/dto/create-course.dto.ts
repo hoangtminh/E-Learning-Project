@@ -34,4 +34,8 @@ export class CreateCourseDto {
   @IsOptional()
   @IsEnum(CourseVisibility)
   visibility?: CourseVisibility;
+
+  @IsString()
+  @IsNotEmpty()
+  slug: string;
 }

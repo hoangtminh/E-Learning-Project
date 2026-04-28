@@ -29,7 +29,7 @@ export class LessonsService {
   async findAllBySection(sectionId: string) {
     return this.prisma.lesson.findMany({
       where: { sectionId },
-      orderBy: { orderIndex: 'asc' },
+      orderBy: { order: 'asc' },
     });
   }
 

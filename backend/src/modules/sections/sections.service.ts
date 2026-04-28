@@ -25,7 +25,7 @@ export class SectionsService {
       },
       include: {
         lessons: {
-          orderBy: { orderIndex: 'asc' },
+          orderBy: { order: 'asc' },
         },
       },
     });
@@ -37,7 +37,7 @@ export class SectionsService {
       orderBy: { orderIndex: 'asc' },
       include: {
         lessons: {
-          orderBy: { orderIndex: 'asc' },
+          orderBy: { order: 'asc' },
         },
       },
     });
@@ -48,7 +48,7 @@ export class SectionsService {
       where: { id },
       include: {
         lessons: {
-          orderBy: { orderIndex: 'asc' },
+          orderBy: { order: 'asc' },
         },
       },
     });
@@ -67,7 +67,7 @@ export class SectionsService {
       data: dto,
       include: {
         lessons: {
-          orderBy: { orderIndex: 'asc' },
+          orderBy: { order: 'asc' },
         },
       },
     });

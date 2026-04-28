@@ -6,9 +6,16 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  relationMode = "prisma"
 }
 
 // --- ENUMS ---
+
+enum GlobalRole {
+  user
+  instructor
+  admin
+}
 
 enum ClassroomRole {
   owner
@@ -27,45 +34,56 @@ enum CourseVisibility {
 }
 
 enum ContentType {
-  video_embed
-  file_docx
-  file_pdf
-  image_png
-  image_jpg
-  text_content
+  video
+  file
+  image
+  text
+  quiz
 
   @@map("content_type")
 }
 
 enum ConversationType {
-  classroom_common
-  private_direct
-  custom_group
+  classroom
+  direct
+  group
 
   @@map("conversation_type")
+}
+
+enum CallStatus {
+  ongoing
+  ended
+  scheduled
+  canceled
+
+  @@map("call_status")
 }
 
 // --- MODELS ---
 
 model User {
-  id               String   @id @default(uuid()) 
+  id               String   @id @default(cuid()) 
   email            String   @unique
   passwordHash     String   @map("password_hash")
   fullName         String?  @map("full_name")
   avatarUrl        String?  @map("avatar_url")
   createdAt        DateTime @default(now()) @map("created_at")
+  role             GlobalRole @default(user)
 
   // Relations
+  ownedClassrooms     Classroom[]       @relation("ClassroomOwner")
   classroomMembers    ClassroomMember[]
   classroomJoinRequests ClassroomJoinRequest[]
-  ownedCourses        Course[]             @relation("CourseOwner")
-  courseMembers       CourseMember[]
-  courseInvitations   CourseInvitation[]
+  coursesInstructing  Course[]          @relation("CourseInstructor")
+  courseMemberships    CourseMember[]
+  sendInvites    CourseInvitation[]    @relation("SendInvites")
+  receiveInvites    CourseInvitation[]    @relation("ReceiveInvites")
   progresses          UserProgress[]
   conversationMembers ConversationMember[]
   messages            Message[]            @relation("MessageSender")
   createdTasks        ClassroomTask[]      @relation("TaskCreator")
-  taskSubmissions     TaskSubmission[]     @relation("TaskStudent")
+  taskSubmissions     TaskSubmission[]     @relation("TaskUser")
   notes               Note[]
   createdCalls        Call[]               @relation("CallCreator")
 
@@ -73,26 +91,30 @@ model User {
 }
 
 model Classroom {
-  id          String   @id @default(uuid()) 
+  id          String   @id @default(cuid()) 
   title       String
   description String?  @db.Text
   inviteCode  String?  @unique @map("invite_code")
   isPublic    Boolean  @default(false) @map("is_public")
   createdAt   DateTime @default(now()) @map("created_at")
+  ownerId     String   @map("owner_id")
 
   // Relations
+  owner         User              @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   members       ClassroomMember[]
   joinRequests  ClassroomJoinRequest[]
   conversations Conversation[]
   tasks         ClassroomTask[]
   linkedCourses ClassroomLinkedCourse[]
   notes         Note[]
+  calls         Call[]
 
   @@map("classrooms")
+  @@index([ownerId])
 }
 
 model ClassroomMember {
-  id          String        @id @default(uuid()) 
+  id          String        @id @default(cuid()) 
   classroomId String        @map("classroom_id") 
   userId      String        @map("user_id") 
   role        ClassroomRole @default(member)
@@ -102,11 +124,12 @@ model ClassroomMember {
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([classroomId, userId])
+  @@index([userId])
   @@map("classroom_members")
 }
 
 model ClassroomJoinRequest {
-  id          String   @id @default(uuid()) 
+  id          String   @id @default(cuid()) 
   classroomId String   @map("classroom_id") 
   userId      String   @map("user_id") 
   createdAt   DateTime @default(now()) @map("created_at")
@@ -115,31 +138,36 @@ model ClassroomJoinRequest {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([classroomId, userId])
+  @@index([userId])
   @@map("classroom_join_requests")
 }
 
 model Course {
-  id           String           @id @default(uuid()) 
-  ownerId      String           @map("owner_id") 
+  id           String           @id @default(cuid()) 
+  instructorId String           @map("instructor_id")
   title        String
+  slug         String           @unique
   description  String?          @db.Text
   thumbnailUrl String?          @map("thumbnail_url")
-  price        Decimal          @default(0) @db.Decimal
+  price        Decimal          @default(0) @db.Decimal(10,2)
   visibility   CourseVisibility @default(public)
   createdAt    DateTime         @default(now()) @map("created_at")
 
   // Relations
-  owner            User                    @relation("CourseOwner", fields: [ownerId], references: [id], onDelete: Restrict)
-  members          CourseMember[]
-  invitations      CourseInvitation[]
-  sections         Section[]
-  linkedClassrooms ClassroomLinkedCourse[]
+  instructor       User               @relation("CourseInstructor", fields: [instructorId], references: [id])
+  sections   Section[]
+  members    CourseMember[]
+  invites    CourseInvitation[]
+  classrooms ClassroomLinkedCourse[]
+  progresses UserProgress[]
+  notes      Note[]
 
   @@map("courses")
+  @@index([instructorId])
 }
 
 model CourseMember {
-  id         String   @id @default(uuid()) 
+  id         String   @id @default(cuid()) 
   courseId   String   @map("course_id") 
   userId     String   @map("user_id") 
   enrolledAt DateTime @default(now()) @map("enrolled_at")
@@ -148,23 +176,31 @@ model CourseMember {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, userId])
+  @@index([userId])
   @@map("course_members")
 }
 
 model CourseInvitation {
-  id        String   @id @default(uuid()) 
-  courseId  String   @map("course_id") 
-  userId    String   @map("user_id") 
-  invitedAt DateTime @default(now()) @map("invited_at")
+  id          String   @id @default(cuid()) 
+  courseId    String   @map("course_id") 
+  inviterId   String   @map("inviter_id")
+  inviteeId   String   @map("invitee_id")
+  invitedAt   DateTime @default(now()) @map("invited_at")
+  acceptedAt  DateTime? @map("accepted_at")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inviter   User     @relation("SendInvites", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee   User     @relation("ReceiveInvites", fields: [inviteeId], references: [id], onDelete: Cascade)
 
+  @@index([courseId])
+  @@index([inviterId])
+  @@index([inviteeId])
   @@map("course_invitations")
 }
 
 model Section {
-  id         String   @id @default(uuid()) 
+  id         String   @id @default(cuid()) 
   courseId   String   @map("course_id") 
   title      String?
   orderIndex Int?     @map("order_index")
@@ -172,42 +208,49 @@ model Section {
   course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons    Lesson[]
 
+  @@index([courseId])
   @@map("sections")
 }
 
 model Lesson {
-  id         String       @id @default(uuid()) 
-  sectionId  String       @map("section_id") 
-  title      String?
-  type       ContentType?
-  contentUrl String?      @map("content_url")
-  rawText    String?      @db.Text @map("raw_text")
-  orderIndex Int?         @map("order_index")
+  id          String       @id @default(cuid())
+  sectionId   String       @map("section_id")
+  title       String
+  order       Int          @default(0) @map("order_index")
+  type        ContentType  @default(text)
+  contentUrl  String?      @map("content_url")
+  body        String?      @db.Text
+  durationSec Int?         @map("duration_sec")
 
   section    Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   progresses UserProgress[]
   notes      Note[]
 
+  @@index([sectionId])
   @@map("lessons")
 }
 
 model UserProgress {
-  id                String   @id @default(uuid()) 
-  userId            String   @map("user_id") 
-  lessonId          String   @map("lesson_id") 
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  courseId          String   @map("course_id")
+  lessonId          String   @map("lesson_id")
   lastWatchedSecond Int      @default(0) @map("last_watched_second")
   isCompleted       Boolean  @default(false) @map("is_completed")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course            Course   @relation(fields: [courseId], references: [id])
   lesson            Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
+  @@index([courseId])
+  @@index([lessonId])
   @@map("user_progress")
 }
 
 model Conversation {
-  id          String            @id @default(uuid()) 
+  id          String            @id @default(cuid()) 
   classroomId String?           @map("classroom_id") 
   type        ConversationType?
   title       String?
@@ -217,11 +260,12 @@ model Conversation {
   members     ConversationMember[]
   messages    Message[]
 
+  @@index([classroomId])
   @@map("conversations")
 }
 
 model ConversationMember {
-  id             String       @id @default(uuid()) 
+  id             String       @id @default(cuid()) 
   conversationId String       @map("conversation_id") 
   userId         String       @map("user_id") 
   joinedAt       DateTime     @default(now()) @map("joined_at")
@@ -229,11 +273,13 @@ model ConversationMember {
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([conversationId])
+  @@index([userId])
   @@map("conversation_members")
 }
 
 model Message {
-  id             String       @id @default(uuid()) 
+  id             String       @id @default(cuid()) 
   conversationId String       @map("conversation_id") 
   senderId       String       @map("sender_id") 
   content        String?      @db.Text
@@ -243,11 +289,13 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
 
+  @@index([conversationId])
+  @@index([senderId])
   @@map("messages")
 }
 
 model ClassroomTask {
-  id          String    @id @default(uuid()) 
+  id          String    @id @default(cuid()) 
   classroomId String    @map("classroom_id") 
   creatorId   String    @map("creator_id") 
   title       String?
@@ -259,39 +307,46 @@ model ClassroomTask {
   creator     User      @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
   submissions TaskSubmission[]
 
+  @@index([classroomId])
+  @@index([creatorId])
   @@map("classroom_tasks")
 }
 
 model TaskSubmission {
-  id          String        @id @default(uuid()) 
+  id          String        @id @default(cuid()) 
   taskId      String        @map("task_id") 
-  studentId   String        @map("student_id") 
+  userId   String        @map("user_id") 
   content     String?       @db.Text
   fileUrl     String?       @map("file_url")
   submittedAt DateTime      @default(now()) @map("submitted_at")
   grade       Decimal?      @db.Decimal
 
   task        ClassroomTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  student     User          @relation("TaskStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  user        User          @relation("TaskUser", fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([taskId, userId])
+  @@index([userId])
   @@map("task_submissions")
 }
 
 model ClassroomLinkedCourse {
   classroomId String    @map("classroom_id") 
   courseId    String    @map("course_id") 
+  createdAt   DateTime  @default(now()) @map("created_at")
 
   classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@id([classroomId, courseId])
+  @@index([courseId])
   @@map("classroom_linked_courses")
 }
 
 model Note {
-  id             String     @id @default(uuid()) 
+  id             String     @id @default(cuid()) 
   userId         String     @map("user_id") 
-  lessonId       String     @map("lesson_id") 
+  courseId       String ?    @map("course_id")
+  lessonId       String?     @map("lesson_id") 
   classroomId    String?    @map("classroom_id") 
   content        String     @db.Text
   videoTimestamp Int?       @map("video_timestamp")
@@ -299,25 +354,33 @@ model Note {
   updatedAt      DateTime   @updatedAt @map("updated_at")
 
   user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson         Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson         Lesson?     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  course         Course?     @relation(fields: [courseId], references: [id], onDelete: Cascade)
   classroom      Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
 
   @@index([userId, lessonId])
   @@index([userId, classroomId])
+  @@index([courseId])
+  @@index([lessonId])
+  @@index([classroomId])
   @@map("notes")
 }
 
 model Call {
-  id               String    @id @default(uuid())
+  id               String    @id @default(cuid())
   creatorId        String    @map("creator_id")
   title            String?   @db.VarChar(255)
-  status           String    @default("ongoing") @db.VarChar(50)
+  classroomId      String?   @map("classroom_id")
+  status           CallStatus    @default(ongoing)
   participantCount Int       @default(0) @map("participant_count")
   createdAt        DateTime  @default(now()) @map("created_at")
+  startedAt        DateTime? @map("started_at")
   endedAt          DateTime? @map("ended_at")
 
   creator          User      @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  classroom        Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
 
-  @@index([status]) // Đánh index để truy vấn nhanh các phòng đang "ongoing"
+  @@index([creatorId])
+  @@index([classroomId])
   @@map("calls")
 }

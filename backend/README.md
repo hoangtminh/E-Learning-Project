@@ -1,68 +1,71 @@
-# E-Learning Project - Backend
+# Glacier Learn - Backend
 
-Đây là mã nguồn backend cho dự án E-Learning. Dự án được xây dựng dựa trên
-framework [NestJS](https://nestjs.com/), sử dụng
-[Prisma ORM](https://www.prisma.io/) để tương tác với cơ sở dữ liệu
-[PostgreSQL](https://www.postgresql.org/).
+Hệ thống API và Real-time cho nền tảng Glacier Learn, được xây dựng trên nền tảng NestJS mạnh mẽ và Prisma ORM.
 
-## 📋 Yêu cầu hệ thống
+## 🚀 Hướng dẫn khởi chạy
 
-Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt các phần mềm sau:
-
-- [Node.js](https://nodejs.org/) (Khuyến nghị phiên bản 18.x hoặc mới hơn)
-- [npm](https://www.npmjs.com/) (thường đi kèm với Node.js) hoặc
-  [Yarn](https://yarnpkg.com/)/[pnpm](https://pnpm.io/)
-- [PostgreSQL](https://www.postgresql.org/) (Đang chạy ở local hoặc trên cloud)
-
-## 🚀 Hướng dẫn cài đặt và khởi chạy
-
-### 1. Cài đặt các gói phụ thuộc (Dependencies)
-
-Mở terminal, đảm bảo bạn đang ở trong thư mục `backend`, sau đó chạy lệnh sau để
-cài đặt các thư viện cần thiết:
-
+### 1. Cài đặt Dependencies
 ```bash
 npm install
-# hoặc
-yarn install
 ```
 
-### 2. Cấu hình biến môi trường
+### 2. Cấu hình môi trường
+Tạo file `.env` tại thư mục gốc của `backend` và cấu hình chuỗi kết nối Database (MySQL):
+```env
+DATABASE_URL="mysql://user:password@localhost:3306/glacier_db"
+JWT_SECRET="your_secret_key"
+```
 
-Tạo một file `.env` ở thư mục gốc của `backend`. Bạn có thể sao chép từ file mẫu
-`.env.example` (nếu có):
-
+### 3. Khởi tạo Database (Prisma)
+Đồng bộ schema và tạo Prisma Client:
 ```bash
-cp .env.example .env
-```
-
-Mở file `.env` và cập nhật lại chuỗi kết nối cơ sở dữ liệu PostgreSQL cho phù
-hợp với máy của bạn. Ví dụ:
-
-# Port chạy server (mặc định thường là 3000)
-
-PORT=3000
-
-`````
-
-### 3. Thiết lập Cơ sở dữ liệu (Prisma)
-
-Sau khi đã cấu hình xong `DATABASE_URL`, bạn cần chạy các lệnh Prisma để đồng bộ
-cấu trúc database và tạo Prisma Client:
-
-````bash
-# Chạy migration để tự động tạo các bảng trong database PostgreSQL
-npx prisma migrate dev (Không cần)
-
-# Generate lại mã Prisma Client
 npx prisma generate
+```
 
 ### 4. Chạy ứng dụng
-
 ```bash
-# Chạy môi trường phát triển (tự động reload khi có thay đổi code)
+# Môi trường phát triển
 npm run start:dev
+```
+API server sẽ chạy tại: [http://localhost:3001](http://localhost:3001) (hoặc port được cấu hình).
 
-Khi terminal hiển thị thông báo thành công, API server sẽ chạy tại địa chỉ:
-`http://localhost:3000` (hoặc theo port bạn cấu hình).
-`````
+---
+
+## 📁 Cấu trúc thư mục (Folder Structure)
+
+Dự án được tổ chức theo module của NestJS:
+
+- **`src/auth`**: Xử lý xác thực (Login, Register, JWT Strategy).
+- **`src/modules`**: Các module nghiệp vụ chính.
+    - `courses/`: Quản lý khóa học.
+    - `sections/` & `lessons/`: Quản lý nội dung bài học.
+    - `classrooms/`: Quản lý lớp học ảo.
+    - `chat/`: Xử lý tin nhắn và hội thoại.
+- **`src/socket`**: Xử lý WebSockets.
+    - `webrtc.gateway.ts`: Xử lý signaling cho gọi video/audio (WebRTC).
+    - `socket.module.ts`: Cấu hình chung cho WebSocket.
+- **`src/prisma`**: Kết nối và quản lý Prisma Service.
+- **`src/common`**: Chứa các thành phần dùng chung toàn hệ thống.
+    - `guards/`: Bảo vệ route (ví dụ: `JwtAuthGuard`).
+    - `decorators/`: Các decorator tùy chỉnh (ví dụ: `@Public()`).
+    - `filters/`: Xử lý lỗi tập trung.
+
+---
+
+## 🛠 Hướng dẫn phát triển (Development)
+
+### Nguyên tắc chung
+1. **Module-based**: Mỗi tính năng mới nên được tách thành một module riêng trong `src/modules`.
+2. **Security**: Mặc định tất cả các route đều được bảo vệ bởi `JwtAuthGuard`. Sử dụng decorator `@Public()` cho các API không cần đăng nhập.
+3. **Database**: Sử dụng `PrismaService` để tương tác với DB. Luôn đảm bảo `schema.prisma` được cập nhật index cho các quan hệ khi sử dụng `relationMode = "prisma"`.
+
+### Thêm tính năng mới
+- **Tạo module**: `nest generate module modules/feature_name`.
+- **Real-time**: Nếu cần thêm sự kiện socket mới, hãy cập nhật trong `WebrtcGateway` hoặc tạo Gateway mới trong `src/socket`.
+- **Schema**: Sau khi sửa `schema.prisma`, nhớ chạy `npx prisma generate`.
+
+### Công nghệ sử dụng
+- **Framework**: NestJS
+- **ORM**: Prisma (MySQL)
+- **Real-time**: Socket.io (WebSockets)
+- **Auth**: JWT (Passport.js)

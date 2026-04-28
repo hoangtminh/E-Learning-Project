@@ -11,14 +11,14 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class CoursesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(ownerId: string, dto: CreateCourseDto) {
+  async create(instructorId: string, dto: CreateCourseDto) {
     return this.prisma.course.create({
       data: {
         ...dto,
-        ownerId,
+        instructorId,
       },
       include: {
-        owner: {
+        instructor: {
           select: { id: true, fullName: true, avatarUrl: true },
         },
       },
@@ -37,7 +37,7 @@ export class CoursesService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          owner: {
+          instructor: {
             select: { id: true, fullName: true, avatarUrl: true },
           },
           _count: {
@@ -63,14 +63,14 @@ export class CoursesService {
     const course = await this.prisma.course.findUnique({
       where: { id },
       include: {
-        owner: {
+        instructor: {
           select: { id: true, fullName: true, avatarUrl: true },
         },
         sections: {
           orderBy: { orderIndex: 'asc' },
           include: {
             lessons: {
-              orderBy: { orderIndex: 'asc' },
+              orderBy: { order: 'asc' },
             },
           },
         },
@@ -90,9 +90,9 @@ export class CoursesService {
   async update(id: string, userId: string, dto: UpdateCourseDto) {
     const course = await this.findOne(id);
 
-    if (course.ownerId !== userId) {
+    if (course.instructorId !== userId) {
       throw new ForbiddenException(
-        'Only the course owner can update this course',
+        'Only the course instructor can update this course',
       );
     }
 
@@ -100,7 +100,7 @@ export class CoursesService {
       where: { id },
       data: dto,
       include: {
-        owner: {
+        instructor: {
           select: { id: true, fullName: true, avatarUrl: true },
         },
       },
@@ -110,9 +110,9 @@ export class CoursesService {
   async remove(id: string, userId: string) {
     const course = await this.findOne(id);
 
-    if (course.ownerId !== userId) {
+    if (course.instructorId !== userId) {
       throw new ForbiddenException(
-        'Only the course owner can delete this course',
+        'Only the course instructor can delete this course',
       );
     }
 

@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Glacier Learn - Frontend
 
-## Getting Started
+Glacier Learn là nền tảng E-Learning hiện đại dành cho giảng viên và học viên, được xây dựng với trải nghiệm người dùng mượt mà và các tính năng tương tác thời gian thực.
 
-First, run the development server:
+## 🚀 Hướng dẫn khởi chạy
 
+### 1. Cài đặt Dependencies
+Đảm bảo bạn đã cài đặt Node.js (phiên bản 18+).
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Biến môi trường (Environment Variables)
+Tạo file `.env.local` nếu cần thiết (mặc định frontend kết nối tới backend tại `http://localhost:3001`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Chạy môi trường phát triển
+```bash
+npm run dev
+```
+Ứng dụng sẽ chạy tại địa chỉ: [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📁 Cấu trúc thư mục (Folder Structure)
 
-To learn more about Next.js, take a look at the following resources:
+Dự án sử dụng Next.js App Router:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **`src/app`**: Chứa các route và trang của ứng dụng (Dashboard, Call, Courses, Auth).
+- **`src/components`**: Các thành phần giao diện dùng chung và theo module.
+    - `ui/`: Các component nền tảng (button, card, input...) từ shadcn/ui.
+    - `dashboard/`: Các thành phần cho trang quản lý.
+    - `call/`: Các thành phần cho module họp trực tuyến/học online.
+- **`src/contexts`**: Quản lý trạng thái toàn cục (Global State).
+    - `AuthContext`: Quản lý đăng nhập/người dùng.
+    - `CallContext`: Xử lý WebRTC, Socket.io cho phòng họp.
+    - `CourseContext`: Quản lý dữ liệu khóa học.
+- **`src/api`**: Các hàm gọi API backend (axios instance, services).
+- **`src/lib`**: Các hàm tiện ích (utils), constants và config.
+- **`src/hooks`**: Các custom hooks dùng chung.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠 Hướng dẫn phát triển (Development)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Nguyên tắc chung
+1. **Thẩm mỹ (Aesthetics)**: Luôn ưu tiên giao diện đẹp, hiện đại (sử dụng glassmorphism, gradient, và framer-motion cho animation).
+2. **Component-based**: Chia nhỏ UI thành các component tái sử dụng được.
+3. **Context Usage**: 
+    - Để lấy thông tin cuộc gọi/họp: sử dụng `useCallContext()`.
+    - Để lấy dữ liệu khóa học: sử dụng `useCourses()`.
+    - Để lấy thông tin người dùng: sử dụng `useAuth()`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Thêm tính năng mới
+- **Trang mới**: Tạo thư mục mới trong `src/app`.
+- **API mới**: Định nghĩa endpoint trong `src/api` tương ứng với backend.
+- **Real-time**: Sử dụng `socketRef` trong `CallContext` nếu cần thêm các sự kiện socket mới.
+
+### Công nghệ sử dụng
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS
+- **Animation**: Framer Motion
+- **Icons**: Google Material Symbols & Lucide React
+- **Real-time**: Socket.io Client
+- **Video/Audio**: WebRTC (Peer-to-peer)

@@ -12,4 +12,8 @@ export class CreateClassroomDto {
   @IsOptional()
   @IsString()
   inviteCode?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  ownerId: string;
 }

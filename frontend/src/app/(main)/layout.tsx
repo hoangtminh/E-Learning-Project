@@ -1,6 +1,7 @@
 import { MainHeader } from '@/components/main/MainHeader';
 import { MainSidebar } from '@/components/main/MainSidebar';
 import { ChatProvider } from '@/contexts/ChatContext';
+import { CourseProvider } from '@/contexts/CourseContext';
 
 export default function MainLayout({
   children,
@@ -9,13 +10,15 @@ export default function MainLayout({
 }) {
   return (
     <ChatProvider>
-      <div className='flex h-screen bg-slate-50 font-sans selection:bg-sky-500/20 text-slate-900 overflow-hidden'>
-        <MainSidebar />
-        <div className='flex-1 flex flex-col min-w-0 overflow-hidden'>
-          <MainHeader />
-          <div className='flex-1 overflow-y-auto relative'>{children}</div>
+      <CourseProvider>
+        <div className='flex h-screen bg-slate-50 font-sans selection:bg-sky-500/20 text-slate-900 overflow-hidden'>
+          <MainSidebar />
+          <div className='flex-1 flex flex-col min-w-0 overflow-hidden'>
+            <MainHeader />
+            <div className='flex-1 overflow-y-auto relative'>{children}</div>
+          </div>
         </div>
-      </div>
+      </CourseProvider>
     </ChatProvider>
   );
 }
