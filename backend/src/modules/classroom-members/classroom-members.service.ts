@@ -230,4 +230,92 @@ export class ClassroomMembersService {
       },
     });
   }
+
+  // 5. Lấy danh sách thành viên của lớp học
+  async getMembers(requesterId: string, classroomId: string) {
+    const requesterMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId: requesterId } },
+    });
+
+    if (!requesterMember) {
+      throw new ForbiddenException('You are not a member of this classroom');
+    }
+
+    return this.prisma.classroomMember.findMany({
+      where: { classroomId },
+      include: {
+        user: {
+          select: { id: true, email: true, fullName: true, avatarUrl: true },
+        },
+      },
+      orderBy: { joinedAt: 'asc' },
+    });
+  }
+
+  // 6. Admin/Owner xóa thành viên khỏi lớp học
+  async removeMember(
+    requesterId: string,
+    classroomId: string,
+    targetUserId: string,
+  ) {
+    const requesterMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId: requesterId } },
+    });
+
+    if (!requesterMember || requesterMember.role === 'member') {
+      throw new ForbiddenException(
+        'Only admins and owners can remove members',
+      );
+    }
+
+    if (targetUserId === requesterId) {
+      throw new ForbiddenException('You cannot remove yourself');
+    }
+
+    const targetMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId: targetUserId } },
+    });
+
+    if (!targetMember) {
+      throw new NotFoundException('Member not found in this classroom');
+    }
+
+    // Cannot remove the owner
+    if (targetMember.role === 'owner') {
+      throw new ForbiddenException('Cannot remove the classroom owner');
+    }
+
+    return this.prisma.classroomMember.delete({
+      where: { classroomId_userId: { classroomId, userId: targetUserId } },
+    });
+  }
+
+  // 7. Admin/Owner từ chối người dùng trong hàng đợi
+  async rejectMember(
+    requesterId: string,
+    classroomId: string,
+    targetUserId: string,
+  ) {
+    const requesterMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId: requesterId } },
+    });
+
+    if (!requesterMember || requesterMember.role === 'member') {
+      throw new ForbiddenException(
+        'Only admins and owners can reject join requests',
+      );
+    }
+
+    const targetRequest = await this.prisma.classroomJoinRequest.findUnique({
+      where: { classroomId_userId: { classroomId, userId: targetUserId } },
+    });
+
+    if (!targetRequest) {
+      throw new NotFoundException('Pending request not found');
+    }
+
+    return this.prisma.classroomJoinRequest.delete({
+      where: { classroomId_userId: { classroomId, userId: targetUserId } },
+    });
+  }
 }

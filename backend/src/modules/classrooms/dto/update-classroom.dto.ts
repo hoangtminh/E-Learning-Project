@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsBoolean } from 'class-validator';
 
 export class UpdateClassroomDto {
   @IsOptional()
@@ -10,6 +10,6 @@ export class UpdateClassroomDto {
   description?: string;
 
   @IsOptional()
-  @IsString()
-  inviteCode?: string;
+  @IsBoolean()
+  isPublic?: boolean;
 }

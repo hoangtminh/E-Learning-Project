@@ -20,9 +20,13 @@ import { setAuthToken } from '@/api/client';
 
 export interface User {
   userId: string;
+  id?: string;
   email: string;
   fullname: string | null;
+  name?: string;
   imageUrl: string | null | undefined;
+  avatar?: string;
+  role?: string;
   // Add other user properties here based on your backend response
 }
 
