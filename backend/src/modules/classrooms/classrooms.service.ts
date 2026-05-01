@@ -160,76 +160,121 @@ export class ClassroomsService {
       throw new NotFoundException(`Invite code not found`);
     }
 
-    const existing = await this.prisma.classroomMember.findUnique({
-      where: {
-        classroomId_userId: { classroomId: classroom.id, userId },
-      },
+    // Already a member?
+    const existingMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId: classroom.id, userId } },
     });
-
-    if (existing) {
+    if (existingMember) {
       throw new ConflictException(`You are already a member of this classroom`);
     }
 
-    // Remove any pending join request
-    await this.prisma.classroomJoinRequest
-      .delete({
-        where: {
-          classroomId_userId: { classroomId: classroom.id, userId },
-        },
-      })
-      .catch(() => {});
+    // Already has a pending request?
+    const existingRequest = await this.prisma.classroomJoinRequest.findUnique({
+      where: { classroomId_userId: { classroomId: classroom.id, userId } },
+    });
+    if (existingRequest) {
+      throw new ConflictException(`You already have a pending join request for this classroom`);
+    }
 
-    const member = await this.prisma.classroomMember.create({
-      data: { classroomId: classroom.id, userId, role: ClassroomRole.member },
+    // Always create a join request — owner approves it
+    await this.prisma.classroomJoinRequest.create({
+      data: { classroomId: classroom.id, userId },
     });
 
-    return { classroom, member };
+    return { classroomId: classroom.id, status: 'pending' };
   }
 
-  async linkCourse(userId: string, classroomId: string, courseId: string) {
-    const adminUser = await this.prisma.user.findUnique({
+  async getMyPendingClassrooms(userId: string) {
+    const requests = await this.prisma.classroomJoinRequest.findMany({
+      where: { userId },
+      include: {
+        classroom: {
+          include: {
+            _count: { select: { members: true } },
+            owner: { select: { id: true, fullName: true, avatarUrl: true, email: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return requests.map((r) => ({
+      requestId: r.id,
+      createdAt: r.createdAt,
+      classroom: r.classroom,
+    }));
+  }
+
+  async assignCourseToClass(courseId: string, classId: string, userId: string) {
+    // 1. Lấy thông tin user thực hiện
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
-    if (!adminUser || adminUser.role !== GlobalRole.admin) {
-      throw new ForbiddenException('Only system admins can link courses to classrooms');
-    }
+    const isAdmin = user?.role === GlobalRole.admin;
 
-    const classroom = await this.prisma.classroom.findUnique({
-      where: { id: classroomId },
-    });
-    if (!classroom) throw new NotFoundException('Classroom not found');
-
+    // 2. Lấy thông tin khóa học
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
     });
-    if (!course) throw new NotFoundException('Course not found');
 
+    if (!course) {
+      throw new NotFoundException('Không tìm thấy khóa học');
+    }
+
+    // 3. Logic kiểm tra quyền nghiệp vụ (Business Logic)
+    let hasCourseAccess = false;
+
+    if (isAdmin) {
+      // Điều kiện 4: userId là Admin (có quyền gắn mọi loại khóa học)
+      hasCourseAccess = true;
+    } else if (course.visibility === 'public') {
+      // Điều kiện 1: Khóa học là public
+      hasCourseAccess = true;
+    } else if (course.visibility === 'private' && course.instructorId === userId) {
+      // Điều kiện 2: Khóa học là private nhưng userId chính là instructor_id
+      hasCourseAccess = true;
+    } else if (course.visibility === 'sale') {
+      // Điều kiện 3: Khóa học là sale nhưng userId đã mua khóa học này
+      const membership = await this.prisma.courseMember.findUnique({
+        where: {
+          courseId_userId: { courseId, userId },
+        },
+      });
+      if (membership) {
+        hasCourseAccess = true;
+      }
+    }
+
+    if (!hasCourseAccess) {
+      throw new ForbiddenException(
+        'Bạn không có quyền gắn khóa học này vào lớp (Khóa học private của người khác, hoặc khóa học đang bán mà bạn chưa mua).',
+      );
+    }
+
+    // 4. Kiểm tra xem đã gắn chưa
     const existing = await this.prisma.classroomLinkedCourse.findUnique({
-      where: { classroomId_courseId: { classroomId, courseId } },
+      where: { classroomId_courseId: { classroomId: classId, courseId } },
     });
 
-    if (existing) throw new ConflictException('Course already linked to this classroom');
+    if (existing) {
+      throw new ConflictException('Khóa học này đã được gắn vào lớp từ trước.');
+    }
 
+    // 5. Gắn khóa học vào lớp
     return this.prisma.classroomLinkedCourse.create({
-      data: { classroomId, courseId },
+      data: { classroomId: classId, courseId },
     });
   }
 
   async unlinkCourse(userId: string, classroomId: string, courseId: string) {
-    const adminUser = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!adminUser || adminUser.role !== GlobalRole.admin) {
-      throw new ForbiddenException('Only system admins can unlink courses from classrooms');
-    }
-
+    // Logic của Guard (AssignCourseGuard) đã đảm bảo người gọi là Admin hoặc Owner.
+    // Ở đây chỉ cần thực hiện việc tháo gỡ.
     const linkedCourse = await this.prisma.classroomLinkedCourse.findUnique({
       where: { classroomId_courseId: { classroomId, courseId } },
     });
 
-    if (!linkedCourse) throw new NotFoundException('Linked course not found');
+    if (!linkedCourse) throw new NotFoundException('Không tìm thấy liên kết khóa học trong lớp này.');
 
     return this.prisma.classroomLinkedCourse.delete({
       where: { classroomId_courseId: { classroomId, courseId } },

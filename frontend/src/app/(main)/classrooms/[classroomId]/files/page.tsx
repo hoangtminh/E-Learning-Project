@@ -216,28 +216,6 @@ export default function ClassroomFilesPage() {
         })}
       </div>
 
-      {/* Bottom Section: Storage info */}
-      <div className='mt-12 p-6 rounded-2xl bg-white/60 backdrop-blur-md border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm'>
-        <div className='flex items-center gap-4'>
-          <div className='w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 shrink-0'>
-            <span className='material-symbols-outlined'>storage</span>
-          </div>
-          <div>
-            <p className='text-sm font-semibold text-slate-800'>
-              Dung lượng lưu trữ của lớp học
-            </p>
-            <p className='text-xs text-slate-500'>
-              1.8 GB / 5.0 GB đã được sử dụng
-            </p>
-          </div>
-        </div>
-        <div className='w-full md:w-64 h-2 bg-slate-200 rounded-full overflow-hidden'>
-          <div className='h-full bg-sky-500 w-[36%]'></div>
-        </div>
-        <button className='text-sky-600 text-sm font-bold hover:underline shrink-0'>
-          Quản lý tài nguyên
-        </button>
-      </div>
     </div>
   );
 }

@@ -275,7 +275,7 @@ export default function Home() {
                             <span className='material-symbols-outlined text-[16px]'>
                               person
                             </span>
-                            <span>{course.owner.fullName || 'Instructor'}</span>
+                            <span>{course.owner?.fullName || 'Instructor'}</span>
                           </div>
                           <div className='flex items-center space-x-1'>
                             <span className='material-symbols-outlined text-[16px]'>

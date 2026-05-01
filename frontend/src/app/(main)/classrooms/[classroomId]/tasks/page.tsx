@@ -30,118 +30,6 @@ function formatDeadline(task: ClassroomTask): {
   };
 }
 
-// ─── Create Task Modal ────────────────────────────────────────────────────────
-
-function CreateTaskModal({
-  classroomId,
-  onClose,
-}: {
-  classroomId: string;
-  onClose: () => void;
-}) {
-  const { createTask } = useTasks();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [deadline, setDeadline] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async () => {
-    if (!title.trim()) return;
-    setSubmitting(true);
-    setError('');
-    try {
-      await createTask(classroomId, {
-        title,
-        description: description || undefined,
-        deadline: deadline || undefined,
-      });
-      onClose();
-    } catch (e: any) {
-      setError(e.message || 'Tạo bài tập thất bại');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4'>
-      <div className='bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl'>
-        <h2 className='text-xl font-bold text-slate-900 mb-5 flex items-center gap-2'>
-          <span className='material-symbols-outlined text-sky-600'>assignment_add</span>
-          Tạo bài tập mới
-        </h2>
-        <div className='space-y-4'>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-1'>
-              Tiêu đề <span className='text-red-500'>*</span>
-            </label>
-            <input
-              type='text'
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className='w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800'
-              placeholder='Tên bài tập...'
-            />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-1'>
-              Mô tả (Tùy chọn)
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className='w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800 resize-none'
-              placeholder='Mô tả chi tiết bài tập...'
-              rows={3}
-            />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-1'>
-              Hạn nộp (Tùy chọn)
-            </label>
-            <input
-              type='datetime-local'
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              className='w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800'
-            />
-          </div>
-          {error && (
-            <p className='text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg'>
-              {error}
-            </p>
-          )}
-        </div>
-        <div className='mt-6 flex justify-end gap-3'>
-          <button
-            onClick={onClose}
-            className='px-5 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition-colors'
-          >
-            Hủy
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !title.trim()}
-            className='px-5 py-2 bg-sky-600 text-white rounded-xl font-semibold hover:bg-sky-700 transition-colors disabled:opacity-50 flex items-center gap-2'
-          >
-            {submitting ? (
-              <>
-                <span className='material-symbols-outlined animate-spin text-sm'>
-                  progress_activity
-                </span>
-                Đang tạo...
-              </>
-            ) : (
-              'Tạo bài tập'
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Submit Modal ────────────────────────────────────────────────────────────
 
 function SubmitModal({
@@ -241,34 +129,16 @@ const ICON_STYLES = [
 export default function ClassroomTasksPage() {
   const params = useParams();
   const classroomId = params.classroomId as string;
-  const { classroom } = useClassrooms();
-  const { tasks, loadingTasks, fetchTasks, deleteTask } = useTasks();
+  const { tasks, loadingTasks, fetchTasks } = useTasks();
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [submitTask, setSubmitTask] = useState<ClassroomTask | null>(null);
 
   useEffect(() => {
     if (classroomId) fetchTasks(classroomId);
   }, [classroomId, fetchTasks]);
 
-  // Determine user's role from classroom context
-  // The 'members' array from findOne includes role info
-  const isAdminOrOwner =
-    classroom?.members?.some(
-      (m) => m.role === 'owner' || m.role === 'admin',
-    ) ?? false;
-
   const todoCount = tasks.filter((t) => t.submissions.length === 0).length;
   const doneCount = tasks.filter((t) => t.submissions.length > 0).length;
-
-  const handleDelete = async (taskId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài tập này?')) return;
-    try {
-      await deleteTask(classroomId, taskId);
-    } catch (e: any) {
-      alert(e.message || 'Xóa thất bại');
-    }
-  };
 
   if (loadingTasks) {
     return (
@@ -296,15 +166,6 @@ export default function ClassroomTasksPage() {
                 Đã nộp: {doneCount}
               </span>
             </div>
-            {isAdminOrOwner && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className='flex items-center gap-2 bg-sky-600 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-sky-600/20 hover:bg-sky-700 transition-all active:scale-95 text-sm'
-              >
-                <span className='material-symbols-outlined text-lg'>add</span>
-                Tạo bài tập
-              </button>
-            )}
           </div>
 
           {/* Empty state */}
@@ -314,14 +175,6 @@ export default function ClassroomTasksPage() {
                 assignment
               </span>
               <p className='font-medium'>Chưa có bài tập nào</p>
-              {isAdminOrOwner && (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className='mt-4 text-sky-600 text-sm font-semibold hover:underline'
-                >
-                  + Tạo bài tập đầu tiên
-                </button>
-              )}
             </div>
           )}
 
@@ -386,14 +239,6 @@ export default function ClassroomTasksPage() {
                           <span className='material-symbols-outlined text-sm'>person</span>
                           {task.creator?.fullName ?? 'N/A'}
                         </div>
-                        {isAdminOrOwner && task._count.submissions > 0 && (
-                          <div className='flex items-center gap-1.5 text-xs text-indigo-500'>
-                            <span className='material-symbols-outlined text-sm'>
-                              assignment_turned_in
-                            </span>
-                            {task._count.submissions} bài đã nộp
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -438,16 +283,6 @@ export default function ClassroomTasksPage() {
                           Nộp bài
                         </button>
                       </>
-                    )}
-                    {/* Admin delete */}
-                    {isAdminOrOwner && (
-                      <button
-                        onClick={() => handleDelete(task.id)}
-                        className='text-red-400 hover:text-red-600 text-xs flex items-center gap-1 transition-colors mt-1'
-                      >
-                        <span className='material-symbols-outlined text-sm'>delete</span>
-                        Xóa
-                      </button>
                     )}
                   </div>
                 </div>
@@ -536,13 +371,6 @@ export default function ClassroomTasksPage() {
         </div>
       </div>
 
-      {/* Modals */}
-      {showCreateModal && (
-        <CreateTaskModal
-          classroomId={classroomId}
-          onClose={() => setShowCreateModal(false)}
-        />
-      )}
       {submitTask && (
         <SubmitModal
           task={submitTask}

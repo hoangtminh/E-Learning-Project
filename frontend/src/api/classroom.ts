@@ -74,6 +74,28 @@ export const approveMember = (classroomId: string, userId: string) =>
 export const rejectMember = (classroomId: string, userId: string) =>
   apiDelete(`/classrooms/${classroomId}/members/pending/${userId}`);
 
+export type PendingClassroomRequest = {
+  requestId: string;
+  createdAt: string;
+  classroom: {
+    id: string;
+    title: string;
+    description: string | null;
+    isPublic: boolean;
+    inviteCode: string | null;
+    createdAt: string;
+    ownerId: string;
+    _count: { members: number };
+    owner: ClassroomMemberUser;
+  };
+};
+
+export const getMyPendingClassrooms = () =>
+  apiGet<PendingClassroomRequest[]>('/classrooms/my-pending');
+
+export const cancelJoinRequest = (classroomId: string, userId: string) =>
+  apiDelete(`/classrooms/${classroomId}/members/pending/${userId}`);
+
 // ── Tasks ─────────────────────────────────────────────────────────────────────
 
 export const getTasks = (classroomId: string) =>

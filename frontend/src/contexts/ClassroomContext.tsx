@@ -20,6 +20,9 @@ import {
   unlinkCourse as apiUnlinkCourse,
   ClassroomMemberUser,
   ClassroomLinkedCourse,
+  PendingClassroomRequest,
+  getMyPendingClassrooms as apiGetMyPendingClassrooms,
+  cancelJoinRequest as apiCancelJoinRequest,
 } from '@/api/classroom';
 
 export type Classroom = {
@@ -67,6 +70,12 @@ interface ClassroomContextType {
 
   linkCourse: (classroomId: string, courseId: string) => Promise<void>;
   unlinkCourse: (classroomId: string, courseId: string) => Promise<void>;
+
+  // Pending join requests for the current user
+  pendingClassrooms: PendingClassroomRequest[];
+  loadingPendingClassrooms: boolean;
+  fetchPendingClassrooms: () => Promise<void>;
+  cancelJoinRequest: (classroomId: string, userId: string) => Promise<void>;
 }
 
 const ClassroomContext = createContext<ClassroomContextType | undefined>(
@@ -85,6 +94,9 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
 
   const [pendingMembers, setPendingMembers] = useState<PendingMember[]>([]);
   const [loadingPending, setLoadingPending] = useState(false);
+
+  const [pendingClassrooms, setPendingClassrooms] = useState<PendingClassroomRequest[]>([]);
+  const [loadingPendingClassrooms, setLoadingPendingClassrooms] = useState(false);
 
   const fetchClassrooms = useCallback(async () => {
     setLoading(true);
@@ -131,7 +143,28 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
   const joinByCode = async (code: string) => {
     const res = await apiJoinByCode(code);
     if (!res.success) throw new Error(res.error || 'Tham gia thất bại');
+    await fetchPendingClassrooms();
     await fetchClassrooms();
+  };
+
+  const fetchPendingClassrooms = useCallback(async () => {
+    setLoadingPendingClassrooms(true);
+    try {
+      const res = await apiGetMyPendingClassrooms();
+      if (res.success && res.data) {
+        setPendingClassrooms(res.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingPendingClassrooms(false);
+    }
+  }, []);
+
+  const cancelJoinRequest = async (classroomId: string, userId: string) => {
+    const res = await apiCancelJoinRequest(classroomId, userId);
+    if (!res.success) throw new Error(res.error || 'Hủy yêu cầu thất bại');
+    await fetchPendingClassrooms();
   };
 
   const fetchClassroom = useCallback(async (id: string) => {
@@ -233,6 +266,10 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
         rejectMember,
         linkCourse,
         unlinkCourse,
+        pendingClassrooms,
+        loadingPendingClassrooms,
+        fetchPendingClassrooms,
+        cancelJoinRequest,
       }}
     >
       {children}
