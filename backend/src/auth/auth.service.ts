@@ -44,6 +44,7 @@ export class AuthService {
         id: true,
         email: true,
         fullName: true,
+        role: true,
       },
     });
 
@@ -67,6 +68,7 @@ export class AuthService {
         email: true,
         fullName: true,
         passwordHash: true,
+        role: true,
       },
     });
 
@@ -94,6 +96,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
+        role: user.role,
       },
     };
   }
@@ -106,6 +109,7 @@ export class AuthService {
         email: true,
         fullName: true,
         avatarUrl: true,
+        role: true,
       },
     });
   }

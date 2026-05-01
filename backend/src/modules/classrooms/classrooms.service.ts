@@ -186,9 +186,9 @@ export class ClassroomsService {
     return { classroom, member };
   }
 
-  async linkCourse(adminId: string, classroomId: string, courseId: string) {
+  async linkCourse(userId: string, classroomId: string, courseId: string) {
     const adminUser = await this.prisma.user.findUnique({
-      where: { id: adminId },
+      where: { id: userId },
     });
 
     if (!adminUser || adminUser.role !== GlobalRole.admin) {
@@ -216,9 +216,9 @@ export class ClassroomsService {
     });
   }
 
-  async unlinkCourse(adminId: string, classroomId: string, courseId: string) {
+  async unlinkCourse(userId: string, classroomId: string, courseId: string) {
     const adminUser = await this.prisma.user.findUnique({
-      where: { id: adminId },
+      where: { id: userId },
     });
 
     if (!adminUser || adminUser.role !== GlobalRole.admin) {

@@ -40,6 +40,6 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me') // Endpoint for getUser() in frontend
   getMe(@Request() req) {
-    return req.user;
+    return this.authService.getMe(req.user.userId);
   }
 }
