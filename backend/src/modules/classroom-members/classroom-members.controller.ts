@@ -3,6 +3,7 @@ import {
   Post,
   Patch,
   Get,
+  Delete,
   Param,
   Body,
   Req,
@@ -74,6 +75,37 @@ export class ClassroomMembersController {
     return this.membersService.getPendingMembers(
       this.getUserId(req),
       classroomId,
+    );
+  }
+
+  @Delete('members/pending/:userId')
+  rejectMember(
+    @Req() req: any,
+    @Param('classroomId') classroomId: string,
+    @Param('userId') targetUserId: string,
+  ) {
+    return this.membersService.rejectMember(
+      this.getUserId(req),
+      classroomId,
+      targetUserId,
+    );
+  }
+
+  @Get('members')
+  getMembers(@Req() req: any, @Param('classroomId') classroomId: string) {
+    return this.membersService.getMembers(this.getUserId(req), classroomId);
+  }
+
+  @Delete('members/:userId')
+  removeMember(
+    @Req() req: any,
+    @Param('classroomId') classroomId: string,
+    @Param('userId') targetUserId: string,
+  ) {
+    return this.membersService.removeMember(
+      this.getUserId(req),
+      classroomId,
+      targetUserId,
     );
   }
 }

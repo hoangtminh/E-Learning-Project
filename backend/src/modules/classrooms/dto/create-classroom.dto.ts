@@ -1,4 +1,9 @@
-import { IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateClassroomDto {
   @IsString()
@@ -10,10 +15,6 @@ export class CreateClassroomDto {
   description?: string;
 
   @IsOptional()
-  @IsString()
-  inviteCode?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  ownerId: string;
+  @IsBoolean()
+  isPublic?: boolean;
 }

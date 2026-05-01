@@ -2,21 +2,42 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { UpdateClassroomDto } from './dto/update-classroom.dto';
-import { ClassroomRole } from '@prisma/client';
+import { ClassroomRole, GlobalRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+
+function generateInviteCode(): string {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
 
 @Injectable()
 export class ClassroomsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, createClassroomDto: CreateClassroomDto) {
-    // Automatically make the user who created it the 'owner'
+  async create(userId: string, dto: CreateClassroomDto) {
+    // Auto-generate a unique 6-char invite code
+    let inviteCode: string;
+    let tries = 0;
+    do {
+      inviteCode = generateInviteCode();
+      const existing = await this.prisma.classroom.findUnique({
+        where: { inviteCode },
+      });
+      if (!existing) break;
+      tries++;
+    } while (tries < 5);
+
     return this.prisma.classroom.create({
       data: {
-        ...createClassroomDto,
+        title: dto.title,
+        description: dto.description,
+        isPublic: dto.isPublic ?? false,
+        inviteCode,
+        ownerId: userId,
         members: {
           create: {
             userId,
@@ -28,20 +49,22 @@ export class ClassroomsService {
   }
 
   async findAll(userId: string) {
-    // Return only classrooms where the user is a member
     return this.prisma.classroom.findMany({
       where: {
         members: {
-          some: {
-            userId,
-          },
+          some: { userId },
         },
       },
       include: {
         members: {
           where: { userId },
+          select: { role: true },
+        },
+        _count: {
+          select: { members: true },
         },
       },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -49,8 +72,29 @@ export class ClassroomsService {
     const classroom = await this.prisma.classroom.findUnique({
       where: { id },
       include: {
+        _count: { select: { members: true } },
         members: {
-          where: { userId },
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                avatarUrl: true,
+                email: true,
+              },
+            },
+          },
+          orderBy: { joinedAt: 'asc' },
+        },
+        owner: {
+          select: { id: true, fullName: true, avatarUrl: true, email: true },
+        },
+        linkedCourses: {
+          include: {
+            course: {
+              select: { id: true, title: true, description: true, thumbnailUrl: true },
+            },
+          },
         },
       },
     });
@@ -59,32 +103,21 @@ export class ClassroomsService {
       throw new NotFoundException(`Classroom not found`);
     }
 
-    // Protect against non-members accessing classroom details
-    if (classroom.members.length === 0) {
+    const isMember = classroom.members.some((m) => m.userId === userId);
+    if (!isMember) {
       throw new ForbiddenException(`You are not a member of this classroom`);
     }
 
     return classroom;
   }
 
-  async update(
-    id: string,
-    userId: string,
-    updateClassroomDto: UpdateClassroomDto,
-  ) {
+  async update(id: string, userId: string, dto: UpdateClassroomDto) {
     const member = await this.prisma.classroomMember.findUnique({
-      where: {
-        classroomId_userId: {
-          classroomId: id,
-          userId,
-        },
-      },
+      where: { classroomId_userId: { classroomId: id, userId } },
     });
 
     if (!member) {
-      throw new NotFoundException(
-        `Classroom not found or you are not a member`,
-      );
+      throw new NotFoundException(`Classroom not found or you are not a member`);
     }
 
     if (
@@ -98,32 +131,108 @@ export class ClassroomsService {
 
     return this.prisma.classroom.update({
       where: { id },
-      data: updateClassroomDto,
+      data: dto,
     });
   }
 
   async remove(id: string, userId: string) {
     const member = await this.prisma.classroomMember.findUnique({
-      where: {
-        classroomId_userId: {
-          classroomId: id,
-          userId,
-        },
-      },
+      where: { classroomId_userId: { classroomId: id, userId } },
     });
 
     if (!member) {
-      throw new NotFoundException(
-        `Classroom not found or you are not a member`,
-      );
+      throw new NotFoundException(`Classroom not found or you are not a member`);
     }
 
     if (member.role !== ClassroomRole.owner) {
       throw new ForbiddenException(`Only the owner can delete this classroom`);
     }
 
-    return this.prisma.classroom.delete({
-      where: { id },
+    return this.prisma.classroom.delete({ where: { id } });
+  }
+
+  async joinByCode(userId: string, code: string) {
+    const classroom = await this.prisma.classroom.findUnique({
+      where: { inviteCode: code.toUpperCase() },
+    });
+
+    if (!classroom) {
+      throw new NotFoundException(`Invite code not found`);
+    }
+
+    const existing = await this.prisma.classroomMember.findUnique({
+      where: {
+        classroomId_userId: { classroomId: classroom.id, userId },
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException(`You are already a member of this classroom`);
+    }
+
+    // Remove any pending join request
+    await this.prisma.classroomJoinRequest
+      .delete({
+        where: {
+          classroomId_userId: { classroomId: classroom.id, userId },
+        },
+      })
+      .catch(() => {});
+
+    const member = await this.prisma.classroomMember.create({
+      data: { classroomId: classroom.id, userId, role: ClassroomRole.member },
+    });
+
+    return { classroom, member };
+  }
+
+  async linkCourse(adminId: string, classroomId: string, courseId: string) {
+    const adminUser = await this.prisma.user.findUnique({
+      where: { id: adminId },
+    });
+
+    if (!adminUser || adminUser.role !== GlobalRole.admin) {
+      throw new ForbiddenException('Only system admins can link courses to classrooms');
+    }
+
+    const classroom = await this.prisma.classroom.findUnique({
+      where: { id: classroomId },
+    });
+    if (!classroom) throw new NotFoundException('Classroom not found');
+
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+    });
+    if (!course) throw new NotFoundException('Course not found');
+
+    const existing = await this.prisma.classroomLinkedCourse.findUnique({
+      where: { classroomId_courseId: { classroomId, courseId } },
+    });
+
+    if (existing) throw new ConflictException('Course already linked to this classroom');
+
+    return this.prisma.classroomLinkedCourse.create({
+      data: { classroomId, courseId },
+    });
+  }
+
+  async unlinkCourse(adminId: string, classroomId: string, courseId: string) {
+    const adminUser = await this.prisma.user.findUnique({
+      where: { id: adminId },
+    });
+
+    if (!adminUser || adminUser.role !== GlobalRole.admin) {
+      throw new ForbiddenException('Only system admins can unlink courses from classrooms');
+    }
+
+    const linkedCourse = await this.prisma.classroomLinkedCourse.findUnique({
+      where: { classroomId_courseId: { classroomId, courseId } },
+    });
+
+    if (!linkedCourse) throw new NotFoundException('Linked course not found');
+
+    return this.prisma.classroomLinkedCourse.delete({
+      where: { classroomId_courseId: { classroomId, courseId } },
     });
   }
 }
