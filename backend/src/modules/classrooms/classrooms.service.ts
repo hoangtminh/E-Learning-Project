@@ -9,6 +9,7 @@ import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { UpdateClassroomDto } from './dto/update-classroom.dto';
 import { ClassroomRole, GlobalRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
 
 function generateInviteCode(): string {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -16,7 +17,19 @@ function generateInviteCode(): string {
 
 @Injectable()
 export class ClassroomsService {
-  constructor(private prisma: PrismaService) {}
+  private s3Client: S3Client;
+  private bucketName: string;
+
+  constructor(private prisma: PrismaService) {
+    this.bucketName = process.env.AWS_S3_BUCKET_NAME || '';
+    this.s3Client = new S3Client({
+      region: process.env.AWS_REGION || 'ap-southeast-1',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      },
+    });
+  }
 
   async create(userId: string, dto: CreateClassroomDto) {
     // Auto-generate a unique 6-char invite code
@@ -31,7 +44,7 @@ export class ClassroomsService {
       tries++;
     } while (tries < 5);
 
-    return this.prisma.classroom.create({
+    const classroom = await this.prisma.classroom.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -46,6 +59,17 @@ export class ClassroomsService {
         },
       },
     });
+
+    try {
+      await this.s3Client.send(new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: `classrooms/${classroom.id}/`,
+      }));
+    } catch (err) {
+      console.error('Failed to create S3 folder for classroom', err);
+    }
+
+    return classroom;
   }
 
   async findAll(userId: string) {
@@ -146,6 +170,25 @@ export class ClassroomsService {
 
     if (member.role !== ClassroomRole.owner) {
       throw new ForbiddenException(`Only the owner can delete this classroom`);
+    }
+
+    // Delete all objects in S3 folder
+    try {
+      const prefix = `classrooms/${id}/`;
+      const listedObjects = await this.s3Client.send(new ListObjectsV2Command({
+        Bucket: this.bucketName,
+        Prefix: prefix,
+      }));
+
+      if (listedObjects.Contents && listedObjects.Contents.length > 0) {
+        const deleteParams = {
+          Bucket: this.bucketName,
+          Delete: { Objects: listedObjects.Contents.map(({ Key }) => ({ Key })) },
+        };
+        await this.s3Client.send(new DeleteObjectsCommand(deleteParams));
+      }
+    } catch (err) {
+      console.error('Failed to delete S3 folder for classroom', err);
     }
 
     return this.prisma.classroom.delete({ where: { id } });

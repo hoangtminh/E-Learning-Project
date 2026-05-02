@@ -141,3 +141,32 @@ export const linkCourse = (classroomId: string, courseId: string) =>
 export const unlinkCourse = (classroomId: string, courseId: string) =>
   apiDelete(`/classrooms/${classroomId}/courses/${courseId}`);
 
+// ── Files ─────────────────────────────────────────────────────────────────────
+
+export type ClassroomFile = {
+  id: string;
+  name: string;
+  s3Key: string;
+  sizeBytes: number;
+  mimeType: string;
+  uploadedAt: string;
+  uploader: { fullName: string | null; avatarUrl: string | null };
+};
+
+export const getFiles = (classroomId: string) =>
+  apiGet<ClassroomFile[]>(`/classrooms/${classroomId}/files`);
+
+export const getPresignedUploadUrl = (classroomId: string, filename: string, mimeType: string) =>
+  apiPost<{ url: string; s3Key: string }>(`/classrooms/${classroomId}/files/presigned-upload`, { filename, mimeType });
+
+export const confirmFileUpload = (classroomId: string, s3Key: string, name: string, sizeBytes: number, mimeType: string) =>
+  apiPost<ClassroomFile>(`/classrooms/${classroomId}/files/confirm`, { s3Key, name, sizeBytes, mimeType });
+
+export const getPresignedDownloadUrl = (classroomId: string, fileId: string) =>
+  apiGet<{ url: string }>(`/classrooms/${classroomId}/files/${fileId}/download`);
+
+export const renameFile = (classroomId: string, fileId: string, name: string) =>
+  apiPatch(`/classrooms/${classroomId}/files/${fileId}`, { name });
+
+export const deleteFile = (classroomId: string, fileId: string) =>
+  apiDelete(`/classrooms/${classroomId}/files/${fileId}`);

@@ -1,221 +1,173 @@
 'use client';
 
 import { useClassrooms } from '@/contexts/ClassroomContext';
+import { useState, useEffect } from 'react';
+import { ClassroomFile, getFiles, getPresignedDownloadUrl } from '@/api/classroom';
 
-type FileType = 'pdf' | 'video' | 'slides' | 'zip' | 'doc';
-
-interface ClassroomFile {
-  id: string;
-  name: string;
-  description: string;
-  type: FileType;
-  size: string;
-  uploader: string;
-  uploadedAt: string;
-  isFeatured?: boolean;
-}
-
-const mockFiles: ClassroomFile[] = [
-  {
-    id: '1',
-    name: 'Course Syllabus v1.2',
-    description:
-      'Complete roadmap of the course including weekly topics and project requirements.',
-    type: 'pdf',
-    size: '2.4 MB',
-    uploader: 'Alex Nguyen',
-    uploadedAt: 'Oct 24, 2023',
-  },
-  {
-    id: '2',
-    name: 'Module 1: Deep Dive into SSR',
-    description:
-      'Offline video for Module 1 focusing on Server-Side Rendering performance.',
-    type: 'video',
-    size: '1.2 GB',
-    uploader: 'Alex Nguyen',
-    uploadedAt: 'Oct 20, 2023',
-  },
-  {
-    id: '3',
-    name: 'Project Architecture Slides',
-    description:
-      'Visual guides and diagrams explaining the final project structure.',
-    type: 'slides',
-    size: '15.8 MB',
-    uploader: 'Jane Doe',
-    uploadedAt: 'Nov 02, 2023',
-  },
-  {
-    id: '4',
-    name: 'Starter Template Source',
-    description:
-      'Clean repository starter with Prettier, ESLint, and Tailwind pre-configured.',
-    type: 'zip',
-    size: '450 KB',
-    uploader: 'Alex Nguyen',
-    uploadedAt: 'Nov 15, 2023',
-  },
-  {
-    id: '5',
-    name: 'Cheat Sheet: Next.js Hooks & Patterns',
-    description:
-      'A handy one-page reference guide for useFormState, useFormStatus, and Server Actions.',
-    type: 'doc',
-    size: '840 KB',
-    uploader: 'Minh Tran',
-    uploadedAt: 'Nov 20, 2023',
-    isFeatured: true,
-  },
-];
-
-const getFileUI = (type: FileType) => {
-  switch (type) {
-    case 'pdf':
-      return {
-        icon: 'picture_as_pdf',
-        bg: 'bg-red-100',
-        color: 'text-red-600',
-      };
-    case 'video':
-      return { icon: 'movie', bg: 'bg-blue-100', color: 'text-blue-600' };
-    case 'slides':
-      return {
-        icon: 'present_to_all',
-        bg: 'bg-amber-100',
-        color: 'text-amber-600',
-      };
-    case 'zip':
-      return {
-        icon: 'folder_zip',
-        bg: 'bg-emerald-100',
-        color: 'text-emerald-600',
-      };
-    case 'doc':
-      return {
-        icon: 'description',
-        bg: 'bg-purple-100',
-        color: 'text-purple-600',
-      };
-    default:
-      return {
-        icon: 'insert_drive_file',
-        bg: 'bg-slate-100',
-        color: 'text-slate-600',
-      };
+const getFileUI = (mimeType: string, name: string) => {
+  const ext = name.split('.').pop()?.toLowerCase();
+  
+  if (mimeType.includes('pdf') || ext === 'pdf') {
+    return { icon: 'picture_as_pdf', bg: 'bg-red-50', color: 'text-red-500' };
+  } else if (mimeType.includes('video') || ['mp4', 'mov', 'avi'].includes(ext || '')) {
+    return { icon: 'movie', bg: 'bg-blue-50', color: 'text-blue-500' };
+  } else if (mimeType.includes('presentation') || ['ppt', 'pptx'].includes(ext || '')) {
+    return { icon: 'present_to_all', bg: 'bg-amber-50', color: 'text-amber-500' };
+  } else if (mimeType.includes('zip') || ['zip', 'rar', 'tar'].includes(ext || '')) {
+    return { icon: 'folder_zip', bg: 'bg-emerald-50', color: 'text-emerald-500' };
+  } else if (mimeType.includes('document') || ['doc', 'docx'].includes(ext || '')) {
+    return { icon: 'description', bg: 'bg-purple-50', color: 'text-purple-500' };
   }
+  return { icon: 'insert_drive_file', bg: 'bg-slate-50', color: 'text-slate-500' };
 };
 
 export default function ClassroomFilesPage() {
   const { classroom } = useClassrooms();
+  const [files, setFiles] = useState<ClassroomFile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (classroom?.id) {
+      fetchFiles();
+    }
+  }, [classroom?.id]);
+
+  const fetchFiles = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getFiles(classroom!.id);
+      if (res.success && res.data) {
+        setFiles(res.data);
+      } else {
+        setFiles([]);
+      }
+    } catch (error) {
+      console.error('Failed to load files', error);
+      setFiles([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDownload = async (fileId: string) => {
+    try {
+      const res = await getPresignedDownloadUrl(classroom!.id, fileId);
+      if (res.success && res.data?.url) {
+        window.open(res.data.url, '_blank');
+      } else {
+        throw new Error(res.error || 'Failed to get download URL');
+      }
+    } catch (error) {
+      console.error('Failed to download file', error);
+      alert('Không thể tải xuống file.');
+    }
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   return (
-    <div className='p-6 lg:p-10 max-w-7xl mx-auto w-full flex-1'>
-      {/* Header Section */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4'>
+    <div className='p-4 lg:p-8 max-w-7xl mx-auto w-full flex-1'>
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4'>
         <div>
-          <h2 className='text-2xl font-bold text-slate-800'>
+          <h2 className='text-xl font-bold text-slate-800'>
             Tài nguyên lớp học
           </h2>
-          <p className='text-slate-500 text-sm mt-1'>
-            Tất cả tài liệu có thể tải xuống của {classroom?.title}
+          <p className='text-slate-500 text-xs mt-0.5'>
+            {files.length} tài liệu trong lớp {classroom?.title}
           </p>
         </div>
-        <div className='flex gap-3'>
-          <button className='flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-slate-600 text-sm font-medium hover:bg-slate-200 transition-all'>
-            <span className='material-symbols-outlined text-lg'>
-              filter_list
-            </span>
-            Lọc
-          </button>
-          <button className='flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-sky-600/20 hover:opacity-90 hover:bg-sky-700 transition-all'>
-            <span className='material-symbols-outlined text-lg'>download</span>
-            Tải tất cả
-          </button>
-        </div>
       </div>
 
-      {/* Bento Grid of Resources */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {mockFiles.map((file) => {
-          const ui = getFileUI(file.type);
-          return (
-            <div
-              key={file.id}
-              className={`bg-white/60 backdrop-blur-md border border-slate-200 p-6 rounded-2xl group hover:bg-white/80 hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col ${
-                file.isFeatured
-                  ? 'lg:col-span-2 md:flex-row md:items-center gap-6'
-                  : ''
-              }`}
-            >
-              <div
-                className={`flex justify-between items-start mb-6 ${file.isFeatured ? 'mb-0 shrink-0' : ''}`}
-              >
-                <div
-                  className={`w-16 h-16 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${ui.bg} ${ui.color}`}
-                >
-                  <span className='material-symbols-outlined text-4xl md:text-3xl'>
-                    {ui.icon}
-                  </span>
-                </div>
-                {!file.isFeatured && (
-                  <span className='text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md'>
-                    {file.size}
-                  </span>
-                )}
-              </div>
-
-              <div className='flex-1 flex flex-col h-full'>
-                <div
-                  className={`${file.isFeatured ? 'flex justify-between items-start mb-4' : ''}`}
-                >
-                  <h3 className='text-lg font-bold text-slate-800 group-hover:text-sky-600 transition-colors'>
-                    {file.name}
-                  </h3>
-                  {file.isFeatured && (
-                    <span className='text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md hidden md:block'>
-                      {file.size}
-                    </span>
-                  )}
-                </div>
-
-                <div
-                  className={`mt-auto pt-6 flex items-center justify-between border-t border-slate-200/60 ${file.isFeatured ? 'border-none pt-4' : ''}`}
-                >
-                  <div className='flex flex-col md:flex-row md:items-center gap-1 md:gap-4'>
-                    <span className='text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1'>
-                      <span className='material-symbols-outlined text-xs'>
-                        person
-                      </span>{' '}
-                      {file.uploader}
-                    </span>
-                    <span className='text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1'>
-                      <span className='material-symbols-outlined text-xs'>
-                        history
-                      </span>{' '}
-                      {file.uploadedAt}
-                    </span>
-                  </div>
-
-                  <button
-                    className={`rounded-lg bg-slate-100 text-slate-600 hover:bg-sky-600 hover:text-white transition-all flex items-center justify-center ${file.isFeatured ? 'px-4 py-2 gap-2' : 'p-2'}`}
-                  >
-                    <span className='material-symbols-outlined text-lg md:text-sm'>
-                      download
-                    </span>
-                    {file.isFeatured && (
-                      <span className='text-xs font-bold hidden md:block'>
-                        TẢI XUỐNG
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      <div className='bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 overflow-hidden shadow-sm'>
+        {isLoading ? (
+          <div className='text-center py-12 text-slate-500 text-sm'>Đang tải dữ liệu...</div>
+        ) : files.length === 0 ? (
+          <div className='text-center py-16'>
+            <span className='material-symbols-outlined text-4xl text-slate-300 mb-2 block'>folder_open</span>
+            <p className='text-slate-500 text-sm'>Lớp học chưa có tài liệu nào.</p>
+          </div>
+        ) : (
+          <div className='overflow-x-auto'>
+            <table className='w-full text-left text-sm border-collapse'>
+              <thead>
+                <tr className='border-b border-slate-100 bg-slate-50/50'>
+                  <th className='px-6 py-4 font-semibold text-slate-600'>Tên tài liệu</th>
+                  <th className='px-6 py-4 font-semibold text-slate-600 hidden md:table-cell'>Dung lượng</th>
+                  <th className='px-6 py-4 font-semibold text-slate-600 hidden lg:table-cell'>Ngày tải</th>
+                  <th className='px-6 py-4 font-semibold text-slate-600 hidden sm:table-cell'>Người đăng</th>
+                  <th className='px-6 py-4 font-semibold text-slate-600 text-right'>Tải về</th>
+                </tr>
+              </thead>
+              <tbody>
+                {files.map((file) => {
+                  const ui = getFileUI(file.mimeType, file.name);
+                  return (
+                    <tr 
+                      key={file.id} 
+                      className='border-b border-slate-50 hover:bg-slate-50/80 transition-colors group'
+                    >
+                      <td className='px-6 py-4'>
+                        <div className='flex items-center gap-3'>
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${ui.bg} ${ui.color}`}>
+                            <span className='material-symbols-outlined text-[22px]'>
+                              {ui.icon}
+                            </span>
+                          </div>
+                          <div className='flex flex-col min-w-0'>
+                            <span className='font-medium text-slate-700 truncate max-w-[200px] md:max-w-md block' title={file.name}>
+                              {file.name}
+                            </span>
+                            <span className='text-[10px] text-slate-400 md:hidden'>
+                              {formatBytes(file.sizeBytes)} • {new Date(file.uploadedAt).toLocaleDateString('vi-VN')}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className='px-6 py-4 text-slate-500 hidden md:table-cell whitespace-nowrap'>
+                        {formatBytes(file.sizeBytes)}
+                      </td>
+                      <td className='px-6 py-4 text-slate-500 hidden lg:table-cell whitespace-nowrap'>
+                        {new Date(file.uploadedAt).toLocaleDateString('vi-VN')}
+                      </td>
+                      <td className='px-6 py-4 hidden sm:table-cell'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden'>
+                            {file.uploader.avatarUrl ? (
+                              <img src={file.uploader.avatarUrl} alt='' className='w-full h-full object-cover' />
+                            ) : (
+                              file.uploader.fullName?.charAt(0) || 'U'
+                            )}
+                          </div>
+                          <span className='text-xs text-slate-600 truncate max-w-[100px]'>
+                            {file.uploader.fullName || 'Người dùng'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className='px-6 py-4 text-right'>
+                        <button
+                          onClick={() => handleDownload(file.id)}
+                          className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm'
+                          title='Tải xuống'
+                        >
+                          <span className='material-symbols-outlined text-[18px]'>
+                            download
+                          </span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-
     </div>
   );
 }

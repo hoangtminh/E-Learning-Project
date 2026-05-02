@@ -85,6 +85,7 @@ model User {
   createdTasks        ClassroomTask[]      @relation("TaskCreator")
   taskSubmissions     TaskSubmission[]     @relation("TaskUser")
   notes               Note[]
+  uploadedFiles       ClassroomFile[]
   createdCalls        Call[]               @relation("CallCreator")
 
   @@map("users")
@@ -108,6 +109,7 @@ model Classroom {
   linkedCourses ClassroomLinkedCourse[]
   notes         Note[]
   calls         Call[]
+  files         ClassroomFile[]
 
   @@map("classrooms")
   @@index([ownerId])
@@ -327,6 +329,24 @@ model TaskSubmission {
   @@unique([taskId, userId])
   @@index([userId])
   @@map("task_submissions")
+}
+
+model ClassroomFile {
+  id          String   @id @default(cuid())
+  classroomId String   @map("classroom_id")
+  uploaderId  String   @map("uploader_id")
+  name        String   
+  s3Key       String   @map("s3_key")
+  sizeBytes   Int      @map("size_bytes")
+  mimeType    String   @map("mime_type")
+  uploadedAt  DateTime @default(now()) @map("uploaded_at")
+
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  uploader    User      @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  @@index([classroomId])
+  @@index([uploaderId])
+  @@map("classroom_files")
 }
 
 model ClassroomLinkedCourse {
