@@ -135,6 +135,35 @@ export default function ClassroomInfoPage() {
 
         {/* Right Column — Sidebar */}
         <div className='lg:col-span-4 space-y-6'>
+          {/* Invite Code Card */}
+          <div className='bg-white border border-slate-200 p-5 rounded-2xl shadow-sm'>
+            <h3 className='text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2'>
+              <span className='material-symbols-outlined text-base text-indigo-500'>qr_code</span> 
+              Mã mời tham gia
+            </h3>
+            <div className='flex items-center gap-2'>
+              <div className='flex-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 font-mono text-center tracking-[0.2em] font-bold text-slate-700 text-lg'>
+                {classroom?.inviteCode ?? '------'}
+              </div>
+              <button 
+                onClick={() => {
+                  if (classroom?.inviteCode) {
+                    navigator.clipboard.writeText(classroom.inviteCode);
+                    // Use a simple alert for now as we don't have a toast system visible here
+                    alert('Đã sao chép mã mời!');
+                  }
+                }}
+                className='w-11 h-11 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors shrink-0'
+                title='Sao chép mã'
+              >
+                <span className='material-symbols-outlined text-[20px]'>content_copy</span>
+              </button>
+            </div>
+            <p className='text-[10px] text-slate-400 mt-2 font-medium leading-tight'>
+              Học viên có thể sử dụng mã này để yêu cầu tham gia lớp học.
+            </p>
+          </div>
+
           {/* Support card */}
           <div className='bg-gradient-to-br from-purple-100 to-sky-100 p-6 rounded-2xl relative overflow-hidden shadow-sm border border-sky-200/50'>
             <div className='absolute -right-4 -top-4 w-24 h-24 bg-white/40 rounded-full blur-2xl' />

@@ -1,0 +1,139 @@
+version: "3.8"
+
+networks:
+  coolify:
+    external: true
+    name: coolify
+
+services:
+
+  # ────────────────────────────────────────────────────────────
+  #  POSTGRESQL – Database for Cloudreve
+  # ────────────────────────────────────────────────────────────
+  postgresql:
+    image: postgres:17
+    container_name: postgresql
+    restart: always
+    environment:
+      - POSTGRES_USER=cloudreve
+      - POSTGRES_DB=cloudreve
+      - POSTGRES_PASSWORD=cloudreve_pass_2026
+    volumes:
+      - /root/docker/data/cloudreve/postgres:/var/lib/postgresql/data
+    networks:
+      - coolify
+
+  # ────────────────────────────────────────────────────────────
+  #  REDIS – Cache for Cloudreve
+  # ────────────────────────────────────────────────────────────
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    volumes:
+      - /root/docker/data/cloudreve/redis:/data
+    networks:
+      - coolify
+
+  # ────────────────────────────────────────────────────────────
+  #  MEILISEARCH – Full-text Search Engine
+  # ────────────────────────────────────────────────────────────
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: meilisearch
+    restart: always
+    environment:
+      - MEILI_MASTER_KEY=dacc255af30a508727ad944fd65cd1ba4cf3ce785a3365cec38685cb12fd1461
+    volumes:
+      - /root/docker/data/cloudreve/meilisearch:/meili_data
+    networks:
+      - coolify
+
+  # ────────────────────────────────────────────────────────────
+  #  APACHE TIKA – Document Content Extraction
+  # ────────────────────────────────────────────────────────────
+  tika:
+    image: apache/tika:latest-full
+    container_name: tika
+    restart: always
+    networks:
+      - coolify
+
+  # ────────────────────────────────────────────────────────────
+  #  ONLYOFFICE DOCUMENT SERVER – Online Office Editor
+  # ────────────────────────────────────────────────────────────
+  onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: onlyoffice
+    restart: always
+    environment:
+      - JWT_ENABLED=true
+      - JWT_SECRET=your_onlyoffice_jwt_secret_change_me   # ← ĐỔI GIÁ TRỊ NÀY
+      - JWT_HEADER=Authorization
+      - JWT_IN_BODY=true
+      # Bật WOPI để Cloudreve có thể dùng /hosting/discovery và /hosting/wopi/*
+      - WOPI_ENABLED=true
+    volumes:
+      - /root/docker/data/onlyoffice/logs:/var/log/onlyoffice
+      - /root/docker/data/onlyoffice/data:/var/www/onlyoffice/Data
+      - /root/docker/data/onlyoffice/lib:/var/lib/onlyoffice
+      - /root/docker/data/onlyoffice/fonts:/usr/share/fonts/truetype/custom
+      # Force HTTPS trong discovery XML – fix Mixed Content error
+      - /root/docker/data/onlyoffice/config/local.json:/etc/onlyoffice/documentserver/local.json:ro
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      # HTTP – cần thiết cho Let's Encrypt challenge và browser auto-detect
+      - "traefik.http.routers.onlyoffice-http.rule=Host(`office.nampham.id.vn`)"
+      - "traefik.http.routers.onlyoffice-http.entrypoints=http"
+      - "traefik.http.routers.onlyoffice-http.service=onlyoffice"
+      # HTTPS – TLS termination bởi Traefik, forward HTTP vào container
+      - "traefik.http.routers.onlyoffice.rule=Host(`office.nampham.id.vn`)"
+      - "traefik.http.routers.onlyoffice.entrypoints=https"
+      - "traefik.http.routers.onlyoffice.tls=true"
+      - "traefik.http.routers.onlyoffice.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.onlyoffice.service=onlyoffice"
+      - "traefik.http.services.onlyoffice.loadbalancer.server.port=80"
+
+  # ────────────────────────────────────────────────────────────
+  #  CLOUDREVE – Cloud Storage / File Manager
+  # ────────────────────────────────────────────────────────────
+  cloudreve:
+    image: cloudreve/cloudreve:v4
+    container_name: cloudreve
+    restart: always
+    depends_on:
+      - postgresql
+      - redis
+      - onlyoffice
+    environment:
+      - CR_CONF_Database.Type=postgres
+      - CR_CONF_Database.Host=postgresql
+      - CR_CONF_Database.User=cloudreve
+      - CR_CONF_Database.Name=cloudreve
+      - CR_CONF_Database.Password=cloudreve_pass_2026
+      - CR_CONF_Database.Port=5432
+      - CR_CONF_Redis.Server=redis:6379
+      # ⚠️ Cấu hình OnlyOffice phải làm qua Admin Panel của Cloudreve
+      # Admin Panel → 参数设置 → 图像与媒体 → Office 文档预览
+      # Server URL: https://office.nampham.id.vn
+      # JWT Secret: (khớp với JWT_SECRET trong service onlyoffice)
+    volumes:
+      - /mnt/data_nas/cloudreve/uploads:/cloudreve/data/uploads
+      - /root/docker/data/cloudreve/conf:/cloudreve/data
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      # HTTP
+      - "traefik.http.routers.cloudreve-http.rule=Host(`cloud.nampham.id.vn`)"
+      - "traefik.http.routers.cloudreve-http.entrypoints=http"
+      - "traefik.http.routers.cloudreve-http.service=cloudreve"
+      # HTTPS với TLS
+      - "traefik.http.routers.cloudreve.rule=Host(`cloud.nampham.id.vn`)"
+      - "traefik.http.routers.cloudreve.entrypoints=https"
+      - "traefik.http.routers.cloudreve.tls=true"
+      - "traefik.http.routers.cloudreve.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.cloudreve.service=cloudreve"
+      - "traefik.http.services.cloudreve.loadbalancer.server.port=5212"
