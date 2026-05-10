@@ -34,6 +34,11 @@ export default function ClassroomLayout({
 
   const currentUserId = user?.userId || user?.id;
   const isOwner = !!currentUserId && currentUserId === classroom.ownerId;
+  const currentMember = classroom.members?.find((m) => m.userId === currentUserId);
+  const isOwnerOrAdmin =
+    isOwner ||
+    currentMember?.role === 'admin' ||
+    currentMember?.role === 'owner';
 
   const tabs = [
     { name: 'Bảng tin', path: `/classrooms/${classroomId}`, exact: true },
@@ -72,7 +77,7 @@ export default function ClassroomLayout({
                 </p>
               )}
             </div>
-            {isOwner && (
+            {isOwnerOrAdmin && (
               <Link
                 href={`/classrooms/${classroomId}/admin`}
                 className='bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 backdrop-blur-sm'

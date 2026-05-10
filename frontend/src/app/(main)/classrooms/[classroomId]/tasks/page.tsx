@@ -1,383 +1,365 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { useClassrooms } from '@/contexts/ClassroomContext';
 import { useTasks } from '@/contexts/TaskContext';
 import type { ClassroomTask } from '@/api/classroom';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatDeadline(task: ClassroomTask): {
-  text: string;
-  urgency: 'high' | 'normal' | 'past';
-} {
-  if (!task.deadline) return { text: 'Không có hạn nộp', urgency: 'normal' };
-  const diff = Math.ceil(
-    (new Date(task.deadline).getTime() - Date.now()) / 86400000,
-  );
-  if (diff < 0)
-    return {
-      text: `Hết hạn ${new Date(task.deadline).toLocaleDateString('vi-VN')}`,
-      urgency: 'past',
-    };
-  if (diff === 0) return { text: 'Hạn nộp hôm nay!', urgency: 'high' };
-  if (diff <= 3)
-    return { text: `Còn ${diff} ngày`, urgency: 'high' };
-  return {
-    text: `Hạn: ${new Date(task.deadline).toLocaleDateString('vi-VN')}`,
-    urgency: 'normal',
-  };
+function useDeadline(deadline: string | null) {
+  if (!deadline) return { label: null, color: '' };
+  const diff = Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000);
+  if (diff < 0) return { label: `Hết hạn ${new Date(deadline).toLocaleDateString('vi-VN')}`, color: 'text-slate-400' };
+  if (diff === 0) return { label: 'Hết hạn hôm nay', color: 'text-red-500 font-semibold' };
+  if (diff <= 3) return { label: `Còn ${diff} ngày`, color: 'text-orange-500 font-semibold' };
+  return { label: new Date(deadline).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }), color: 'text-slate-400' };
 }
 
-// ─── Submit Modal ────────────────────────────────────────────────────────────
+// ─── Submission Form (inline inside panel) ───────────────────────────────────
 
-function SubmitModal({
-  task,
-  classroomId,
-  onClose,
-}: {
-  task: ClassroomTask;
-  classroomId: string;
-  onClose: () => void;
-}) {
-  const { submitTask } = useTasks();
-  const [content, setContent] = useState(task.submissions[0]?.content ?? '');
-  const [submitting, setSubmitting] = useState(false);
+function SubmitForm({ task, classroomId, onDone }: { task: ClassroomTask; classroomId: string; onDone: () => void }) {
+  const { submitTask, getSubmissionPresignedUpload, getMySubmissionDownloadUrl } = useTasks();
+  const existing = task.submissions[0];
+
+  const [tab, setTab] = useState<'text' | 'file'>('text');
+  const [content, setContent] = useState(existing?.content ?? '');
+  const [file, setFile] = useState<File | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [dlLoading, setDlLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const hasS3File = existing?.fileUrl && !existing.fileUrl.startsWith('http');
+  const hasLinkFile = existing?.fileUrl?.startsWith('http');
 
   const handleSubmit = async () => {
-    setSubmitting(true);
-    setError('');
+    setLoading(true); setError(''); setSuccess(false);
     try {
-      await submitTask(classroomId, task.id, { content });
-      onClose();
+      let fileUrl: string | undefined;
+      if (tab === 'file' && file) {
+        setProgress(10);
+        const { url, s3Key } = await getSubmissionPresignedUpload(classroomId, task.id, file.name, file.type || 'application/octet-stream');
+        setProgress(30);
+        const r = await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type || 'application/octet-stream' } });
+        if (!r.ok) throw new Error('Upload thất bại');
+        fileUrl = s3Key;
+        setProgress(90);
+      }
+      await submitTask(classroomId, task.id, {
+        content: tab === 'text' ? (content || undefined) : undefined,
+        fileUrl: tab === 'file' ? fileUrl : (existing?.fileUrl ?? undefined),
+        fileName: tab === 'file' && file ? file.name : undefined,
+      });
+      setProgress(100);
+      setSuccess(true);
+      setFile(null);
+      setTimeout(onDone, 800);
     } catch (e: any) {
       setError(e.message || 'Nộp bài thất bại');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
+  const handleDownloadOwn = async () => {
+    setDlLoading(true);
+    try { window.open(await getMySubmissionDownloadUrl(classroomId, task.id), '_blank'); }
+    catch (e: any) { alert(e.message); }
+    finally { setDlLoading(false); }
+  };
+
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4'>
-      <div className='bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl'>
-        <h2 className='text-xl font-bold text-slate-900 mb-1 flex items-center gap-2'>
-          <span className='material-symbols-outlined text-sky-600'>upload_file</span>
-          Nộp bài
-        </h2>
-        <p className='text-sm text-slate-500 mb-5'>{task.title}</p>
-        <div className='space-y-4'>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-1'>
-              Nội dung / Link bài nộp
-            </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className='w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800 resize-none'
-              placeholder='Dán link hoặc nhập nội dung bài làm...'
-              rows={4}
-            />
+    <div className="mt-4 border-t border-slate-100 pt-4">
+      <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
+        {existing ? 'Cập nhật bài nộp' : 'Nộp bài'}
+      </p>
+
+      {/* Tab */}
+      <div className="flex gap-1 bg-slate-100 rounded-lg p-1 mb-3 w-fit">
+        {(['text', 'file'] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === t ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            <span className="material-symbols-outlined text-[14px]">{t === 'text' ? 'edit_note' : 'attach_file'}</span>
+            {t === 'text' ? 'Text / Link' : 'Upload file'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'text' ? (
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={3}
+          placeholder="Dán link Google Drive, GitHub, hoặc nhập nội dung..."
+          className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none bg-slate-50"
+        />
+      ) : (
+        <div>
+          <div
+            onClick={() => fileRef.current?.click()}
+            className="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center cursor-pointer hover:border-sky-400 hover:bg-sky-50/40 transition-colors"
+          >
+            <span className="material-symbols-outlined text-3xl text-slate-300 block mb-1">cloud_upload</span>
+            {file
+              ? <p className="text-sm font-semibold text-sky-600">{file.name}</p>
+              : <p className="text-sm text-slate-400">Nhấn để chọn file</p>
+            }
           </div>
-          {error && (
-            <p className='text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg'>
-              {error}
-            </p>
+          <input ref={fileRef} type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          {(hasS3File || hasLinkFile) && !file && (
+            <button onClick={handleDownloadOwn} disabled={dlLoading} className="mt-2 flex items-center gap-1 text-xs text-slate-500 hover:text-sky-600 transition-colors">
+              <span className="material-symbols-outlined text-sm">{dlLoading ? 'progress_activity' : 'download'}</span>
+              Tải file đã nộp
+            </button>
+          )}
+          {loading && progress > 0 && (
+            <div className="mt-2">
+              <div className="h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-full bg-sky-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+              </div>
+              <p className="text-xs text-slate-400 mt-1">{progress}%</p>
+            </div>
           )}
         </div>
-        <div className='mt-6 flex justify-end gap-3'>
-          <button
-            onClick={onClose}
-            className='px-5 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition-colors'
-          >
-            Hủy
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className='px-5 py-2 bg-sky-600 text-white rounded-xl font-semibold hover:bg-sky-700 transition-colors disabled:opacity-50 flex items-center gap-2'
-          >
-            {submitting ? (
-              <>
-                <span className='material-symbols-outlined animate-spin text-sm'>
-                  progress_activity
-                </span>
-                Đang nộp...
-              </>
-            ) : task.submissions.length > 0 ? (
-              'Cập nhật bài nộp'
-            ) : (
-              'Nộp bài'
+      )}
+
+      {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+      {success && <p className="text-xs text-green-600 mt-2 flex items-center gap-1"><span className="material-symbols-outlined text-sm">check_circle</span>Nộp bài thành công!</p>}
+
+      <div className="mt-3 flex justify-end">
+        <button
+          onClick={handleSubmit}
+          disabled={loading || (tab === 'file' && !file && !existing)}
+          className="flex items-center gap-1.5 px-5 py-2 bg-sky-600 text-white text-sm font-semibold rounded-xl hover:bg-sky-700 transition-colors disabled:opacity-40 shadow-sm shadow-sky-200"
+        >
+          {loading && <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>}
+          {existing ? 'Cập nhật' : 'Nộp bài'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Attachment Download ──────────────────────────────────────────────────────
+
+function AttachBtn({ label, onPress }: { label: string; onPress: () => Promise<void> }) {
+  const [loading, setLoading] = useState(false);
+  return (
+    <button
+      onClick={async () => { setLoading(true); try { await onPress(); } finally { setLoading(false); } }}
+      disabled={loading}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+    >
+      <span className="material-symbols-outlined text-sm">{loading ? 'progress_activity' : 'download'}</span>
+      {label}
+    </button>
+  );
+}
+
+// ─── Detail Panel ─────────────────────────────────────────────────────────────
+
+function TaskDetailPanel({ task, classroomId, onClose, onRefresh }: { task: ClassroomTask; classroomId: string; onClose: () => void; onRefresh: () => void }) {
+  const { getTaskAttachmentDownloadUrl } = useTasks();
+  const existing = task.submissions[0];
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleDone = () => {
+    setRefreshKey((k) => k + 1);
+    onRefresh();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-white w-full sm:max-w-xl sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start gap-3 p-5 border-b border-slate-100">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Bài tập</p>
+            <h2 className="text-base font-bold text-slate-900 leading-snug">{task.title}</h2>
+            {task.deadline && (
+              <DeadlineBadge deadline={task.deadline} />
             )}
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors shrink-0">
+            <span className="material-symbols-outlined">close</span>
           </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+          {/* Description */}
+          {task.description && (
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Yêu cầu</p>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{task.description}</p>
+            </div>
+          )}
+
+          {/* Attachment */}
+          {task.attachmentKey && (
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">File đính kèm</p>
+              <AttachBtn
+                label={task.attachmentName ?? 'Tải đề bài'}
+                onPress={async () => {
+                  const url = await getTaskAttachmentDownloadUrl(classroomId, task.id);
+                  window.open(url, '_blank');
+                }}
+              />
+            </div>
+          )}
+
+          {/* Current submission preview */}
+          {existing && (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm text-green-500">check_circle</span>
+                Bài đã nộp · {new Date(existing.submittedAt).toLocaleString('vi-VN')}
+              </p>
+              {existing.content && (
+                <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{existing.content}</p>
+              )}
+              {existing.grade !== null && existing.grade !== undefined && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-slate-500">Điểm:</span>
+                  <span className="text-lg font-black text-green-700">{Number(existing.grade).toFixed(0)}</span>
+                  <span className="text-xs text-slate-400">/100</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Submit form */}
+          <SubmitForm key={refreshKey} task={task} classroomId={classroomId} onDone={handleDone} />
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+function DeadlineBadge({ deadline }: { deadline: string }) {
+  const { label, color } = useDeadline(deadline);
+  if (!label) return null;
+  return (
+    <span className={`flex items-center gap-0.5 text-xs mt-1 ${color}`}>
+      <span className="material-symbols-outlined text-[13px]">schedule</span>
+      {label}
+    </span>
+  );
+}
 
-const ICON_STYLES = [
-  { icon: 'assignment', color: 'text-purple-600', bg: 'bg-purple-100' },
-  { icon: 'code', color: 'text-sky-600', bg: 'bg-sky-100' },
-  { icon: 'description', color: 'text-slate-500', bg: 'bg-slate-100' },
-  { icon: 'quiz', color: 'text-amber-600', bg: 'bg-amber-100' },
-];
+// ─── Task Row ─────────────────────────────────────────────────────────────────
+
+function TaskRow({ task, classroomId }: { task: ClassroomTask; classroomId: string }) {
+  const [open, setOpen] = useState(false);
+  const { fetchTasks } = useTasks();
+  const existing = task.submissions[0];
+  const submitted = !!existing;
+  const graded = existing?.grade !== null && existing?.grade !== undefined;
+  const { label: dlLabel, color: dlColor } = useDeadline(task.deadline);
+  const isPast = task.deadline && new Date(task.deadline) < new Date();
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left group"
+      >
+        {/* Status dot */}
+        <div className={`w-2 h-2 rounded-full shrink-0 ${graded ? 'bg-green-500' : submitted ? 'bg-sky-400' : isPast ? 'bg-red-400' : 'bg-slate-300'}`} />
+
+        {/* Title */}
+        <p className="flex-1 text-sm font-medium text-slate-800 truncate group-hover:text-sky-700 transition-colors">
+          {task.title}
+        </p>
+
+        {/* Status badge */}
+        {graded ? (
+          <span className="shrink-0 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+            {Number(existing.grade).toFixed(0)}/100
+          </span>
+        ) : submitted ? (
+          <span className="shrink-0 text-xs font-semibold text-sky-600 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full">Đã nộp</span>
+        ) : (
+          <span className="shrink-0 text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Chưa nộp</span>
+        )}
+
+        {/* Deadline */}
+        {dlLabel && (
+          <span className={`shrink-0 text-xs ${dlColor} hidden sm:block min-w-[80px] text-right`}>{dlLabel}</span>
+        )}
+
+        <span className="material-symbols-outlined text-slate-300 group-hover:text-slate-400 text-[18px] shrink-0 transition-colors">chevron_right</span>
+      </button>
+
+      {open && <TaskDetailPanel task={task} classroomId={classroomId} onClose={() => setOpen(false)} onRefresh={() => fetchTasks(classroomId)} />}
+    </>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ClassroomTasksPage() {
   const params = useParams();
   const classroomId = params.classroomId as string;
   const { tasks, loadingTasks, fetchTasks } = useTasks();
 
-  const [submitTask, setSubmitTask] = useState<ClassroomTask | null>(null);
+  useEffect(() => { if (classroomId) fetchTasks(classroomId); }, [classroomId, fetchTasks]);
 
-  useEffect(() => {
-    if (classroomId) fetchTasks(classroomId);
-  }, [classroomId, fetchTasks]);
-
-  const todoCount = tasks.filter((t) => t.submissions.length === 0).length;
-  const doneCount = tasks.filter((t) => t.submissions.length > 0).length;
+  const submitted = tasks.filter((t) => t.submissions.length > 0).length;
+  const total = tasks.length;
 
   if (loadingTasks) {
     return (
-      <div className='flex items-center justify-center py-20 text-slate-400'>
-        <span className='material-symbols-outlined animate-spin mr-2'>
-          progress_activity
-        </span>
-        Đang tải bài tập...
+      <div className="flex items-center justify-center py-20 text-slate-400 gap-2">
+        <span className="material-symbols-outlined animate-spin">progress_activity</span>
+        Đang tải...
+      </div>
+    );
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="text-center py-20 text-slate-400">
+        <span className="material-symbols-outlined text-5xl block mb-3 opacity-30">assignment</span>
+        <p className="font-medium text-sm">Chưa có bài tập nào</p>
       </div>
     );
   }
 
   return (
-    <div className='p-6 lg:p-10 max-w-7xl mx-auto w-full'>
-      <div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>
-        {/* Main Assignments List */}
-        <div className='col-span-1 lg:col-span-8 space-y-6'>
-          {/* Toolbar */}
-          <div className='flex justify-between items-center bg-white/60 backdrop-blur-md p-4 rounded-xl border border-sky-200/50 shadow-sm'>
-            <div className='flex gap-2'>
-              <span className='px-3 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold'>
-                Cần làm: {todoCount}
-              </span>
-              <span className='px-3 py-1 rounded-lg bg-green-50 text-green-600 text-xs font-semibold border border-green-100'>
-                Đã nộp: {doneCount}
-              </span>
-            </div>
-          </div>
-
-          {/* Empty state */}
-          {tasks.length === 0 && (
-            <div className='text-center py-16 text-slate-400'>
-              <span className='material-symbols-outlined text-5xl block mb-3'>
-                assignment
-              </span>
-              <p className='font-medium'>Chưa có bài tập nào</p>
-            </div>
-          )}
-
-          {/* Task Cards */}
-          {tasks.map((task, index) => {
-            const submission = task.submissions[0];
-            const status = submission
-              ? submission.grade !== null
-                ? 'graded'
-                : 'submitted'
-              : 'todo';
-            const ui = ICON_STYLES[index % ICON_STYLES.length];
-            const { text: dueDateStr, urgency } = formatDeadline(task);
-
-            return (
-              <div
-                key={task.id}
-                className={`bg-white/60 backdrop-blur-md border p-6 rounded-2xl group transition-all duration-300 shadow-sm ${
-                  status === 'todo'
-                    ? urgency === 'high'
-                      ? 'border-l-4 border-l-red-500 border-slate-200 hover:border-red-400/60'
-                      : 'border-l-4 border-l-sky-500 border-slate-200 hover:border-sky-400/60'
-                    : 'border-slate-200 hover:border-sky-300/60 opacity-90'
-                }`}
-              >
-                <div className='flex flex-col md:flex-row justify-between items-start gap-4'>
-                  <div className='flex gap-4 flex-1'>
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${ui.bg} ${ui.color}`}
-                    >
-                      <span className='material-symbols-outlined'>{ui.icon}</span>
-                    </div>
-                    <div className='flex-1'>
-                      <h3 className='text-base font-bold text-slate-800 group-hover:text-sky-600 transition-colors'>
-                        {task.title}
-                      </h3>
-                      {task.description && (
-                        <p className='text-sm text-slate-500 mt-1 leading-relaxed'>
-                          {task.description}
-                        </p>
-                      )}
-                      <div className='flex flex-wrap items-center gap-4 mt-3'>
-                        <div
-                          className={`flex items-center gap-1.5 text-xs ${
-                            urgency === 'high'
-                              ? 'text-red-500 font-bold'
-                              : urgency === 'past'
-                                ? 'text-slate-400 line-through'
-                                : 'text-slate-500'
-                          }`}
-                        >
-                          <span className='material-symbols-outlined text-sm'>
-                            {urgency === 'high'
-                              ? 'priority_high'
-                              : status !== 'todo'
-                                ? 'history'
-                                : 'calendar_today'}
-                          </span>
-                          {dueDateStr}
-                        </div>
-                        <div className='flex items-center gap-1.5 text-xs text-slate-400'>
-                          <span className='material-symbols-outlined text-sm'>person</span>
-                          {task.creator?.fullName ?? 'N/A'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className='flex flex-col items-end gap-2 shrink-0'>
-                    {/* Status badge */}
-                    {status === 'graded' && (
-                      <>
-                        <span className='px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center gap-1'>
-                          <span className='material-symbols-outlined text-sm'>check_circle</span>
-                          Đã chấm điểm
-                        </span>
-                        <div className='text-2xl font-black text-slate-800 text-right'>
-                          {submission?.grade}
-                          <span className='text-sm font-normal text-slate-500'>/100</span>
-                        </div>
-                      </>
-                    )}
-                    {status === 'submitted' && (
-                      <>
-                        <span className='px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-xs font-bold flex items-center gap-1'>
-                          <span className='material-symbols-outlined text-sm'>pending</span>
-                          Đã nộp
-                        </span>
-                        <button
-                          onClick={() => setSubmitTask(task)}
-                          className='text-sky-600 text-xs font-bold hover:underline'
-                        >
-                          Sửa bài nộp
-                        </button>
-                      </>
-                    )}
-                    {status === 'todo' && (
-                      <>
-                        <span className='px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold border border-slate-200'>
-                          Chưa làm
-                        </span>
-                        <button
-                          onClick={() => setSubmitTask(task)}
-                          className='mt-1 bg-sky-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md shadow-sky-600/20 hover:bg-sky-700 transition-all active:scale-95'
-                        >
-                          Nộp bài
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Sidebar */}
-        <div className='col-span-1 lg:col-span-4 space-y-6'>
-          {/* Progress */}
-          <div className='bg-white/60 backdrop-blur-md border border-slate-200 p-6 rounded-2xl shadow-sm'>
-            <h4 className='font-bold text-slate-800 mb-6'>Tiến độ của bạn</h4>
-            <div className='space-y-4'>
-              <div>
-                <div className='flex justify-between text-sm mb-2'>
-                  <span className='text-slate-500'>Đã hoàn thành</span>
-                  <span className='font-bold text-slate-800'>
-                    {doneCount}/{tasks.length || 1}
-                  </span>
-                </div>
-                <div className='w-full bg-slate-200 h-2 rounded-full overflow-hidden'>
-                  <div
-                    className='bg-sky-500 h-full rounded-full transition-all duration-500'
-                    style={{
-                      width: `${tasks.length ? (doneCount / tasks.length) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
-              <div className='grid grid-cols-2 gap-3'>
-                <div className='bg-slate-50 p-4 rounded-xl border border-slate-100 text-center'>
-                  <div className='text-2xl font-black text-sky-600'>
-                    {todoCount}
-                  </div>
-                  <div className='text-xs text-slate-500 mt-1'>Cần làm</div>
-                </div>
-                <div className='bg-slate-50 p-4 rounded-xl border border-slate-100 text-center'>
-                  <div className='text-2xl font-black text-green-600'>
-                    {doneCount}
-                  </div>
-                  <div className='text-xs text-slate-500 mt-1'>Đã nộp</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Upcoming deadlines */}
-          {tasks.filter((t) => t.deadline && t.submissions.length === 0).length > 0 && (
-            <div className='bg-white/60 backdrop-blur-md border border-slate-200 p-6 rounded-2xl shadow-sm'>
-              <h4 className='font-bold text-slate-800 mb-4'>Sắp tới hạn</h4>
-              <div className='space-y-3'>
-                {tasks
-                  .filter((t) => t.deadline && t.submissions.length === 0)
-                  .sort(
-                    (a, b) =>
-                      new Date(a.deadline!).getTime() -
-                      new Date(b.deadline!).getTime(),
-                  )
-                  .slice(0, 3)
-                  .map((t) => {
-                    const { text, urgency } = formatDeadline(t);
-                    return (
-                      <div key={t.id} className='flex gap-3 items-center'>
-                        <span
-                          className={`material-symbols-outlined text-sm ${urgency === 'high' ? 'text-red-500' : 'text-slate-400'}`}
-                        >
-                          calendar_today
-                        </span>
-                        <div>
-                          <div
-                            className={`text-xs font-bold uppercase ${urgency === 'high' ? 'text-red-500' : 'text-slate-400'}`}
-                          >
-                            {text}
-                          </div>
-                          <div className='text-sm font-semibold text-slate-800'>
-                            {t.title}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
+    <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* Summary bar */}
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h1 className="text-base font-bold text-slate-700">Bài tập ({total})</h1>
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <span className="w-2 h-2 rounded-full bg-sky-400 inline-block" />
+          <span>{submitted}/{total} đã nộp</span>
         </div>
       </div>
 
-      {submitTask && (
-        <SubmitModal
-          task={submitTask}
-          classroomId={classroomId}
-          onClose={() => setSubmitTask(null)}
+      {/* Progress */}
+      <div className="h-1 w-full bg-slate-100 rounded-full mb-5 overflow-hidden">
+        <div
+          className="h-full bg-sky-500 rounded-full transition-all duration-500"
+          style={{ width: total ? `${(submitted / total) * 100}%` : '0%' }}
         />
-      )}
+      </div>
+
+      {/* Task list */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
+        {tasks.map((task) => (
+          <TaskRow key={task.id} task={task} classroomId={classroomId} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -302,8 +302,10 @@ model ClassroomTask {
   creatorId   String    @map("creator_id") 
   title       String?
   description String?   @db.Text
-  deadline    DateTime?
-  createdAt   DateTime  @default(now()) @map("created_at")
+  deadline       DateTime?
+  attachmentKey  String?   @map("attachment_key")  // S3 key for teacher's assignment file
+  attachmentName String?   @map("attachment_name")  // Original filename of teacher's attachment
+  createdAt      DateTime  @default(now()) @map("created_at")
 
   classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   creator     User      @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)

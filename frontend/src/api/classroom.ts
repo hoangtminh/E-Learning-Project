@@ -35,9 +35,11 @@ export type ClassroomTask = {
   title: string;
   description: string | null;
   deadline: string | null;
+  attachmentKey: string | null;
+  attachmentName: string | null;
   createdAt: string;
   creator: { id: string; fullName: string | null; avatarUrl: string | null };
-  submissions: TaskSubmission[]; // only current user's submission
+  submissions: TaskSubmission[];
   _count: { submissions: number };
 };
 
@@ -106,13 +108,19 @@ export const createTask = (
   payload: { title: string; description?: string; deadline?: string },
 ) => apiPost<ClassroomTask>(`/classrooms/${classroomId}/tasks`, payload);
 
+export const updateTask = (
+  classroomId: string,
+  taskId: string,
+  payload: { title?: string; description?: string; deadline?: string | null; attachmentKey?: string; attachmentName?: string },
+) => apiPatch<ClassroomTask>(`/classrooms/${classroomId}/tasks/${taskId}`, payload);
+
 export const deleteTask = (classroomId: string, taskId: string) =>
   apiDelete(`/classrooms/${classroomId}/tasks/${taskId}`);
 
 export const submitTask = (
   classroomId: string,
   taskId: string,
-  payload: { content?: string; fileUrl?: string },
+  payload: { content?: string; fileUrl?: string; fileName?: string },
 ) =>
   apiPost<TaskSubmission>(
     `/classrooms/${classroomId}/tasks/${taskId}/submit`,
@@ -120,7 +128,53 @@ export const submitTask = (
   );
 
 export const getSubmissions = (classroomId: string, taskId: string) =>
-  apiGet(`/classrooms/${classroomId}/tasks/${taskId}/submissions`);
+  apiGet<(TaskSubmission & { user: { id: string; fullName: string | null; avatarUrl: string | null; email: string } })[]>(
+    `/classrooms/${classroomId}/tasks/${taskId}/submissions`,
+  );
+
+/** Admin: presigned upload URL for task attachment file */
+export const getTaskAttachmentPresignedUpload = (
+  classroomId: string,
+  taskId: string,
+  filename: string,
+  mimeType: string,
+) =>
+  apiGet<{ url: string; s3Key: string; filename: string }>(
+    `/classrooms/${classroomId}/tasks/${taskId}/attachment/presigned-upload?filename=${encodeURIComponent(filename)}&mimeType=${encodeURIComponent(mimeType)}`,
+  );
+
+/** Any member: presigned download URL for task attachment */
+export const getTaskAttachmentDownloadUrl = (classroomId: string, taskId: string) =>
+  apiGet<{ url: string; filename: string | null }>(
+    `/classrooms/${classroomId}/tasks/${taskId}/attachment/download`,
+  );
+
+/** Get a presigned S3 upload URL for a student's submission file */
+export const getSubmissionPresignedUpload = (
+  classroomId: string,
+  taskId: string,
+  filename: string,
+  mimeType: string,
+) =>
+  apiGet<{ url: string; s3Key: string; filename: string }>(
+    `/classrooms/${classroomId}/tasks/${taskId}/submissions/presigned-upload?filename=${encodeURIComponent(filename)}&mimeType=${encodeURIComponent(mimeType)}`,
+  );
+
+/** Admin gets a presigned download URL for a student's submission file */
+export const getSubmissionDownloadUrl = (
+  classroomId: string,
+  taskId: string,
+  submissionId: string,
+) =>
+  apiGet<{ url: string }>(
+    `/classrooms/${classroomId}/tasks/${taskId}/submissions/${submissionId}/download`,
+  );
+
+/** Student downloads their own submission file */
+export const getMySubmissionDownloadUrl = (classroomId: string, taskId: string) =>
+  apiGet<{ url: string }>(
+    `/classrooms/${classroomId}/tasks/${taskId}/my-submission/download`,
+  );
 
 export const gradeSubmission = (
   classroomId: string,
