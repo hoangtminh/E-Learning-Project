@@ -253,3 +253,95 @@ CREATE TABLE `calls` (
     INDEX `calls_classroom_id_idx`(`classroom_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `quizzes` (
+    `id` VARCHAR(191) NOT NULL,
+    `creator_id` VARCHAR(191) NOT NULL,
+    `title` VARCHAR(191) NOT NULL,
+    `description` TEXT NULL,
+    `is_public` BOOLEAN NOT NULL DEFAULT false,
+    `duration` INTEGER NULL,
+    `start_date` DATETIME(3) NULL,
+    `end_date` DATETIME(3) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `quizzes_creator_id_idx`(`creator_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `quiz_memberships` (
+    `id` VARCHAR(191) NOT NULL,
+    `quiz_id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `joined_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `quiz_memberships_user_id_idx`(`user_id`),
+    UNIQUE INDEX `quiz_memberships_quiz_id_user_id_key`(`quiz_id`, `user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `questions` (
+    `id` VARCHAR(191) NOT NULL,
+    `quiz_id` VARCHAR(191) NOT NULL,
+    `type` ENUM('single_choice', 'multiple_choice', 'text') NOT NULL,
+    `content` TEXT NOT NULL,
+    `order_index` INTEGER NOT NULL DEFAULT 0,
+    `points` INTEGER NOT NULL DEFAULT 1,
+
+    INDEX `questions_quiz_id_idx`(`quiz_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `question_options` (
+    `id` VARCHAR(191) NOT NULL,
+    `question_id` VARCHAR(191) NOT NULL,
+    `content` TEXT NOT NULL,
+    `is_correct` BOOLEAN NOT NULL DEFAULT false,
+    `order_index` INTEGER NOT NULL DEFAULT 0,
+
+    INDEX `question_options_question_id_idx`(`question_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `quiz_submissions` (
+    `id` VARCHAR(191) NOT NULL,
+    `quiz_id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `score` DECIMAL(10, 2) NULL,
+    `time_spent` INTEGER NULL,
+    `submitted_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `quiz_submissions_quiz_id_idx`(`quiz_id`),
+    INDEX `quiz_submissions_user_id_idx`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `user_answers` (
+    `id` VARCHAR(191) NOT NULL,
+    `submission_id` VARCHAR(191) NOT NULL,
+    `question_id` VARCHAR(191) NOT NULL,
+    `text_answer` TEXT NULL,
+    `is_correct` BOOLEAN NULL,
+
+    INDEX `user_answers_submission_id_idx`(`submission_id`),
+    INDEX `user_answers_question_id_idx`(`question_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `user_answer_options` (
+    `id` VARCHAR(191) NOT NULL,
+    `user_answer_id` VARCHAR(191) NOT NULL,
+    `option_id` VARCHAR(191) NOT NULL,
+
+    INDEX `user_answer_options_user_answer_id_idx`(`user_answer_id`),
+    INDEX `user_answer_options_option_id_idx`(`option_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

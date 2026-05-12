@@ -26,7 +26,6 @@ interface QuestionEditorProps {
 export function QuestionEditor({ questions, onChange }: QuestionEditorProps) {
   const addQuestion = (type: QuestionType) => {
     const newQuestion = {
-      id: Math.random().toString(36).substr(2, 9),
       content: '',
       type: type, // single_choice, multiple_choice, text
       options:
@@ -53,7 +52,6 @@ export function QuestionEditor({ questions, onChange }: QuestionEditorProps) {
     const question = questions.find((q) => q.id === questionId);
     if (!question) return;
     const newOption = {
-      id: (question.options.length + 1).toString(),
       content: `Đáp án ${question.options.length + 1}`,
       isCorrect: false,
     };

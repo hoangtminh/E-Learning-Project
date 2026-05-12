@@ -71,20 +71,27 @@ export function QuizEditor({ quiz }: QuizEditorProps) {
 
     setIsSaving(true);
     try {
-      // Map questions to match backend expectations (especially for text questions)
+      // Map questions to match backend expectations
       const formattedQuestions = formData.questions.map((q: any) => {
-        if (q.type === 'text') {
-          return {
-            ...q,
-            options: q.correctText
-              ? [{ content: q.correctText, isCorrect: true }]
-              : [],
-          };
-        }
-        return q;
+        const { id, ...rest } = q;
+        const cleanedOptions = (q.options || []).map(({ id: optId, ...optRest }: any) => optRest);
+        
+        return {
+          ...rest,
+          options: q.type === 'text' ? [] : cleanedOptions,
+          correctText: q.type === 'text' ? q.correctText : undefined
+        };
       });
 
-      const dataToSave = { ...formData, questions: formattedQuestions };
+      const dataToSave = { 
+        title: formData.title,
+        description: formData.description,
+        isPublic: formData.isPublic,
+        duration: formData.duration,
+        startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
+        endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
+        questions: formattedQuestions 
+      };
 
       if (quiz?.id) {
         await handleUpdateQuiz(quiz.id, dataToSave);

@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider     = "mysql"
   relationMode = "prisma"
 }
 
@@ -60,38 +60,50 @@ enum CallStatus {
   @@map("call_status")
 }
 
+enum QuestionType {
+  single_choice
+  multiple_choice
+  text
+
+  @@map("question_type")
+}
+
 // --- MODELS ---
 
 model User {
-  id               String   @id @default(cuid()) 
-  email            String   @unique
-  passwordHash     String   @map("password_hash")
-  fullName         String?  @map("full_name")
-  avatarUrl        String?  @map("avatar_url")
-  createdAt        DateTime @default(now()) @map("created_at")
-  role             GlobalRole @default(user)
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  fullName     String?    @map("full_name")
+  avatarUrl    String?    @map("avatar_url")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  role         GlobalRole @default(user)
 
   // Relations
-  ownedClassrooms     Classroom[]       @relation("ClassroomOwner")
-  classroomMembers    ClassroomMember[]
+  ownedClassrooms       Classroom[]            @relation("ClassroomOwner")
+  classroomMembers      ClassroomMember[]
   classroomJoinRequests ClassroomJoinRequest[]
-  coursesInstructing  Course[]          @relation("CourseInstructor")
-  courseMemberships    CourseMember[]
-  sendInvites    CourseInvitation[]    @relation("SendInvites")
-  receiveInvites    CourseInvitation[]    @relation("ReceiveInvites")
-  progresses          UserProgress[]
-  conversationMembers ConversationMember[]
-  messages            Message[]            @relation("MessageSender")
-  createdTasks        ClassroomTask[]      @relation("TaskCreator")
-  taskSubmissions     TaskSubmission[]     @relation("TaskUser")
-  notes               Note[]
-  createdCalls        Call[]               @relation("CallCreator")
+  coursesInstructing    Course[]               @relation("CourseInstructor")
+  courseMemberships     CourseMember[]
+  sendInvites           CourseInvitation[]     @relation("SendInvites")
+  receiveInvites        CourseInvitation[]     @relation("ReceiveInvites")
+  progresses            UserProgress[]
+  conversationMembers   ConversationMember[]
+  messages              Message[]              @relation("MessageSender")
+  createdTasks          ClassroomTask[]        @relation("TaskCreator")
+  taskSubmissions       TaskSubmission[]       @relation("TaskUser")
+  notes                 Note[]
+  createdCalls          Call[]                 @relation("CallCreator")
+
+  createdQuizzes        Quiz[]                 @relation("QuizCreator")
+  quizMemberships       QuizMembership[]
+  quizSubmissions       QuizSubmission[]
 
   @@map("users")
 }
 
 model Classroom {
-  id          String   @id @default(cuid()) 
+  id          String   @id @default(cuid())
   title       String
   description String?  @db.Text
   inviteCode  String?  @unique @map("invite_code")
@@ -100,7 +112,7 @@ model Classroom {
   ownerId     String   @map("owner_id")
 
   // Relations
-  owner         User              @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  owner         User                    @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   members       ClassroomMember[]
   joinRequests  ClassroomJoinRequest[]
   conversations Conversation[]
@@ -109,19 +121,19 @@ model Classroom {
   notes         Note[]
   calls         Call[]
 
-  @@map("classrooms")
   @@index([ownerId])
+  @@map("classrooms")
 }
 
 model ClassroomMember {
-  id          String        @id @default(cuid()) 
-  classroomId String        @map("classroom_id") 
-  userId      String        @map("user_id") 
+  id          String        @id @default(cuid())
+  classroomId String        @map("classroom_id")
+  userId      String        @map("user_id")
   role        ClassroomRole @default(member)
   joinedAt    DateTime      @default(now()) @map("joined_at")
 
-  classroom   Classroom     @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([classroomId, userId])
   @@index([userId])
@@ -129,13 +141,13 @@ model ClassroomMember {
 }
 
 model ClassroomJoinRequest {
-  id          String   @id @default(cuid()) 
-  classroomId String   @map("classroom_id") 
-  userId      String   @map("user_id") 
+  id          String   @id @default(cuid())
+  classroomId String   @map("classroom_id")
+  userId      String   @map("user_id")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([classroomId, userId])
   @@index([userId])
@@ -143,18 +155,18 @@ model ClassroomJoinRequest {
 }
 
 model Course {
-  id           String           @id @default(cuid()) 
+  id           String           @id @default(cuid())
   instructorId String           @map("instructor_id")
   title        String
   slug         String           @unique
   description  String?          @db.Text
   thumbnailUrl String?          @map("thumbnail_url")
-  price        Decimal          @default(0) @db.Decimal(10,2)
+  price        Decimal          @default(0) @db.Decimal(10, 2)
   visibility   CourseVisibility @default(public)
   createdAt    DateTime         @default(now()) @map("created_at")
 
   // Relations
-  instructor       User               @relation("CourseInstructor", fields: [instructorId], references: [id])
+  instructor User                    @relation("CourseInstructor", fields: [instructorId], references: [id])
   sections   Section[]
   members    CourseMember[]
   invites    CourseInvitation[]
@@ -162,18 +174,18 @@ model Course {
   progresses UserProgress[]
   notes      Note[]
 
-  @@map("courses")
   @@index([instructorId])
+  @@map("courses")
 }
 
 model CourseMember {
-  id         String   @id @default(cuid()) 
-  courseId   String   @map("course_id") 
-  userId     String   @map("user_id") 
+  id         String   @id @default(cuid())
+  courseId   String   @map("course_id")
+  userId     String   @map("user_id")
   enrolledAt DateTime @default(now()) @map("enrolled_at")
 
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, userId])
   @@index([userId])
@@ -181,17 +193,17 @@ model CourseMember {
 }
 
 model CourseInvitation {
-  id          String   @id @default(cuid()) 
-  courseId    String   @map("course_id") 
-  inviterId   String   @map("inviter_id")
-  inviteeId   String   @map("invitee_id")
-  invitedAt   DateTime @default(now()) @map("invited_at")
-  acceptedAt  DateTime? @map("accepted_at")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id         String    @id @default(cuid())
+  courseId   String    @map("course_id")
+  inviterId  String    @map("inviter_id")
+  inviteeId  String    @map("invitee_id")
+  invitedAt  DateTime  @default(now()) @map("invited_at")
+  acceptedAt DateTime? @map("accepted_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  inviter   User     @relation("SendInvites", fields: [inviterId], references: [id], onDelete: Cascade)
-  invitee   User     @relation("ReceiveInvites", fields: [inviteeId], references: [id], onDelete: Cascade)
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  inviter User   @relation("SendInvites", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee User   @relation("ReceiveInvites", fields: [inviteeId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
   @@index([inviterId])
@@ -200,29 +212,29 @@ model CourseInvitation {
 }
 
 model Section {
-  id         String   @id @default(cuid()) 
-  courseId   String   @map("course_id") 
+  id         String  @id @default(cuid())
+  courseId   String  @map("course_id")
   title      String?
-  orderIndex Int?     @map("order_index")
+  orderIndex Int?    @map("order_index")
 
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessons    Lesson[]
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
 
   @@index([courseId])
   @@map("sections")
 }
 
 model Lesson {
-  id          String       @id @default(cuid())
-  sectionId   String       @map("section_id")
+  id          String      @id @default(cuid())
+  sectionId   String      @map("section_id")
   title       String
-  order       Int          @default(0) @map("order_index")
-  type        ContentType  @default(text)
-  contentUrl  String?      @map("content_url")
-  body        String?      @db.Text
-  durationSec Int?         @map("duration_sec")
+  order       Int         @default(0) @map("order_index")
+  type        ContentType @default(text)
+  contentUrl  String?     @map("content_url")
+  body        String?     @db.Text
+  durationSec Int?        @map("duration_sec")
 
-  section    Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  section    Section        @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   progresses UserProgress[]
   notes      Note[]
 
@@ -239,9 +251,9 @@ model UserProgress {
   isCompleted       Boolean  @default(false) @map("is_completed")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course            Course   @relation(fields: [courseId], references: [id])
-  lesson            Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
   @@index([courseId])
@@ -250,28 +262,28 @@ model UserProgress {
 }
 
 model Conversation {
-  id          String            @id @default(cuid()) 
-  classroomId String?           @map("classroom_id") 
+  id          String            @id @default(cuid())
+  classroomId String?           @map("classroom_id")
   type        ConversationType?
   title       String?
   createdAt   DateTime          @default(now()) @map("created_at")
 
-  classroom   Classroom?        @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  members     ConversationMember[]
-  messages    Message[]
+  classroom Classroom?           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  members   ConversationMember[]
+  messages  Message[]
 
   @@index([classroomId])
   @@map("conversations")
 }
 
 model ConversationMember {
-  id             String       @id @default(cuid()) 
-  conversationId String       @map("conversation_id") 
-  userId         String       @map("user_id") 
-  joinedAt       DateTime     @default(now()) @map("joined_at")
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  userId         String   @map("user_id")
+  joinedAt       DateTime @default(now()) @map("joined_at")
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([userId])
@@ -279,15 +291,15 @@ model ConversationMember {
 }
 
 model Message {
-  id             String       @id @default(cuid()) 
-  conversationId String       @map("conversation_id") 
-  senderId       String       @map("sender_id") 
-  content        String?      @db.Text
-  fileUrl        String?      @map("file_url")
-  createdAt      DateTime     @default(now()) @map("created_at")
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  senderId       String   @map("sender_id")
+  content        String?  @db.Text
+  fileUrl        String?  @map("file_url")
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
 
   @@index([conversationId])
   @@index([senderId])
@@ -295,16 +307,16 @@ model Message {
 }
 
 model ClassroomTask {
-  id          String    @id @default(cuid()) 
-  classroomId String    @map("classroom_id") 
-  creatorId   String    @map("creator_id") 
+  id          String    @id @default(cuid())
+  classroomId String    @map("classroom_id")
+  creatorId   String    @map("creator_id")
   title       String?
   description String?   @db.Text
   deadline    DateTime?
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  creator     User      @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  classroom   Classroom        @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  creator     User             @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
   submissions TaskSubmission[]
 
   @@index([classroomId])
@@ -313,16 +325,16 @@ model ClassroomTask {
 }
 
 model TaskSubmission {
-  id          String        @id @default(cuid()) 
-  taskId      String        @map("task_id") 
-  userId   String        @map("user_id") 
-  content     String?       @db.Text
-  fileUrl     String?       @map("file_url")
-  submittedAt DateTime      @default(now()) @map("submitted_at")
-  grade       Decimal?      @db.Decimal
+  id          String   @id @default(cuid())
+  taskId      String   @map("task_id")
+  userId      String   @map("user_id")
+  content     String?  @db.Text
+  fileUrl     String?  @map("file_url")
+  submittedAt DateTime @default(now()) @map("submitted_at")
+  grade       Decimal? @db.Decimal
 
-  task        ClassroomTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user        User          @relation("TaskUser", fields: [userId], references: [id], onDelete: Cascade)
+  task ClassroomTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User          @relation("TaskUser", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, userId])
   @@index([userId])
@@ -330,12 +342,12 @@ model TaskSubmission {
 }
 
 model ClassroomLinkedCourse {
-  classroomId String    @map("classroom_id") 
-  courseId    String    @map("course_id") 
-  createdAt   DateTime  @default(now()) @map("created_at")
+  classroomId String   @map("classroom_id")
+  courseId    String   @map("course_id")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@id([classroomId, courseId])
   @@index([courseId])
@@ -343,20 +355,20 @@ model ClassroomLinkedCourse {
 }
 
 model Note {
-  id             String     @id @default(cuid()) 
-  userId         String     @map("user_id") 
-  courseId       String ?    @map("course_id")
-  lessonId       String?     @map("lesson_id") 
-  classroomId    String?    @map("classroom_id") 
-  content        String     @db.Text
-  videoTimestamp Int?       @map("video_timestamp")
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  courseId       String?  @map("course_id")
+  lessonId       String?  @map("lesson_id")
+  classroomId    String?  @map("classroom_id")
+  content        String   @db.Text
+  videoTimestamp Int?     @map("video_timestamp")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson         Lesson?     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  course         Course?     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  classroom      Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson    Lesson?    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  course    Course?    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  classroom Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
 
   @@index([userId, lessonId])
   @@index([userId, classroomId])
@@ -367,20 +379,131 @@ model Note {
 }
 
 model Call {
-  id               String    @id @default(cuid())
-  creatorId        String    @map("creator_id")
-  title            String?   @db.VarChar(255)
-  classroomId      String?   @map("classroom_id")
-  status           CallStatus    @default(ongoing)
-  participantCount Int       @default(0) @map("participant_count")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  startedAt        DateTime? @map("started_at")
-  endedAt          DateTime? @map("ended_at")
+  id               String     @id @default(cuid())
+  creatorId        String     @map("creator_id")
+  title            String?    @db.VarChar(255)
+  classroomId      String?    @map("classroom_id")
+  status           CallStatus @default(ongoing)
+  participantCount Int        @default(0) @map("participant_count")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  startedAt        DateTime?  @map("started_at")
+  endedAt          DateTime?  @map("ended_at")
 
-  creator          User      @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  classroom        Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  creator   User       @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  classroom Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
 
   @@index([creatorId])
   @@index([classroomId])
   @@map("calls")
+}
+
+model Quiz {
+  id          String    @id @default(cuid())
+  creatorId   String    @map("creator_id")
+  title       String
+  description String?   @db.Text
+  isPublic    Boolean   @default(false) @map("is_public")
+  duration    Int?      @map("duration") // time limit in minutes
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  creator     User             @relation("QuizCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  memberships QuizMembership[]
+  questions   Question[]
+  submissions QuizSubmission[]
+
+  @@index([creatorId])
+  @@map("quizzes")
+}
+
+model QuizMembership {
+  id        String   @id @default(cuid())
+  quizId    String   @map("quiz_id")
+  userId    String   @map("user_id")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, userId])
+  @@index([userId])
+  @@map("quiz_memberships")
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  quizId        String         @map("quiz_id")
+  type          QuestionType
+  content       String         @db.Text
+  orderIndex    Int            @default(0) @map("order_index")
+  points        Int            @default(1)
+  
+  quiz          Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options       QuestionOption[]
+  userAnswers   UserAnswer[]
+
+  @@index([quizId])
+  @@map("questions")
+}
+
+model QuestionOption {
+  id          String   @id @default(cuid())
+  questionId  String   @map("question_id")
+  content     String   @db.Text
+  isCorrect   Boolean  @default(false) @map("is_correct")
+  orderIndex  Int      @default(0) @map("order_index")
+
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userAnswers UserAnswerOption[]
+
+  @@index([questionId])
+  @@map("question_options")
+}
+
+model QuizSubmission {
+  id          String   @id @default(cuid())
+  quizId      String   @map("quiz_id")
+  userId      String   @map("user_id")
+  score       Decimal? @db.Decimal(10,2)
+  timeSpent   Int?     @map("time_spent") // time spent in seconds
+  submittedAt DateTime @default(now()) @map("submitted_at")
+
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers     UserAnswer[]
+
+  @@index([quizId])
+  @@index([userId])
+  @@map("quiz_submissions")
+}
+
+model UserAnswer {
+  id            String         @id @default(cuid())
+  submissionId  String         @map("submission_id")
+  questionId    String         @map("question_id")
+  textAnswer    String?        @db.Text @map("text_answer")
+  isCorrect     Boolean?       @map("is_correct")
+
+  submission    QuizSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOptions UserAnswerOption[]
+
+  @@index([submissionId])
+  @@index([questionId])
+  @@map("user_answers")
+}
+
+model UserAnswerOption {
+  id            String         @id @default(cuid())
+  userAnswerId  String         @map("user_answer_id")
+  optionId      String         @map("option_id")
+
+  userAnswer    UserAnswer     @relation(fields: [userAnswerId], references: [id], onDelete: Cascade)
+  option        QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@index([userAnswerId])
+  @@index([optionId])
+  @@map("user_answer_options")
 }

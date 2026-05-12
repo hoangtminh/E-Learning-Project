@@ -65,8 +65,33 @@ export interface SubmitQuizDto {
   timeSpent: number;
   answers: {
     questionId: string;
-    optionIds?: string[];
+    selectedOptionIds?: string[];
     textAnswer?: string;
+  }[];
+}
+
+export interface SubmitQuizResponse {
+  id: string;
+  quizId: string;
+  userId: string;
+  score: string | number;
+  timeSpent: number | null;
+  submittedAt: string;
+  quiz: Quiz;
+  answers: {
+    id: string;
+    submissionId: string;
+    questionId: string;
+    textAnswer: string | null;
+    isCorrect: boolean;
+    points: number;
+    maxPoints: number;
+    selectedOptions: {
+      id: string;
+      userAnswerId: string;
+      optionId: string;
+    }[];
+    question: Question;
   }[];
 }
 
@@ -105,7 +130,7 @@ export function shareQuiz(id: string, email: string) {
 }
 
 export function submitQuiz(id: string, data: SubmitQuizDto) {
-  return apiPost<QuizSubmission>(`/quizzes/${id}/submit`, data);
+  return apiPost<SubmitQuizResponse>(`/quizzes/${id}/submit`, data);
 }
 
 export function getQuizSubmissions(id: string) {
@@ -113,5 +138,7 @@ export function getQuizSubmissions(id: string) {
 }
 
 export function getSubmissionDetails(quizId: string, submissionId: string) {
-  return apiGet<any>(`/quizzes/${quizId}/submissions/${submissionId}`);
+  return apiGet<SubmitQuizResponse>(
+    `/quizzes/${quizId}/submissions/${submissionId}`,
+  );
 }

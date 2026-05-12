@@ -11,7 +11,9 @@ import {
   updateQuiz,
   deleteQuiz,
   submitQuiz,
+  getSubmissionDetails,
   SubmitQuizDto,
+  SubmitQuizResponse,
 } from '@/api/quizzes';
 
 interface QuizContextType {
@@ -23,10 +25,14 @@ interface QuizContextType {
   fetchJoinedQuizzes: () => Promise<void>;
   fetchPublicQuizzes: (page?: number, limit?: number) => Promise<void>;
   fetchQuiz: (id: string) => Promise<Quiz>;
+  getSubmissionDetails: (quizId: string, submissionId: string) => Promise<SubmitQuizResponse>;
   handleAddQuiz: (data: any) => Promise<void>;
   handleUpdateQuiz: (id: string, data: any) => Promise<void>;
   handleDeleteQuiz: (id: string) => Promise<void>;
-  handleSubmitQuiz: (id: string, data: SubmitQuizDto) => Promise<any>;
+  handleSubmitQuiz: (
+    id: string,
+    data: SubmitQuizDto,
+  ) => Promise<SubmitQuizResponse>;
 }
 
 const QuizContext = createContext<QuizContextType | undefined>(undefined);
@@ -65,19 +71,22 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const fetchPublicQuizzes = useCallback(async (page: number = 1, limit: number = 20) => {
-    setLoading(true);
-    try {
-      const res = await getPublicQuizzes(page, limit);
-      if (res.success && res.data) {
-        setPublicQuizzes(res.data || []);
+  const fetchPublicQuizzes = useCallback(
+    async (page: number = 1, limit: number = 20) => {
+      setLoading(true);
+      try {
+        const res = await getPublicQuizzes(page, limit);
+        if (res.success && res.data) {
+          setPublicQuizzes(res.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching public quizzes:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching public quizzes:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const fetchQuiz = useCallback(async (id: string) => {
     const res = await getQuiz(id);
@@ -89,6 +98,7 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
 
   const handleAddQuiz = async (data: any) => {
     try {
+      console.log(data);
       const res = await createQuiz(data);
       if (res.success && res.data) {
         setCreatedQuizzes((prev) => [res.data!, ...prev]);
@@ -103,7 +113,9 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await updateQuiz(id, data);
       if (res.success && res.data) {
-        setCreatedQuizzes((prev) => prev.map((q) => (q.id === id ? res.data! : q)));
+        setCreatedQuizzes((prev) =>
+          prev.map((q) => (q.id === id ? res.data! : q)),
+        );
       }
     } catch (error) {
       console.error('Error updating quiz:', error);
@@ -125,6 +137,7 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
 
   const handleSubmitQuiz = async (id: string, data: SubmitQuizDto) => {
     try {
+      console.log(data, id);
       const res = await submitQuiz(id, data);
       if (res.success && res.data) {
         return res.data;
@@ -135,6 +148,14 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
   };
+
+  const handleGetSubmissionDetails = useCallback(async (quizId: string, submissionId: string) => {
+    const res = await getSubmissionDetails(quizId, submissionId);
+    if (res.success && res.data) {
+      return res.data;
+    }
+    throw new Error(res.error || 'Failed to fetch submission details');
+  }, []);
 
   return (
     <QuizContext.Provider
@@ -147,6 +168,7 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
         fetchJoinedQuizzes,
         fetchPublicQuizzes,
         fetchQuiz,
+        getSubmissionDetails: handleGetSubmissionDetails,
         handleAddQuiz,
         handleUpdateQuiz,
         handleDeleteQuiz,

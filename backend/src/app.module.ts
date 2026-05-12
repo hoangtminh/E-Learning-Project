@@ -15,6 +15,7 @@ import { ClassroomsModule } from './modules/classrooms/classrooms.module';
 import { SectionsModule } from './modules/sections/sections.module';
 import { LessonsModule } from './modules/lessons/lessons.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { QuizzesModule } from './modules/quizzes/quizzes.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
     ChatModule,
     NotificationsModule,
     RealtimeModule,
+    QuizzesModule,
   ],
   controllers: [AppController],
   providers: [
