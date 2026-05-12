@@ -11,12 +11,15 @@ export interface CourseOwner {
 export interface CourseListItem {
   id: string;
   title: string;
+  slug?: string;
   description: string | null;
   thumbnailUrl: string | null;
   price: number;
   visibility: string;
   createdAt: string;
-  owner: CourseOwner;
+  instructor: CourseOwner;
+  // Keep `owner` as alias for backward compatibility with landing page
+  owner?: CourseOwner;
   _count: {
     sections: number;
     members: number;

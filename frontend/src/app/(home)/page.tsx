@@ -19,6 +19,7 @@ const fallbackCourses: CourseListItem[] = [
     price: 199,
     visibility: 'public',
     createdAt: '',
+    instructor: { id: '', fullName: 'Glacier Team', avatarUrl: null },
     owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
     _count: { sections: 12, members: 1200 },
   },
@@ -31,6 +32,7 @@ const fallbackCourses: CourseListItem[] = [
     price: 149,
     visibility: 'public',
     createdAt: '',
+    instructor: { id: '', fullName: 'Glacier Team', avatarUrl: null },
     owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
     _count: { sections: 8, members: 850 },
   },
@@ -43,6 +45,7 @@ const fallbackCourses: CourseListItem[] = [
     price: 210,
     visibility: 'public',
     createdAt: '',
+    instructor: { id: '', fullName: 'Glacier Team', avatarUrl: null },
     owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
     _count: { sections: 14, members: 540 },
   },
@@ -275,7 +278,10 @@ export default function Home() {
                             <span className='material-symbols-outlined text-[16px]'>
                               person
                             </span>
-                            <span>{course?.owner?.fullName || 'Instructor'}</span>
+                            <span>
+                              {(course.instructor ?? course.owner)?.fullName ||
+                                'Instructor'}
+                            </span>
                           </div>
                           <div className='flex items-center space-x-1'>
                             <span className='material-symbols-outlined text-[16px]'>

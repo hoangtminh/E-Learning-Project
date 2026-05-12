@@ -14,6 +14,7 @@ import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Public } from '../../common/decorators/public.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 type AuthenticatedRequest = Request & {
   user: {
@@ -27,6 +28,7 @@ type AuthenticatedRequest = Request & {
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
+  @Roles('instructor', 'admin')
   @Post()
   create(@Req() req: AuthenticatedRequest, @Body() dto: CreateCourseDto) {
     return this.coursesService.create(req.user.userId, dto);
@@ -46,6 +48,7 @@ export class CoursesController {
     return this.coursesService.findOne(id);
   }
 
+  @Roles('instructor', 'admin')
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -55,6 +58,7 @@ export class CoursesController {
     return this.coursesService.update(id, req.user.userId, dto);
   }
 
+  @Roles('instructor', 'admin')
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.coursesService.remove(id, req.user.userId);
