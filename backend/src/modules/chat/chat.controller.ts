@@ -21,7 +21,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 @Controller('chat')
 @UseGuards(JwtAuthGuard)
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService) { }
 
   @Post('conversations')
   createConversation(@Request() req, @Body() dto: CreateConversationDto) {

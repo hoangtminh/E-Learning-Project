@@ -11,7 +11,7 @@ import { ApproveAllResponseDto } from './dto/approve-all-response.dto';
 
 @Injectable()
 export class ClassroomMembersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // 1. Tự động Join bằng ID hoặc vào hàng đợi (Pending)
   async joinClassroom(userId: string, classroomId: string) {
