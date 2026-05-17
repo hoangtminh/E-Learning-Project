@@ -60,8 +60,13 @@ export class CoursesService {
   }
 
   async findOne(id: string) {
-    const course = await this.prisma.course.findUnique({
-      where: { id },
+    const course = await this.prisma.course.findFirst({
+      where: {
+        OR: [
+          { id: id },
+          { slug: id }
+        ]
+      },
       include: {
         instructor: {
           select: { id: true, fullName: true, avatarUrl: true },
@@ -97,7 +102,7 @@ export class CoursesService {
     }
 
     return this.prisma.course.update({
-      where: { id },
+      where: { id: course.id },
       data: dto,
       include: {
         instructor: {
@@ -117,7 +122,7 @@ export class CoursesService {
     }
 
     return this.prisma.course.delete({
-      where: { id },
+      where: { id: course.id },
     });
   }
 }

@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
+import { paymentApi } from '@/api/payment';
+
 interface CourseBuyCardProps {
+  courseId: string;
   course: {
     price: number;
     originalPrice: number;
@@ -52,9 +55,25 @@ function useCountdown(durationMs: number) {
   return `${d} ngày ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function CourseBuyCard({ course }: CourseBuyCardProps) {
+export function CourseBuyCard({ courseId, course }: CourseBuyCardProps) {
   const discount = Math.round((1 - course.price / course.originalPrice) * 100);
   const countdown = useCountdown(38528000); // ~10.7 hours
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleBuy = async () => {
+    try {
+      setIsProcessing(true);
+      const res = await paymentApi.createPaymentUrl(courseId);
+      if (res.paymentUrl) {
+        window.location.href = res.paymentUrl;
+      }
+    } catch (error) {
+      console.error('Lỗi khi tạo payment request', error);
+      alert('Không thể tạo giao dịch. Vui lòng thử lại.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="sticky top-[84px] space-y-5">
@@ -108,9 +127,15 @@ export function CourseBuyCard({ course }: CourseBuyCardProps) {
           </div>
 
           {/* CTA Buttons */}
-          <button type="button" className="w-full py-4 bg-[#006382] text-white font-black text-base rounded-2xl shadow-xl shadow-[#006382]/30 hover:bg-[#005672] transition-all active:scale-[0.98] flex items-center justify-center gap-3">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-            Đăng ký ngay
+          <button 
+            type="button" 
+            onClick={handleBuy}
+            disabled={isProcessing}
+            className="w-full py-4 bg-[#006382] text-white font-black text-base rounded-2xl shadow-xl shadow-[#006382]/30 hover:bg-[#005672] transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-75 disabled:cursor-not-allowed">
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+              {isProcessing ? 'hourglass_empty' : 'bolt'}
+            </span>
+            {isProcessing ? 'Đang xử lý...' : 'Đăng ký ngay'}
           </button>
           <button type="button" className="w-full py-3 border-2 border-[#006382] text-[#006382] font-bold rounded-2xl hover:bg-[#006382]/5 transition-all active:scale-[0.98]">
             Thử miễn phí 7 ngày
