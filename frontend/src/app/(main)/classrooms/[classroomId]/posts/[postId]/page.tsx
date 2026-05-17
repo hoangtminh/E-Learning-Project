@@ -1,271 +1,150 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useClassrooms } from '@/contexts/ClassroomContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { ClassroomPost, ClassroomPostComment } from '@/api/classroom';
-import { ChevronLeft, Send, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { usePosts } from '@/contexts/PostContext';
+import { ChevronLeft } from 'lucide-react';
+import { CommentItem } from './CommentItem';
+import { CommentInput } from './CommentInput';
 
 export default function PostDetailPage() {
   const { classroomId, postId } = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { 
-    classroom, 
-    posts, 
-    fetchComments, 
-    createComment, 
-    updateComment, 
-    deleteComment 
-  } = useClassrooms();
+  const { posts, commentsMap, fetchComments, fetchPosts, loadingPosts, loadingComments } = usePosts();
 
-  const [post, setPost] = useState<ClassroomPost | null>(null);
-  const [comments, setComments] = useState<ClassroomPostComment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [newComment, setNewComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-
+  const post = posts.find((p) => p.id === postId);
+  const comments = commentsMap[postId as string] || [];
+  const isLoadingComments = loadingComments[postId as string];
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!classroomId || !postId) return;
-      setLoading(true);
-      try {
-        // Find post in existing context or fetch if needed
-        const foundPost = posts.find(p => p.id === postId);
-        if (foundPost) setPost(foundPost);
-        
-        const fetchedComments = await fetchComments(classroomId as string, postId as string);
-        setComments(fetchedComments);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [classroomId, postId, posts, fetchComments]);
+    if (classroomId) {
+      fetchPosts(classroomId as string);
+    }
+  }, [classroomId, fetchPosts]);
+
+  useEffect(() => {
+    if (classroomId && postId) {
+      fetchComments(classroomId as string, postId as string);
+    }
+  }, [classroomId, postId, fetchComments]);
 
   useEffect(() => {
     commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [comments]);
 
-  const handleSend = async () => {
-    if (!newComment.trim() || isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      await createComment(classroomId as string, postId as string, newComment);
-      setNewComment('');
-      const updated = await fetchComments(classroomId as string, postId as string);
-      setComments(updated);
-    } catch (e: any) {
-      alert(e.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleUpdate = async (commentId: string) => {
-    try {
-      await updateComment(classroomId as string, commentId, editContent);
-      setEditingCommentId(null);
-      const updated = await fetchComments(classroomId as string, postId as string);
-      setComments(updated);
-    } catch (e: any) {
-      alert(e.message);
-    }
-  };
-
-  const handleDelete = async (commentId: string) => {
-    if (!confirm('Xóa bình luận này?')) return;
-    try {
-      await deleteComment(classroomId as string, commentId);
-      const updated = await fetchComments(classroomId as string, postId as string);
-      setComments(updated);
-    } catch (e: any) {
-      alert(e.message);
-    }
-  };
-
-  if (loading && !post) {
-    return <div className='p-10 text-center text-slate-400'>Đang tải...</div>;
+  if ((loadingPosts && !post) || (isLoadingComments && comments.length === 0)) {
+    return (
+      <div className='flex items-center justify-center min-h-[400px] text-slate-400'>
+        <span className='material-symbols-outlined animate-spin mr-2'>progress_activity</span>
+        Đang tải thảo luận...
+      </div>
+    );
   }
 
   if (!post) {
-    return <div className='p-10 text-center text-slate-400'>Không tìm thấy bài đăng.</div>;
+    return (
+      <div className='flex flex-col items-center justify-center min-h-[400px] text-slate-500 gap-4'>
+        <span className='material-symbols-outlined text-4xl text-slate-300'>error_outline</span>
+        <p className='text-sm'>Không tìm thấy bài đăng hoặc bạn không có quyền xem.</p>
+        <button 
+          onClick={() => router.back()}
+          className='px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-all'
+        >
+          Quay lại
+        </button>
+      </div>
+    );
   }
 
   return (
     <div className='flex flex-col h-[calc(100vh-64px)] bg-slate-50'>
       {/* Header */}
-      <div className='p-4 bg-white border-b border-slate-200 flex items-center gap-4 sticky top-0 z-20 shadow-sm'>
+      <div className='p-3 bg-white border-b border-slate-200/80 flex items-center gap-3 sticky top-0 z-20 shadow-sm'>
         <button 
           onClick={() => router.back()}
-          className='p-2 hover:bg-slate-100 rounded-full transition-colors'
+          className='p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-600'
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} />
         </button>
-        <h2 className='text-sm font-bold text-slate-800 uppercase tracking-wider'>
-          Bình luận bài viết
-        </h2>
+        <div>
+          <h2 className='text-xs font-black text-slate-800 uppercase tracking-widest'>
+            Chi Tiết Thảo Luận
+          </h2>
+        </div>
       </div>
 
       {/* Content Area */}
-      <div className='flex-1 overflow-y-auto px-4 py-6 max-w-4xl mx-auto w-full space-y-8'>
-        {/* Original Post (Fixed at top conceptually) */}
-        <div className='bg-white rounded-2xl p-6 border border-slate-200 shadow-sm'>
-          <div className='flex items-center gap-3 mb-4'>
+      <div className='flex-1 overflow-y-auto px-4 py-6 max-w-3xl mx-auto w-full space-y-6 scrollbar-thin scrollbar-thumb-slate-200'>
+        {/* Original Post Card */}
+        <article className='bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm relative overflow-hidden'>
+          <div className='absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-sky-500 to-indigo-500'></div>
+          <div className='flex items-center gap-3 mb-3'>
             <img
               alt='Avatar'
-              className='w-12 h-12 rounded-full object-cover border-2 border-sky-100'
+              className='w-9 h-9 rounded-full object-cover border border-slate-100 shadow-sm'
               src={post.author.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName || 'User')}&background=random`}
             />
             <div>
-              <h4 className='text-base font-bold text-slate-900'>{post.author.fullName}</h4>
-              <p className='text-xs text-slate-400'>{new Date(post.createdAt).toLocaleString('vi-VN')}</p>
+              <h4 className='text-xs font-bold text-slate-800 flex items-center gap-1.5'>
+                {post.author.fullName}
+                {user?.userId === post.authorId || user?.id === post.authorId ? (
+                  <span className='px-1.5 py-0.5 text-[8px] bg-slate-100 text-slate-500 rounded font-medium'>(Bạn)</span>
+                ) : null}
+              </h4>
+              <p className='text-[10px] text-slate-400 font-semibold uppercase'>
+                {new Date(post.createdAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
+              </p>
             </div>
           </div>
-          <p className='text-slate-700 whitespace-pre-wrap leading-relaxed'>{post.content}</p>
-        </div>
+          <p className='text-sm text-slate-700 whitespace-pre-wrap leading-relaxed pl-1.5 font-medium'>
+            {post.content}
+          </p>
+        </article>
 
         {/* Comments Section */}
-        <div className='space-y-4'>
-          <h3 className='text-xs font-bold text-slate-400 uppercase tracking-widest pl-2'>
-            Bình luận ({comments.length})
-          </h3>
+        <div className='space-y-3.5'>
+          <div className='flex items-center justify-between pl-1'>
+            <h3 className='text-[10px] font-black text-slate-400 uppercase tracking-wider'>
+              Ý Kiến Trao Đổi ({comments.length})
+            </h3>
+          </div>
           
-          <div className='space-y-4'>
-            {comments.map((comment) => {
-              const isCommentAuthor = user?.userId === comment.authorId || user?.id === comment.authorId;
-              const isPostAuthor = user?.userId === post.authorId || user?.id === post.authorId;
-              const canDelete = isCommentAuthor || isPostAuthor;
+          <div className='space-y-4 bg-white/40 backdrop-blur-sm border border-slate-200/50 rounded-2xl p-4 shadow-inner min-h-[150px] flex flex-col justify-between'>
+            {comments.length === 0 ? (
+              <div className='flex flex-col items-center justify-center py-10 text-slate-400 gap-2'>
+                <span className='material-symbols-outlined text-3xl text-slate-300'>chat_bubble_outline</span>
+                <p className='text-[11px] font-semibold'>Lớp học chưa có thảo luận nào cho bài viết này.</p>
+              </div>
+            ) : (
+              <div className='space-y-4'>
+                {comments.map((comment) => {
+                  const isCommentAuthor = user?.userId === comment.authorId || user?.id === comment.authorId;
+                  const isPostAuthor = user?.userId === post.authorId || user?.id === post.authorId;
+                  const canDelete = isCommentAuthor || isPostAuthor;
 
-              return (
-                <div key={comment.id} className={`flex gap-3 ${isCommentAuthor ? 'flex-row-reverse' : ''}`}>
-                  <img
-                    alt='Avatar'
-                    className='w-8 h-8 rounded-full object-cover shrink-0'
-                    src={comment.author.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author.fullName || 'User')}&background=random`}
-                  />
-                  <div className={`group relative max-w-[80%] ${isCommentAuthor ? 'items-end' : 'items-start'} flex flex-col`}>
-                    <p className='text-[10px] font-bold text-slate-500 mb-1 px-1'>
-                      {comment.author.fullName}
-                    </p>
-                    
-                    {editingCommentId === comment.id ? (
-                      <div className='w-full'>
-                        <textarea
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          className='w-full p-2 text-sm bg-white border border-sky-300 rounded-lg focus:ring-2 focus:ring-sky-200 focus:outline-none min-h-[60px]'
-                        />
-                        <div className='flex gap-2 mt-2 justify-end'>
-                          <button 
-                            onClick={() => setEditingCommentId(null)}
-                            className='text-[10px] font-bold text-slate-400 hover:text-slate-600'
-                          >
-                            HỦY
-                          </button>
-                          <button 
-                            onClick={() => handleUpdate(comment.id)}
-                            className='text-[10px] font-bold text-sky-600 hover:text-sky-700'
-                          >
-                            LƯU
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className={`p-3 rounded-2xl text-sm shadow-sm ${
-                        isCommentAuthor 
-                        ? 'bg-sky-600 text-white rounded-tr-none' 
-                        : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
-                      }`}>
-                        {comment.content}
-                      </div>
-                    )}
-
-                    <div className='flex items-center gap-3 mt-1 px-1'>
-                      <p className='text-[9px] text-slate-400'>
-                        {new Date(comment.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                      
-                      {(isCommentAuthor || canDelete) && !editingCommentId && (
-                        <div className='relative'>
-                          <button 
-                            onClick={() => setActiveMenuId(activeMenuId === comment.id ? null : comment.id)}
-                            className='text-slate-400 hover:text-slate-600 transition-colors opacity-0 group-hover:opacity-100'
-                          >
-                            <MoreVertical size={12} />
-                          </button>
-                          
-                          {activeMenuId === comment.id && (
-                            <div className='absolute bottom-full mb-1 right-0 bg-white shadow-xl rounded-lg border border-slate-100 py-1 z-10 w-24'>
-                              {isCommentAuthor && (
-                                <button 
-                                  onClick={() => {
-                                    setEditingCommentId(comment.id);
-                                    setEditContent(comment.content);
-                                    setActiveMenuId(null);
-                                  }}
-                                  className='w-full px-3 py-1.5 text-left text-[10px] font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2'
-                                >
-                                  <Edit2 size={10} /> SỬA
-                                </button>
-                              )}
-                              {canDelete && (
-                                <button 
-                                  onClick={() => handleDelete(comment.id)}
-                                  className='w-full px-3 py-1.5 text-left text-[10px] font-bold text-red-500 hover:bg-red-50 flex items-center gap-2'
-                                >
-                                  <Trash2 size={10} /> XÓA
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                  return (
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      classroomId={classroomId as string}
+                      postId={postId as string}
+                      isCommentAuthor={isCommentAuthor}
+                      canDelete={canDelete}
+                    />
+                  );
+                })}
+              </div>
+            )}
             <div ref={commentsEndRef} />
           </div>
         </div>
       </div>
 
-      {/* Footer Input */}
-      <div className='p-4 bg-white border-t border-slate-200 sticky bottom-0 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]'>
-        <div className='max-w-4xl mx-auto flex items-center gap-3'>
-          <div className='flex-1 relative'>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder='Viết bình luận...'
-              className='w-full py-3 px-4 pr-12 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-sky-500/20 transition-all resize-none max-h-32 text-slate-800'
-              rows={1}
-            />
-            <button 
-              onClick={handleSend}
-              disabled={!newComment.trim() || isSubmitting}
-              className='absolute right-2 bottom-1.5 p-2 text-sky-600 disabled:text-slate-300 transition-colors'
-            >
-              <Send size={18} />
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Sticky Bottom Footer Input */}
+      <CommentInput classroomId={classroomId as string} postId={postId as string} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useClassrooms } from '@/contexts/ClassroomContext';
 import { getCourses } from '@/api/courses';
 import type { CourseListItem } from '@/api/courses';
+import { toast } from 'sonner';
 
 export default function AdminCoursesPage() {
   const params = useParams();
@@ -42,8 +43,9 @@ export default function AdminCoursesPage() {
     try {
       await linkCourse(classroomId, courseId);
       setShowLinkModal(false);
+      toast.success('Gắn liên kết khóa học thành công!');
     } catch (e: any) {
-      alert(e.message || 'Lỗi liên kết khóa học');
+      toast.error(e.message || 'Lỗi liên kết khóa học');
     } finally {
       setLinking(false);
     }
@@ -56,8 +58,9 @@ export default function AdminCoursesPage() {
       return;
     try {
       await unlinkCourse(classroomId, courseId);
+      toast.success('Đã hủy liên kết khóa học!');
     } catch (e: any) {
-      alert(e.message || 'Lỗi hủy liên kết');
+      toast.error(e.message || 'Lỗi hủy liên kết');
     }
   };
 

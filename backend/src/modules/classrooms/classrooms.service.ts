@@ -139,12 +139,15 @@ export class ClassroomsService {
       throw new NotFoundException(`Classroom not found`);
     }
 
-    const isMember = classroom.members.some((m) => m.userId === userId);
-    if (!isMember) {
+    const userMember = classroom.members.find((m) => m.userId === userId);
+    if (!userMember) {
       throw new ForbiddenException(`You are not a member of this classroom`);
     }
 
-    return classroom;
+    return {
+      ...classroom,
+      role: userMember.role,
+    };
   }
 
   async update(id: string, userId: string, dto: UpdateClassroomDto) {
@@ -188,6 +191,17 @@ export class ClassroomsService {
       throw new ForbiddenException(`Only the owner can delete this classroom`);
     }
 
+    // 1. Find all linked courses
+    const linkedCourses = await this.prisma.classroomLinkedCourse.findMany({
+      where: { classroomId: id },
+      select: { courseId: true },
+    });
+    const courseIds = linkedCourses.map((lc) => lc.courseId);
+
+    const classroomToDelete = await this.prisma.classroom.findUnique({
+      where: { id },
+    });
+
     // Delete all objects in S3 folder
     try {
       const prefix = `classrooms/${id}/`;
@@ -211,7 +225,93 @@ export class ClassroomsService {
       console.error('Failed to delete S3 folder for classroom', err);
     }
 
-    return this.prisma.classroom.delete({ where: { id } });
+    // 3. Delete DB records in exact dependency-respecting order inside a transaction
+    await this.prisma.$transaction(async (tx) => {
+
+      // B. Delete Post Comments
+      await tx.classroomPostComment.deleteMany({
+        where: { post: { classroomId: id } },
+      });
+
+      // C. Delete Posts
+      await tx.classroomPost.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // D. Delete Task Submissions
+      await tx.taskSubmission.deleteMany({
+        where: { task: { classroomId: id } },
+      });
+
+      // E. Delete Classroom Tasks
+      await tx.classroomTask.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // F. Delete Classroom Files
+      await tx.classroomFile.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // G. Delete Linked Courses relations
+      await tx.classroomLinkedCourse.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // H. Delete the Linked Courses themselves
+      if (courseIds.length > 0) {
+        for (const courseId of courseIds) {
+          try {
+            await tx.userProgress.deleteMany({ where: { courseId } });
+            await tx.course.delete({ where: { id: courseId } });
+          } catch (err) {
+            console.error(`Failed to delete course ${courseId} inside transaction:`, err);
+          }
+        }
+      }
+
+      // I. Delete Notes
+      await tx.note.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // J. Delete Calls
+      await tx.call.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // K. Delete Messages
+      await tx.message.deleteMany({
+        where: { conversation: { classroomId: id } },
+      });
+
+      // L. Delete Conversation Members
+      await tx.conversationMember.deleteMany({
+        where: { conversation: { classroomId: id } },
+      });
+
+      // M. Delete Conversations
+      await tx.conversation.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // N. Delete Join Requests
+      await tx.classroomJoinRequest.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // O. Delete Classroom Members
+      await tx.classroomMember.deleteMany({
+        where: { classroomId: id },
+      });
+
+      // P. Delete the Classroom itself
+      await tx.classroom.delete({
+        where: { id },
+      });
+    });
+
+    return classroomToDelete;
   }
 
   async joinByCode(userId: string, code: string) {
@@ -241,12 +341,22 @@ export class ClassroomsService {
       );
     }
 
-    // Always create a join request — owner approves it
-    await this.prisma.classroomJoinRequest.create({
-      data: { classroomId: classroom.id, userId },
-    });
-
-    return { classroomId: classroom.id, status: 'pending' };
+    if (classroom.isPublic) {
+      await this.prisma.classroomMember.create({
+        data: {
+          classroomId: classroom.id,
+          userId,
+          role: ClassroomRole.member,
+        },
+      });
+      return { classroomId: classroom.id, status: 'joined' };
+    } else {
+      // Always create a join request — owner approves it
+      await this.prisma.classroomJoinRequest.create({
+        data: { classroomId: classroom.id, userId },
+      });
+      return { classroomId: classroom.id, status: 'pending' };
+    }
   }
 
   async getMyPendingClassrooms(userId: string) {
@@ -368,13 +478,9 @@ export class ClassroomsService {
     if (!member) throw new ForbiddenException('Not a member of this classroom');
 
     return this.prisma.classroomPost.findMany({
-      where: {
-        classroomId,
-        nextVersions: { none: {} }, // Only fetch active posts, not history snapshots
-      },
+      where: { classroomId },
       include: {
         author: { select: { id: true, fullName: true, avatarUrl: true } },
-        previousVersion: true,
         _count: { select: { comments: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -414,27 +520,12 @@ export class ClassroomsService {
     if (post.authorId !== userId)
       throw new ForbiddenException('Only the author can edit this post');
 
-    // Create a history snapshot
-    const historyPost = await this.prisma.classroomPost.create({
-      data: {
-        classroomId: post.classroomId,
-        authorId: post.authorId,
-        content: post.content,
-        createdAt: post.createdAt,
-        previousVersionId: post.previousVersionId, // preserve chain
-      },
-    });
-
-    // Update current post
+    // Update current post directly
     return this.prisma.classroomPost.update({
       where: { id: postId },
-      data: {
-        content,
-        previousVersionId: historyPost.id,
-      },
+      data: { content },
       include: {
         author: { select: { id: true, fullName: true, avatarUrl: true } },
-        previousVersion: true,
       },
     });
   }
@@ -449,7 +540,9 @@ export class ClassroomsService {
     if (post.authorId !== userId)
       throw new ForbiddenException('Only the author can delete this post');
 
-    return this.prisma.classroomPost.delete({ where: { id: postId } });
+    return this.prisma.classroomPost.delete({
+      where: { id: postId },
+    });
   }
 
   // --- COMMENTS ---

@@ -535,23 +535,19 @@ model UserAnswerOption {
 }
 
 model ClassroomPost {
-  id                String          @id @default(cuid())
-  classroomId       String          @map("classroom_id")
-  authorId          String          @map("author_id")
-  content           String          @db.Text
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
-  previousVersionId String?         @map("previous_version_id")
+  id          String   @id @default(cuid())
+  classroomId String   @map("classroom_id")
+  authorId    String   @map("author_id")
+  content     String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  classroom         Classroom       @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  author            User            @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  previousVersion   ClassroomPost?  @relation("PostHistory", fields: [previousVersionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  nextVersions      ClassroomPost[] @relation("PostHistory")
-  comments          ClassroomPostComment[]
+  classroom Classroom              @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  author    User                   @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  comments  ClassroomPostComment[]
 
   @@index([classroomId])
   @@index([authorId])
-  @@index([previousVersionId])
   @@map("classroom_posts")
 }
 

@@ -61,9 +61,7 @@ export type ClassroomPost = {
   content: string;
   createdAt: string;
   updatedAt: string;
-  previousVersionId: string | null;
   author: ClassroomMemberUser;
-  previousVersion?: ClassroomPost;
   _count?: { comments: number };
 };
 
@@ -85,6 +83,9 @@ export const getMembers = (classroomId: string) =>
 export const removeMember = (classroomId: string, userId: string) =>
   apiDelete(`/classrooms/${classroomId}/members/${userId}`);
 
+export const addMemberByEmail = (classroomId: string, email: string) =>
+  apiPost<ClassroomMember>(`/classrooms/${classroomId}/members/email`, { email });
+
 export const joinByCode = (code: string) =>
   apiPost('/classrooms/join-by-code', { code });
 
@@ -94,10 +95,20 @@ export const getPendingMembers = (classroomId: string) =>
   );
 
 export const approveMember = (classroomId: string, userId: string) =>
-  apiPatch(`/classrooms/${classroomId}/members/${userId}/approve`, {});
+  apiPatch<ClassroomMember>(`/classrooms/${classroomId}/members/${userId}/approve`, {});
 
 export const rejectMember = (classroomId: string, userId: string) =>
   apiDelete(`/classrooms/${classroomId}/members/pending/${userId}`);
+
+export const updateMemberRole = (
+  classroomId: string,
+  userId: string,
+  role: 'owner' | 'admin' | 'member',
+) =>
+  apiPatch<ClassroomMember>(`/classrooms/${classroomId}/members/${userId}/role`, { role });
+
+export const leaveClassroom = (classroomId: string) =>
+  apiPost(`/classrooms/${classroomId}/leave`, {});
 
 export type PendingClassroomRequest = {
   requestId: string;

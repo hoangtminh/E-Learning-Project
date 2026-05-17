@@ -7,11 +7,11 @@ export default function AdminPage() {
   const { classroomId } = useParams();
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (classroomId) {
-  //     router.replace(`/classrooms/${classroomId}/admin/courses`);
-  //   }
-  // }, [classroomId, router]);
+  useEffect(() => {
+    if (classroomId) {
+      router.replace(`/classrooms/${classroomId}/admin/courses`);
+    }
+  }, [classroomId, router]);
 
   return (
     <div className='flex items-center justify-center h-64 text-slate-400'>

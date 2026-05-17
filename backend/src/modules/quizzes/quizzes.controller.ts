@@ -27,7 +27,6 @@ export class QuizzesController {
 
   @Post()
   createQuiz(@Req() req: any, @Body() dto: CreateQuizDto) {
-    console.log(dto);
     return this.quizzesService.createQuiz(this.getUserId(req), dto);
   }
 

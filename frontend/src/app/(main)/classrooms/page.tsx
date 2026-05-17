@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useClassrooms } from '@/contexts/ClassroomContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const mockImages = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCvz6dRTaGnLp3HCtAnUdFeqPCG--8LDSkS_kIcRWF7YWP0FCxFmMSW13aLrBFMLDoBai-M594I-qogj1gqDul0Maz6pPWi6cvRzgrY2AsTIJhiu7uPjIT96j6CUWdvzaDmXLA61S0kCKoSTOjyRmnFs9jY1eqPTxz1dKrTBwj-Bfn1V9-CQ2kmQnwJZzrxlfFTicoMH9lhguYzCK9NO2x5yG9KIFRlmT1Pkk6g9hkWohZ39mUTXwyDUN4Q7NpnU_TSQjo9xmK42kf6',
@@ -61,8 +62,9 @@ export default function ClassroomsPage() {
     try {
       await createClassroom(newTitle, newDesc, newIsPublic);
       setIsCreateModalOpen(false);
+      toast.success('Đã tạo lớp học thành công!');
     } catch (e: any) {
-      alert(e.message || 'Tạo thất bại');
+      toast.error(e.message || 'Tạo thất bại');
     } finally {
       setIsSubmitting(false);
     }
@@ -77,9 +79,10 @@ export default function ClassroomsPage() {
       if (currentUserId) {
         await removeMember(id, currentUserId);
         await fetchClassrooms(); // Refresh list after leaving
+        toast.success('Đã rời khỏi lớp học!');
       }
     } catch (e: any) {
-      alert(e.message || 'Rời lớp thất bại');
+      toast.error(e.message || 'Rời lớp thất bại');
     }
   };
 
@@ -99,6 +102,7 @@ export default function ClassroomsPage() {
       await joinByCode(joinCode.trim());
       setIsJoinModalOpen(false);
       setJoinCode('');
+      toast.success('Đã tham gia / gửi yêu cầu tham gia lớp học thành công!');
     } catch (e: any) {
       setJoinError(e.message || 'Tham gia thất bại');
     } finally {
@@ -112,8 +116,9 @@ export default function ClassroomsPage() {
     if (!currentUserId) return;
     try {
       await cancelJoinRequest(classroomId, currentUserId);
+      toast.success('Đã hủy yêu cầu tham gia.');
     } catch (e: any) {
-      alert(e.message || 'Hủy yêu cầu thất bại');
+      toast.error(e.message || 'Hủy yêu cầu thất bại');
     }
   };
 
@@ -152,7 +157,9 @@ export default function ClassroomsPage() {
         {pendingClassrooms.length > 0 && (
           <div className='mb-8'>
             <h4 className='text-sm font-bold text-amber-700 mb-4 flex items-center gap-2'>
-              <span className='material-symbols-outlined text-lg'>hourglass_empty</span>
+              <span className='material-symbols-outlined text-lg'>
+                hourglass_empty
+              </span>
               Đang chờ duyệt ({pendingClassrooms.length})
             </h4>
             <div className='flex flex-wrap gap-4'>
@@ -170,24 +177,34 @@ export default function ClassroomsPage() {
                     <div className='absolute inset-0 bg-amber-900/40' />
                     <div className='absolute inset-0 flex items-center justify-center'>
                       <div className='bg-amber-100 text-amber-800 px-4 py-2 rounded-full flex items-center gap-2 font-bold text-sm shadow-lg'>
-                        <span className='material-symbols-outlined text-[18px] animate-pulse'>hourglass_empty</span>
+                        <span className='material-symbols-outlined text-[18px] animate-pulse'>
+                          hourglass_empty
+                        </span>
                         Đang chờ duyệt
                       </div>
                     </div>
                     <div className='absolute bottom-4 left-4 right-4'>
-                      <h4 className='text-lg font-bold text-white leading-tight'>{pr.classroom.title}</h4>
+                      <h4 className='text-lg font-bold text-white leading-tight'>
+                        {pr.classroom.title}
+                      </h4>
                     </div>
                   </div>
                   <div className='p-4 flex items-center justify-between'>
                     <div className='text-xs text-amber-700'>
-                      <span className='material-symbols-outlined text-[14px] align-middle mr-1'>group</span>
+                      <span className='material-symbols-outlined text-[14px] align-middle mr-1'>
+                        group
+                      </span>
                       {pr.classroom._count.members} thành viên
                     </div>
                     <button
-                      onClick={() => handleCancelRequest(pr.classroom.id, pr.classroom.title)}
+                      onClick={() =>
+                        handleCancelRequest(pr.classroom.id, pr.classroom.title)
+                      }
                       className='text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors'
                     >
-                      <span className='material-symbols-outlined text-[14px]'>close</span>
+                      <span className='material-symbols-outlined text-[14px]'>
+                        close
+                      </span>
                       Hủy yêu cầu
                     </button>
                   </div>
@@ -225,7 +242,9 @@ export default function ClassroomsPage() {
                       className='bg-red-500/90 text-white px-3 py-1.5 rounded-lg backdrop-blur-md hover:bg-red-600 flex items-center justify-center transition-colors shadow-lg text-sm font-bold gap-1'
                       title='Rời lớp học'
                     >
-                      <span className='material-symbols-outlined text-sm'>logout</span>
+                      <span className='material-symbols-outlined text-sm'>
+                        logout
+                      </span>
                       Rời lớp
                     </button>
                   </div>
@@ -253,10 +272,14 @@ export default function ClassroomsPage() {
                 <div className='p-5 flex-1 flex flex-col gap-3'>
                   <div className='flex items-center gap-3'>
                     <div className='w-9 h-9 rounded-full border border-primary/20 bg-sky-200/10 flex items-center justify-center shrink-0'>
-                      <span className='material-symbols-outlined text-sky-400 text-sm'>school</span>
+                      <span className='material-symbols-outlined text-sky-400 text-sm'>
+                        school
+                      </span>
                     </div>
                     <div className='flex-1 min-w-0'>
-                      <p className='text-xs font-bold text-on-surface-variant'>Mô tả</p>
+                      <p className='text-xs font-bold text-on-surface-variant'>
+                        Mô tả
+                      </p>
                       <p className='text-sm font-semibold text-on-surface truncate'>
                         {cohort.description || 'Không có mô tả'}
                       </p>
@@ -264,7 +287,9 @@ export default function ClassroomsPage() {
                   </div>
                   {cohort._count && (
                     <div className='flex items-center gap-1.5 text-xs text-slate-500'>
-                      <span className='material-symbols-outlined text-sm'>group</span>
+                      <span className='material-symbols-outlined text-sm'>
+                        group
+                      </span>
                       {cohort._count.members} thành viên
                     </div>
                   )}
@@ -282,15 +307,21 @@ export default function ClassroomsPage() {
             <div className='w-16 h-16 rounded-full bg-sky-300/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform'>
               <Plus className='text-sky-400 text-3xl' />
             </div>
-            <h5 className='text-lg font-bold text-on-surface'>Tạo Lớp Học Mới</h5>
+            <h5 className='text-lg font-bold text-on-surface'>
+              Tạo Lớp Học Mới
+            </h5>
           </button>
         </div>
 
         {/* Stats bar */}
         <div className='mt-10 glass-panel p-6 rounded-3xl flex items-center gap-8'>
           <div>
-            <p className='text-3xl font-black text-on-surface'>{cohorts.length}</p>
-            <p className='text-xs text-on-surface-variant'>Tổng số Classrooms</p>
+            <p className='text-3xl font-black text-on-surface'>
+              {cohorts.length}
+            </p>
+            <p className='text-xs text-on-surface-variant'>
+              Tổng số Classrooms
+            </p>
           </div>
           <div className='h-10 w-px bg-sky-300/20' />
           <div>
@@ -307,7 +338,9 @@ export default function ClassroomsPage() {
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4'>
           <div className='bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl'>
             <h2 className='text-xl font-bold text-slate-900 mb-5 flex items-center gap-2'>
-              <span className='material-symbols-outlined text-sky-600'>add_circle</span>
+              <span className='material-symbols-outlined text-sky-600'>
+                add_circle
+              </span>
               Tạo lớp học mới
             </h2>
             <div className='space-y-4'>
@@ -385,7 +418,9 @@ export default function ClassroomsPage() {
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4'>
           <div className='bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl'>
             <h2 className='text-xl font-bold text-slate-900 mb-1 flex items-center gap-2'>
-              <span className='material-symbols-outlined text-sky-600'>login</span>
+              <span className='material-symbols-outlined text-sky-600'>
+                login
+              </span>
               Tham gia lớp học
             </h2>
             <p className='text-sm text-slate-500 mb-5'>

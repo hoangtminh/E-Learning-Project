@@ -3,11 +3,18 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
+import { ClassroomRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PendingMemberDto } from './dto/pending-member.dto';
 import { AddMembersResponseDto } from './dto/add-members-response.dto';
 import { ApproveAllResponseDto } from './dto/approve-all-response.dto';
+import {
+  S3Client,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
+} from '@aws-sdk/client-s3';
 
 @Injectable()
 export class ClassroomMembersService {
@@ -117,6 +124,52 @@ export class ClassroomMembersService {
       skipped: existingUserIds.length,
       total: targetUserIds.length,
     };
+  }
+
+  async addMemberByEmail(requesterId: string, classroomId: string, email: string) {
+    const requesterMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId: requesterId } },
+    });
+
+    if (!requesterMember || requesterMember.role === 'member') {
+      throw new ForbiddenException(
+        'Only admins and owners can add members',
+      );
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.trim().toLowerCase() },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng với email này');
+    }
+
+    const existingMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId: user.id } },
+    });
+
+    if (existingMember) {
+      throw new ConflictException('Người dùng này đã là thành viên của lớp học');
+    }
+
+    // Xóa request xin gia nhập (nếu có)
+    await this.prisma.classroomJoinRequest.deleteMany({
+      where: { classroomId, userId: user.id },
+    });
+
+    const member = await this.prisma.classroomMember.create({
+      data: {
+        classroomId,
+        userId: user.id,
+        role: 'member',
+      },
+      include: {
+        user: { select: { id: true, fullName: true, avatarUrl: true, email: true } },
+      },
+    });
+
+    return member;
   }
 
   // 3. Admin/Owner duyệt người dùng trong hàng đợi
@@ -317,5 +370,268 @@ export class ClassroomMembersService {
     return this.prisma.classroomJoinRequest.delete({
       where: { classroomId_userId: { classroomId, userId: targetUserId } },
     });
+  }
+
+  // 8. Cập nhật quyền (role) thành viên
+  async updateMemberRole(
+    requesterId: string,
+    classroomId: string,
+    targetUserId: string,
+    newRole: ClassroomRole,
+  ) {
+    const requesterMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId: requesterId } },
+    });
+    if (
+      !requesterMember ||
+      (requesterMember.role !== 'owner' && requesterMember.role !== 'admin')
+    ) {
+      throw new ForbiddenException(
+        'Only owners and admins can update member roles',
+      );
+    }
+
+    const targetMember = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId: targetUserId } },
+    });
+    if (!targetMember) throw new NotFoundException('Member not found');
+
+    if (targetMember.role === 'owner') {
+      if (requesterId !== targetUserId) {
+        throw new ForbiddenException(
+          "Cannot modify the classroom owner's role",
+        );
+      }
+      if (newRole !== 'owner') {
+        throw new BadRequestException(
+          'Owner cannot demote themselves without transferring ownership first',
+        );
+      }
+    }
+
+    if (newRole === 'owner') {
+      if (requesterMember.role !== 'owner') {
+        throw new ForbiddenException(
+          'Only the classroom owner can transfer ownership',
+        );
+      }
+      // Transfer ownership
+      await this.prisma.$transaction([
+        this.prisma.classroom.update({
+          where: { id: classroomId },
+          data: { ownerId: targetUserId },
+        }),
+        this.prisma.classroomMember.update({
+          where: { classroomId_userId: { classroomId, userId: requesterId } },
+          data: { role: 'admin' },
+        }),
+        this.prisma.classroomMember.update({
+          where: { classroomId_userId: { classroomId, userId: targetUserId } },
+          data: { role: 'owner' },
+        }),
+      ]);
+      return { success: true };
+    }
+
+    return this.prisma.classroomMember.update({
+      where: { classroomId_userId: { classroomId, userId: targetUserId } },
+      data: { role: newRole },
+    });
+  }
+
+  // 9. Rời phòng (leave)
+  async leaveClassroom(userId: string, classroomId: string) {
+    const classroom = await this.prisma.classroom.findUnique({
+      where: { id: classroomId },
+      include: { members: true },
+    });
+    if (!classroom) throw new NotFoundException('Classroom not found');
+
+    const member = classroom.members.find((m) => m.userId === userId);
+    if (!member) {
+      throw new NotFoundException('You are not a member of this classroom');
+    }
+
+    // Role validations for leaving when there are other members:
+    if (classroom.members.length > 1) {
+      if (member.role === 'owner' || member.role === 'admin') {
+        const adminsAndOwners = classroom.members.filter(
+          (m) => m.role === 'owner' || m.role === 'admin',
+        );
+        if (adminsAndOwners.length === 1) {
+          const otherMembers = classroom.members.filter((m) => m.userId !== userId);
+          if (otherMembers.length > 0) {
+            throw new BadRequestException(
+              'Bạn là admin/owner duy nhất của lớp học. Vui lòng cấp quyền admin cho một thành viên khác trước khi rời phòng.',
+            );
+          }
+        }
+      }
+    }
+
+    let transferredOwnership = false;
+    if (member.role === 'owner' && classroom.members.length > 1) {
+      const otherAdminsAndOwners = classroom.members.filter(
+        (m) =>
+          m.userId !== userId && (m.role === 'owner' || m.role === 'admin'),
+      );
+      if (otherAdminsAndOwners.length > 0) {
+        const newOwner = otherAdminsAndOwners[0];
+        await this.prisma.$transaction([
+          this.prisma.classroom.update({
+            where: { id: classroomId },
+            data: { ownerId: newOwner.userId },
+          }),
+          this.prisma.classroomMember.update({
+            where: {
+              classroomId_userId: { classroomId, userId: newOwner.userId },
+            },
+            data: { role: 'owner' },
+          }),
+          this.prisma.classroomMember.delete({
+            where: { classroomId_userId: { classroomId, userId } },
+          }),
+        ]);
+        transferredOwnership = true;
+      }
+    }
+
+    if (!transferredOwnership) {
+      await this.prisma.classroomMember.delete({
+        where: { classroomId_userId: { classroomId, userId } },
+      });
+    }
+
+    // Now query the remaining members count in the classroom
+    const remainingMembersCount = await this.prisma.classroomMember.count({
+      where: { classroomId },
+    });
+
+    if (remainingMembersCount === 0) {
+      // 1. Find all linked courses
+      const linkedCourses = await this.prisma.classroomLinkedCourse.findMany({
+        where: { classroomId },
+        select: { courseId: true },
+      });
+      const courseIds = linkedCourses.map((lc) => lc.courseId);
+
+      // 2. Delete S3 folder
+      try {
+        const bucketName = process.env.AWS_S3_BUCKET_NAME || '';
+        const s3Client = new S3Client({
+          region: process.env.AWS_REGION || 'ap-southeast-1',
+          credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+          },
+        });
+        const prefix = `classrooms/${classroomId}/`;
+        const listedObjects = await s3Client.send(
+          new ListObjectsV2Command({
+            Bucket: bucketName,
+            Prefix: prefix,
+          }),
+        );
+
+        if (listedObjects.Contents && listedObjects.Contents.length > 0) {
+          const deleteParams = {
+            Bucket: bucketName,
+            Delete: {
+              Objects: listedObjects.Contents.map(({ Key }) => ({ Key })),
+            },
+          };
+          await s3Client.send(new DeleteObjectsCommand(deleteParams));
+        }
+      } catch (err) {
+        console.error('Failed to delete S3 folder for classroom', err);
+      }
+
+      // 3. Delete DB records in exact dependency-respecting order inside a transaction
+      await this.prisma.$transaction(async (tx) => {
+
+        // B. Delete Post Comments
+        await tx.classroomPostComment.deleteMany({
+          where: { post: { classroomId } },
+        });
+
+        // C. Delete Posts
+        await tx.classroomPost.deleteMany({
+          where: { classroomId },
+        });
+
+        // D. Delete Task Submissions
+        await tx.taskSubmission.deleteMany({
+          where: { task: { classroomId } },
+        });
+
+        // E. Delete Classroom Tasks
+        await tx.classroomTask.deleteMany({
+          where: { classroomId },
+        });
+
+        // F. Delete Classroom Files
+        await tx.classroomFile.deleteMany({
+          where: { classroomId },
+        });
+
+        // G. Delete Linked Courses relations
+        await tx.classroomLinkedCourse.deleteMany({
+          where: { classroomId },
+        });
+
+        // H. Delete the Linked Courses themselves
+        if (courseIds.length > 0) {
+          for (const courseId of courseIds) {
+            try {
+              // Delete UserProgress first
+              await tx.userProgress.deleteMany({ where: { courseId } });
+              // Delete Course itself (which cascade deletes Section, CourseMember, CourseInvitation, etc.)
+              await tx.course.delete({ where: { id: courseId } });
+            } catch (err) {
+              console.error(`Failed to delete course ${courseId} inside transaction:`, err);
+            }
+          }
+        }
+
+        // I. Delete Notes
+        await tx.note.deleteMany({
+          where: { classroomId },
+        });
+
+        // J. Delete Calls
+        await tx.call.deleteMany({
+          where: { classroomId },
+        });
+
+        // K. Delete Messages
+        await tx.message.deleteMany({
+          where: { conversation: { classroomId } },
+        });
+
+        // L. Delete Conversation Members
+        await tx.conversationMember.deleteMany({
+          where: { conversation: { classroomId } },
+        });
+
+        // M. Delete Conversations
+        await tx.conversation.deleteMany({
+          where: { classroomId },
+        });
+
+        // N. Delete Join Requests
+        await tx.classroomJoinRequest.deleteMany({
+          where: { classroomId },
+        });
+
+        // P. Delete the Classroom itself
+        await tx.classroom.delete({
+          where: { id: classroomId },
+        });
+      });
+
+      return { success: true, classroomDeleted: true };
+    }
+
+    return { success: true };
   }
 }
