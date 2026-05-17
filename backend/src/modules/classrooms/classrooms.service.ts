@@ -9,6 +9,7 @@ import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { UpdateClassroomDto } from './dto/update-classroom.dto';
 import { ClassroomRole, GlobalRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   S3Client,
   PutObjectCommand,
@@ -25,7 +26,10 @@ export class ClassroomsService {
   private s3Client: S3Client;
   private bucketName: string;
 
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {
     this.bucketName = process.env.AWS_S3_BUCKET_NAME || '';
     this.s3Client = new S3Client({
       region: process.env.AWS_REGION || 'ap-southeast-1',
@@ -493,16 +497,71 @@ export class ClassroomsService {
     });
     if (!member) throw new ForbiddenException('Not a member of this classroom');
 
-    return this.prisma.classroomPost.create({
+    const post = await this.prisma.classroomPost.create({
       data: {
         classroomId,
         authorId: userId,
         content,
       },
       include: {
-        author: { select: { id: true, fullName: true, avatarUrl: true } },
+        author: { select: { id: true, fullName: true, email: true, avatarUrl: true } },
       },
     });
+
+    // Asynchronously create notifications for other members
+    (async () => {
+      try {
+        const classroom = await this.prisma.classroom.findUnique({
+          where: { id: classroomId },
+          select: { title: true },
+        });
+
+        const allMembers = await this.prisma.classroomMember.findMany({
+          where: { classroomId },
+          select: { userId: true },
+        });
+
+        let notificationType = 'post';
+        let typeLabel = 'thông báo';
+        if (content.startsWith('[SYSTEM_CALL]')) {
+          notificationType = 'call';
+          typeLabel = 'cuộc gọi';
+        } else if (content.startsWith('[SYSTEM_TASK]')) {
+          notificationType = 'task';
+          typeLabel = 'task';
+        } else if (content.startsWith('[SYSTEM_FILE]')) {
+          notificationType = 'file';
+          typeLabel = 'file';
+        }
+
+        const authorName = post.author.fullName || post.author.email || 'Thành viên';
+        const classroomName = classroom?.title || 'Lớp học';
+        
+        let notifyContent = `${authorName} đã tạo trong classroom ${classroomName} có 1 thông báo`;
+        if (notificationType !== 'post') {
+          notifyContent += ` ${typeLabel}`;
+        }
+        
+        const link = `/classrooms/${classroomId}`;
+
+        const promises = allMembers
+          .filter((m) => m.userId !== userId)
+          .map((m) =>
+            this.notificationsService.createNotification(
+              m.userId,
+              userId,
+              notificationType,
+              notifyContent,
+              link,
+            ),
+          );
+        await Promise.all(promises);
+      } catch (err) {
+        console.error('Failed to create classroom post notifications:', err);
+      }
+    })();
+
+    return post;
   }
 
   async updatePost(
