@@ -9,12 +9,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { paymentApi } from '@/api/payment';
 
 interface CourseBuyCardProps {
+  courseId: string;
   course: {
     price: number;
     originalPrice: number;
     thumbnailUrl: string;
   };
-  courseId?: string;
 }
 
 const includes = [
@@ -68,6 +68,7 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
   const [enrolled, setEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [firstLessonId, setFirstLessonId] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (courseId && user) {
@@ -112,6 +113,26 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
       alert(err.message || 'Đã xảy ra lỗi');
     } finally {
       setEnrolling(false);
+    }
+  };
+
+  const handleBuy = async () => {
+    if (!courseId) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    try {
+      setIsProcessing(true);
+      const res = await paymentApi.createPaymentUrl(courseId);
+      if (res.paymentUrl) {
+        window.location.href = res.paymentUrl;
+      }
+    } catch (error) {
+      console.error('Lỗi khi tạo payment request', error);
+      alert('Không thể tạo giao dịch. Vui lòng thử lại.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -186,13 +207,15 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
           ) : (
             <>
               <button
-                onClick={handleEnroll}
-                disabled={enrolling}
+                onClick={course.price > 0 ? handleBuy : handleEnroll}
+                disabled={course.price > 0 ? isProcessing : enrolling}
                 type="button"
-                className="w-full py-4 bg-[#006382] text-white font-black text-base rounded-2xl shadow-xl shadow-[#006382]/30 hover:bg-[#005672] transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
+                className="w-full py-4 bg-[#006382] text-white font-black text-base rounded-2xl shadow-xl shadow-[#006382]/30 hover:bg-[#005672] transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-                {enrolling ? 'Đang xử lý...' : 'Đăng ký ngay'}
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {(course.price > 0 ? isProcessing : enrolling) ? 'hourglass_empty' : 'bolt'}
+                </span>
+                {(course.price > 0 ? isProcessing : enrolling) ? 'Đang xử lý...' : 'Đăng ký ngay'}
               </button>
               <button type="button" className="w-full py-3 border-2 border-[#006382] text-[#006382] font-bold rounded-2xl hover:bg-[#006382]/5 transition-all active:scale-[0.98]">
                 Thử miễn phí 7 ngày
