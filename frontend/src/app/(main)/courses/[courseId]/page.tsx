@@ -9,6 +9,8 @@ import { CourseBuyCard } from '@/components/course/CourseBuyCard';
 import { CourseTabs } from '@/components/course/CourseTabs';
 import { stripHtml } from '@/lib/utils';
 
+import { paymentApi } from '@/api/payment';
+
 // Default placeholder thumbnail when course has none
 const DEFAULT_THUMBNAIL =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDsShA9-Xp_8PjhhBjFkZHA1jDKOvzkXeHp3I7H7B-gqYFuWcFn6RJPdvLVEXVqBWocqAAZZJIBeOe-xo-wLAOJVLCJ81R2ShE6LhJOJ8pX3Ao6IcoDMZFnOUAO8QuqSUoIS27bME35VU3h9gKol4s8wE9EzwzqMKbDlcGJgUI87dRSKc7qCStrP2kdQI7Mqaae2X7R_y9kd4DCW0mQeu9DNBscURf5BDIQ9nmQt0HJdc-OowxZ8-__FtxxqSD-yZgSdMP7_CjfEmo6';
@@ -136,10 +138,27 @@ export default function CourseDetailPage() {
   const heroProps = mapCourseToHeroProps(course);
   const buyCardProps = mapCourseToBuyCardProps(course);
 
+  const handleMobileBuy = async () => {
+    if (!course) return;
+    try {
+      const res = await paymentApi.createPaymentUrl(course.id);
+      if (res.paymentUrl) {
+        window.location.href = res.paymentUrl;
+      }
+    } catch (error) {
+      console.error('Lỗi khi tạo payment request', error);
+      alert('Không thể tạo giao dịch. Vui lòng thử lại.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
       {/* Hero banner */}
-      <CourseHero course={heroProps} />
+      <CourseHero 
+        course={heroProps} 
+        onBuy={handleMobileBuy} 
+        price={Number(course.price)} 
+      />
 
       {/* Main content */}
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
@@ -150,7 +169,7 @@ export default function CourseDetailPage() {
 
         {/* Right column: Buy card */}
         <aside className="hidden lg:block">
-          <CourseBuyCard course={buyCardProps} />
+          <CourseBuyCard courseId={course.id} course={buyCardProps} />
         </aside>
       </div>
 
@@ -170,6 +189,7 @@ export default function CourseDetailPage() {
         </div>
         <button
           type="button"
+          onClick={handleMobileBuy}
           className="flex-1 max-w-[200px] py-3 bg-[#006382] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#006382]/25 hover:bg-[#005672] transition-all active:scale-95 flex items-center justify-center gap-2"
         >
           <span

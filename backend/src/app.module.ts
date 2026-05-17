@@ -18,9 +18,12 @@ import { LessonsModule } from './modules/lessons/lessons.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { QuizzesModule } from './modules/quizzes/quizzes.module';
 import { CallsModule } from './modules/calls/calls.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
     ClassroomsModule,
@@ -35,6 +38,7 @@ import { CallsModule } from './modules/calls/calls.module';
     RealtimeModule,
     QuizzesModule,
     CallsModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

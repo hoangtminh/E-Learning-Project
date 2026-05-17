@@ -6,6 +6,8 @@ import { enrollCourse, checkEnrollment } from '@/api/enrollment';
 import { getCourse } from '@/api/courses';
 import { useAuth } from '@/contexts/AuthContext';
 
+import { paymentApi } from '@/api/payment';
+
 interface CourseBuyCardProps {
   course: {
     price: number;
