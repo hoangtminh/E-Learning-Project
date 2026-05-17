@@ -8,72 +8,33 @@ import React, {
   ReactNode,
 } from 'react';
 import {
-  Course,
+  CourseListItem,
+  CourseListResponse,
   getCourses,
-  getCourseById,
-  createCourse,
-  updateCourse,
-  deleteCourse,
-  CreateCourseDto,
-  UpdateCourseDto,
-} from '@/api/course';
+  getCourse,
+  createCourse as apiCreateCourse,
+  updateCourse as apiUpdateCourse,
+  deleteCourse as apiDeleteCourse,
+  CourseDetail,
+} from '@/api/courses';
 
 interface CourseContextType {
-  courses: Course[];
-  currentCourse: Course | null;
+  courses: CourseListItem[];
+  currentCourse: CourseDetail | null;
   isLoading: boolean;
   error: string | null;
   fetchCourses: () => Promise<void>;
   fetchCourseById: (id: string) => Promise<void>;
-  createNewCourse: (data: CreateCourseDto) => Promise<Course | null>;
-  updateExistingCourse: (id: string, data: UpdateCourseDto) => Promise<void>;
+  createNewCourse: (data: Parameters<typeof apiCreateCourse>[0]) => Promise<CourseDetail | null>;
+  updateExistingCourse: (id: string, data: Parameters<typeof apiUpdateCourse>[1]) => Promise<void>;
   removeCourse: (id: string) => Promise<void>;
 }
 
 const CourseContext = createContext<CourseContextType | undefined>(undefined);
 
-const mockCourses: Course[] = [
-  {
-    id: '1',
-    title: 'React Advanced Patterns',
-    slug: 'react-advanced-patterns',
-    description:
-      'Master advanced React patterns like HOCs, Render Props, and Compound Components.',
-    price: 499000,
-    visibility: 'PUBLIC',
-    instructorId: 'inst-1',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Next.js 15 Fullstack Mastery',
-    slug: 'nextjs-15-mastery',
-    description:
-      'Build modern full-stack applications with Next.js 15, App Router, and Server Actions.',
-    price: 799000,
-    visibility: 'PUBLIC',
-    instructorId: 'inst-1',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Node.js & NestJS Backend Engineering',
-    slug: 'nestjs-backend',
-    description:
-      'Scalable backend development with NestJS, Prisma, and PostgreSQL.',
-    price: 0,
-    visibility: 'PUBLIC',
-    instructorId: 'inst-2',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
 export function CourseProvider({ children }: { children: ReactNode }) {
-  const [courses, setCourses] = useState<Course[]>(mockCourses);
-  const [currentCourse, setCurrentCourse] = useState<Course | null>(null);
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [currentCourse, setCurrentCourse] = useState<CourseDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,15 +43,21 @@ export function CourseProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const res = await getCourses();
-      if (res.success && res.data && res.data.length > 0) {
-        setCourses(res.data);
+      if (res.success && res.data) {
+        // Backend returns { data: CourseListItem[], meta: {...} }
+        const payload = res.data as CourseListResponse;
+        if (payload.data && Array.isArray(payload.data)) {
+          setCourses(payload.data);
+        } else if (Array.isArray(res.data)) {
+          // Fallback: if backend returns array directly
+          setCourses(res.data as any);
+        }
       } else if (!res.success) {
-        // Log error but keep mock data for UI demo
-        console.warn('API fetch failed, using mock data:', res.error);
-        // We don't set error state here to avoid blocking UI with error message when mock data is present
+        setError(res.error || 'Không thể tải danh sách khóa học');
       }
     } catch (err: any) {
-      console.error('Fetch error, using mock data:', err);
+      console.error('Fetch courses error:', err);
+      setError(err.message || 'Đã xảy ra lỗi');
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +67,7 @@ export function CourseProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await getCourseById(id);
+      const res = await getCourse(id);
       if (res.success && res.data) {
         setCurrentCourse(res.data);
       } else {
@@ -113,13 +80,13 @@ export function CourseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createNewCourse = async (data: CreateCourseDto) => {
+  const createNewCourse = async (data: Parameters<typeof apiCreateCourse>[0]) => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await createCourse(data);
+      const res = await apiCreateCourse(data);
       if (res.success && res.data) {
-        setCourses((prev) => [...prev, res.data!]);
+        await fetchCourses(); // Refresh the list
         return res.data;
       } else {
         setError(res.error || 'Failed to create course');
@@ -133,13 +100,13 @@ export function CourseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateExistingCourse = async (id: string, data: UpdateCourseDto) => {
+  const updateExistingCourse = async (id: string, data: Parameters<typeof apiUpdateCourse>[1]) => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await updateCourse(id, data);
+      const res = await apiUpdateCourse(id, data);
       if (res.success && res.data) {
-        setCourses((prev) => prev.map((c) => (c.id === id ? res.data! : c)));
+        await fetchCourses(); // Refresh
         if (currentCourse?.id === id) {
           setCurrentCourse(res.data);
         }
@@ -157,7 +124,7 @@ export function CourseProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await deleteCourse(id);
+      const res = await apiDeleteCourse(id);
       if (res.success) {
         setCourses((prev) => prev.filter((c) => c.id !== id));
         if (currentCourse?.id === id) {

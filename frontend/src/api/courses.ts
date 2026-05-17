@@ -73,6 +73,7 @@ export function getCourse(id: string) {
 
 export function createCourse(data: {
   title: string;
+  slug: string;
   description?: string;
   thumbnailUrl?: string;
   price?: number;

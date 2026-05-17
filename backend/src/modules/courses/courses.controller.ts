@@ -42,6 +42,21 @@ export class CoursesController {
     return this.coursesService.findAll({ page: pageNum, limit: limitNum });
   }
 
+  // ── These named routes MUST come before ':id' ──
+
+  @Get('my-courses')
+  getMyEnrolledCourses(@Req() req: AuthenticatedRequest) {
+    return this.coursesService.getEnrolledCourses(req.user.userId);
+  }
+
+  @Roles('instructor', 'admin')
+  @Get('my-teaching')
+  getMyTeachingCourses(@Req() req: AuthenticatedRequest) {
+    return this.coursesService.findMyCoursesAsInstructor(req.user.userId);
+  }
+
+  // ── Param routes ──
+
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -63,4 +78,31 @@ export class CoursesController {
   remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.coursesService.remove(id, req.user.userId);
   }
+
+  // ── Enrollment ──
+
+  @Post(':courseId/enroll')
+  enrollCourse(
+    @Req() req: AuthenticatedRequest,
+    @Param('courseId') courseId: string,
+  ) {
+    return this.coursesService.enrollCourse(req.user.userId, courseId);
+  }
+
+  @Get(':courseId/enrollment')
+  checkEnrollment(
+    @Req() req: AuthenticatedRequest,
+    @Param('courseId') courseId: string,
+  ) {
+    return this.coursesService.checkEnrollment(req.user.userId, courseId);
+  }
+
+  @Delete(':courseId/enroll')
+  unenrollCourse(
+    @Req() req: AuthenticatedRequest,
+    @Param('courseId') courseId: string,
+  ) {
+    return this.coursesService.unenrollCourse(req.user.userId, courseId);
+  }
 }
+

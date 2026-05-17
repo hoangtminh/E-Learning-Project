@@ -16,14 +16,11 @@ export class UpdateLessonDto {
 
   @IsOptional()
   @IsString()
-  rawText?: string;
+  body?: string;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   order?: number;
 
-  @IsString()
-  @IsOptional()
-  status?: string;
 }

@@ -1,38 +1,50 @@
-const instructor = {
-  name: 'TS. Nguyễn Văn Khoa',
-  title: 'Chuyên gia An toàn Thông tin · Cố vấn Bảo mật Doanh nghiệp',
-  avatarUrl:
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCEaD6AYiPTA5D20zrCZ26iXsbBTk7A7n0Re-vB5zoaLF1WPwpiZyeZ_M6A5mWWe2YuY1IWgUkuTM7XS6njCXVZQXaCx-QYfjVj6OP_45Etglz_LF4PfWTX5kR73GixfBzh7aWCAAGsacJALg2ROk4zALBi7Uc7bGNr22lqlIUDqp8_2DLtT0juDR9fo7PYopJws8INS5QmSYWskox6VFaHwdfvcWbYFE6DZrJVzWy3QrQohA3aHSXcYJk2uZb6s-FbDm0SkXnLJ1gj',
-  stats: [
-    { value: '4.8', label: 'Đánh giá TB',  color: 'text-[#006382]' },
-    { value: '32k', label: 'Học viên',      color: 'text-[#252f43]' },
-    { value: '8',   label: 'Khóa học',      color: 'text-[#252f43]' },
-    { value: '15+', label: 'Năm KN',        color: 'text-[#6f4b94]' },
-  ],
-  certs: [
-    { label: 'CISSP', cls: 'bg-[#006382]/10 text-[#006382]' },
-    { label: 'CEH',   cls: 'bg-[#6f4b94]/10 text-[#6f4b94]' },
-    { label: 'OSCP',  cls: 'bg-[#346176]/10 text-[#346176]' },
-    { label: 'AWS Security', cls: 'bg-emerald-100 text-emerald-700' },
-  ],
-  bio: [
-    'Tiến sĩ Khoa học Máy tính, Đại học Bách Khoa TP.HCM. Với hơn 15 năm kinh nghiệm trong lĩnh vực an toàn thông tin, ông từng là chuyên gia bảo mật cấp cao tại các tập đoàn công nghệ quốc tế như Microsoft Vietnam và Cisco. Hiện là Giám đốc Bảo mật (CISO) của một tập đoàn viễn thông lớn và là giảng viên thỉnh giảng tại các trường đại học hàng đầu.',
-    'Phong cách giảng dạy của ông kết hợp giữa lý thuyết nền tảng vững chắc và các tình huống thực chiến từ kinh nghiệm thực tế, giúp học viên không chỉ nắm lý thuyết mà còn có khả năng xử lý các sự cố bảo mật trong môi trường doanh nghiệp thực sự.',
-  ],
-};
+interface CourseInstructorTabProps {
+  course?: any;
+}
 
-export function CourseInstructorTab() {
+const DEFAULT_AVATAR =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuCoLcZt8R31CwX3UiyL5JxZf-X251KAIKT8ZXC5YlL4nUC870JjR0Km4WzFJsip6_pzz0hPTJki_YMdT4TZSVrOZl3RRjcBKEVDVGR6t1x6AsCFBvw6Bl6tIbGWcfu5t9eyI21LtKP0t6YpJPKsV71m8LX8rJSARv-_dVEgT0Gb4NkiEUAp6LQN7RWNKKBkG8X25KKbMzZ4fyxFfCJSWvY0ucPclgX3kUJ0r_IjGymPsg6Xk5RfsyGYhGxDUKl4opdReA3vi4IBvTK3';
+
+export function CourseInstructorTab({ course }: CourseInstructorTabProps) {
+  const instructor = course?.instructor ?? course?.owner;
+
+  if (!instructor) {
+    return (
+      <div className="text-center py-12 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+        <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">person_off</span>
+        <p className="text-slate-400 text-sm">Chưa có thông tin giảng viên.</p>
+      </div>
+    );
+  }
+
+  const name = instructor.fullName || 'Giảng viên';
+  const avatarUrl = instructor.avatarUrl || DEFAULT_AVATAR;
+  const email = instructor.email || null;
+
+  const totalSections = course?.sections?.length ?? 0;
+  const totalLessons = course?.sections?.reduce(
+    (acc: number, s: any) => acc + (s.lessons?.length ?? 0),
+    0,
+  ) ?? 0;
+  const memberCount = course?._count?.members ?? 0;
+
+  const stats = [
+    { value: String(memberCount), label: 'Học viên',   color: 'text-[#006382]' },
+    { value: String(totalSections), label: 'Phần học', color: 'text-[#252f43]' },
+    { value: String(totalLessons), label: 'Bài học',   color: 'text-[#252f43]' },
+  ];
+
   return (
     <div className="glass-panel-elevated rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8">
       {/* Avatar + stats */}
       <div className="flex flex-col items-center gap-4 flex-shrink-0">
         <img
-          src={instructor.avatarUrl}
-          alt={instructor.name}
+          src={avatarUrl}
+          alt={name}
           className="w-28 h-28 rounded-2xl object-cover shadow-xl border-2 border-[#006382]/20"
         />
-        <div className="grid grid-cols-2 gap-3 w-full text-center">
-          {instructor.stats.map((stat) => (
+        <div className="grid grid-cols-3 gap-3 w-full text-center">
+          {stats.map((stat) => (
             <div key={stat.label} className="bg-[#e0e8ff] rounded-xl p-3">
               <p className={`text-xl font-black ${stat.color}`}>{stat.value}</p>
               <p className="text-[10px] text-[#525b72] font-medium">{stat.label}</p>
@@ -43,20 +55,22 @@ export function CourseInstructorTab() {
 
       {/* Bio */}
       <div className="flex-1">
-        <h2 className="text-2xl font-black text-[#252f43]">{instructor.name}</h2>
-        <p className="text-[#006382] font-semibold text-sm mt-1">{instructor.title}</p>
-        <div className="flex flex-wrap gap-2 mt-3 mb-5">
-          {instructor.certs.map((cert) => (
-            <span key={cert.label} className={`px-3 py-1 rounded-full text-[11px] font-bold ${cert.cls}`}>
-              {cert.label}
-            </span>
-          ))}
-        </div>
-        {instructor.bio.map((para, i) => (
-          <p key={i} className={`text-sm text-[#525b72] leading-relaxed ${i > 0 ? 'mt-3' : ''}`}>
-            {para}
+        <h2 className="text-2xl font-black text-[#252f43]">{name}</h2>
+        <p className="text-[#006382] font-semibold text-sm mt-1">Giảng viên khóa học</p>
+        {email && (
+          <p className="text-sm text-[#525b72] mt-1 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base text-[#a3adc7]">mail</span>
+            {email}
           </p>
-        ))}
+        )}
+        <div className="mt-5 space-y-3">
+          <p className="text-sm text-[#525b72] leading-relaxed">
+            Giảng viên phụ trách khóa học <strong className="text-[#252f43]">"{course?.title}"</strong>.
+            Khóa học hiện có <strong className="text-[#252f43]">{totalSections} phần học</strong> với
+            tổng cộng <strong className="text-[#252f43]">{totalLessons} bài học</strong>,
+            và đã có <strong className="text-[#252f43]">{memberCount} học viên</strong> đăng ký tham gia.
+          </p>
+        </div>
       </div>
     </div>
   );

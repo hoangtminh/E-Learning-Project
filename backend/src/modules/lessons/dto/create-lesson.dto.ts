@@ -29,14 +29,11 @@ export class CreateLessonDto {
 
   @IsOptional()
   @IsString()
-  rawText?: string;
+  body?: string;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   order?: number;
 
-  @IsString()
-  @IsNotEmpty()
-  status: string;
 }

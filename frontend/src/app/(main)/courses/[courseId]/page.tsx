@@ -7,6 +7,7 @@ import { getCourse, CourseDetail } from '@/api/courses';
 import { CourseHero } from '@/components/course/CourseHero';
 import { CourseBuyCard } from '@/components/course/CourseBuyCard';
 import { CourseTabs } from '@/components/course/CourseTabs';
+import { stripHtml } from '@/lib/utils';
 
 // Default placeholder thumbnail when course has none
 const DEFAULT_THUMBNAIL =
@@ -26,9 +27,11 @@ function mapCourseToHeroProps(course: CourseDetail) {
   // Estimate ~0.5 hours per lesson as a rough duration calculation
   const totalHours = Math.round(totalLessons * 0.5);
 
+  const cleanDescription = stripHtml(course.description);
+
   return {
     title: course.title,
-    subtitle: course.description ?? 'Khóa học chất lượng cao trên Glacier Learning.',
+    subtitle: cleanDescription || 'Khóa học chất lượng cao trên Glacier Learning.',
     category: course.visibility === 'public' ? 'Phổ biến' : course.visibility,
     level: 'Tất cả trình độ',
     rating: 4.8,
@@ -142,7 +145,7 @@ export default function CourseDetailPage() {
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
         {/* Left column: Tabs */}
         <div className="min-w-0">
-          <CourseTabs courseId={courseId} />
+          <CourseTabs courseId={courseId} course={course} />
         </div>
 
         {/* Right column: Buy card */}
