@@ -9,6 +9,7 @@ import {
   Req,
   UnauthorizedException,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ClassroomsService } from './classrooms.service';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
@@ -86,7 +87,11 @@ export class ClassroomsController {
     @Param('id') id: string,
     @Param('courseId') courseId: string,
   ) {
-    return this.classroomsService.assignCourseToClass(courseId, id, this.getUserId(req));
+    return this.classroomsService.assignCourseToClass(
+      courseId,
+      id,
+      this.getUserId(req),
+    );
   }
 
   @UseGuards(AssignCourseGuard)
@@ -96,6 +101,106 @@ export class ClassroomsController {
     @Param('id') id: string,
     @Param('courseId') courseId: string,
   ) {
-    return this.classroomsService.unlinkCourse(this.getUserId(req), id, courseId);
+    return this.classroomsService.unlinkCourse(
+      this.getUserId(req),
+      id,
+      courseId,
+    );
+  }
+
+  // --- POSTS ---
+  @Get(':id/posts')
+  getPosts(@Req() req: any, @Param('id') id: string) {
+    return this.classroomsService.getPosts(id, this.getUserId(req));
+  }
+
+  @Post(':id/posts')
+  createPost(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body('content') content: string,
+  ) {
+    if (!content) throw new BadRequestException('Content is required');
+    return this.classroomsService.createPost(id, this.getUserId(req), content);
+  }
+
+  @Patch(':id/posts/:postId')
+  updatePost(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('postId') postId: string,
+    @Body('content') content: string,
+  ) {
+    if (!content) throw new BadRequestException('Content is required');
+    return this.classroomsService.updatePost(
+      id,
+      postId,
+      this.getUserId(req),
+      content,
+    );
+  }
+
+  @Delete(':id/posts/:postId')
+  deletePost(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('postId') postId: string,
+  ) {
+    return this.classroomsService.deletePost(id, postId, this.getUserId(req));
+  }
+
+  // --- COMMENTS ---
+  @Get(':id/posts/:postId/comments')
+  getComments(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('postId') postId: string,
+  ) {
+    return this.classroomsService.getComments(id, postId, this.getUserId(req));
+  }
+
+  @Post(':id/posts/:postId/comments')
+  createComment(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('postId') postId: string,
+    @Body('content') content: string,
+  ) {
+    if (!content) throw new BadRequestException('Content is required');
+    return this.classroomsService.createComment(
+      id,
+      postId,
+      this.getUserId(req),
+      content,
+    );
+  }
+
+  @Patch(':id/comments/:commentId')
+  updateComment(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('commentId') commentId: string,
+    @Body('content') content: string,
+  ) {
+    if (!content) throw new BadRequestException('Content is required');
+    return this.classroomsService.updateComment(
+      id,
+      commentId,
+      this.getUserId(req),
+      content,
+    );
+  }
+
+  @Delete(':id/comments/:commentId')
+  deleteComment(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('commentId') commentId: string,
+  ) {
+    return this.classroomsService.deleteComment(
+      id,
+      commentId,
+      this.getUserId(req),
+    );
   }
 }

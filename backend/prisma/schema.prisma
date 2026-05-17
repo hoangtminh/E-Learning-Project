@@ -100,6 +100,8 @@ model User {
   quizSubmissions       QuizSubmission[]
 
   uploadedFiles       ClassroomFile[]
+  classroomPosts      ClassroomPost[]        @relation("PostAuthor")
+  classroomPostComments ClassroomPostComment[] @relation("PostCommentAuthor")
 
   @@map("users")
 }
@@ -123,6 +125,7 @@ model Classroom {
   notes         Note[]
   calls         Call[]
   files         ClassroomFile[]
+  posts         ClassroomPost[]
 
   @@index([ownerId])
   @@map("classrooms")
@@ -530,3 +533,41 @@ model UserAnswerOption {
   @@index([optionId])
   @@map("user_answer_options")
 }
+
+model ClassroomPost {
+  id                String          @id @default(cuid())
+  classroomId       String          @map("classroom_id")
+  authorId          String          @map("author_id")
+  content           String          @db.Text
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  previousVersionId String?         @map("previous_version_id")
+
+  classroom         Classroom       @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  author            User            @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  previousVersion   ClassroomPost?  @relation("PostHistory", fields: [previousVersionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  nextVersions      ClassroomPost[] @relation("PostHistory")
+  comments          ClassroomPostComment[]
+
+  @@index([classroomId])
+  @@index([authorId])
+  @@index([previousVersionId])
+  @@map("classroom_posts")
+}
+
+model ClassroomPostComment {
+  id          String   @id @default(cuid())
+  postId      String   @map("post_id")
+  authorId    String   @map("author_id")
+  content     String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  post        ClassroomPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author      User          @relation("PostCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([authorId])
+  @@map("classroom_post_comments")
+}
+

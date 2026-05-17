@@ -185,6 +185,8 @@ CREATE TABLE `classroom_tasks` (
     `title` VARCHAR(191) NULL,
     `description` TEXT NULL,
     `deadline` DATETIME(3) NULL,
+    `attachment_key` VARCHAR(191) NULL,
+    `attachment_name` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `classroom_tasks_classroom_id_idx`(`classroom_id`),
@@ -204,6 +206,22 @@ CREATE TABLE `task_submissions` (
 
     INDEX `task_submissions_user_id_idx`(`user_id`),
     UNIQUE INDEX `task_submissions_task_id_user_id_key`(`task_id`, `user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `classroom_files` (
+    `id` VARCHAR(191) NOT NULL,
+    `classroom_id` VARCHAR(191) NOT NULL,
+    `uploader_id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `s3_key` VARCHAR(191) NOT NULL,
+    `size_bytes` INTEGER NOT NULL,
+    `mime_type` VARCHAR(191) NOT NULL,
+    `uploaded_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `classroom_files_classroom_id_idx`(`classroom_id`),
+    INDEX `classroom_files_uploader_id_idx`(`uploader_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -343,5 +361,35 @@ CREATE TABLE `user_answer_options` (
 
     INDEX `user_answer_options_user_answer_id_idx`(`user_answer_id`),
     INDEX `user_answer_options_option_id_idx`(`option_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `classroom_posts` (
+    `id` VARCHAR(191) NOT NULL,
+    `classroom_id` VARCHAR(191) NOT NULL,
+    `author_id` VARCHAR(191) NOT NULL,
+    `content` TEXT NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `previous_version_id` VARCHAR(191) NULL,
+
+    INDEX `classroom_posts_classroom_id_idx`(`classroom_id`),
+    INDEX `classroom_posts_author_id_idx`(`author_id`),
+    INDEX `classroom_posts_previous_version_id_idx`(`previous_version_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `classroom_post_comments` (
+    `id` VARCHAR(191) NOT NULL,
+    `post_id` VARCHAR(191) NOT NULL,
+    `author_id` VARCHAR(191) NOT NULL,
+    `content` TEXT NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `classroom_post_comments_post_id_idx`(`post_id`),
+    INDEX `classroom_post_comments_author_id_idx`(`author_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

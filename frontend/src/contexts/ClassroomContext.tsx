@@ -23,6 +23,16 @@ import {
   PendingClassroomRequest,
   getMyPendingClassrooms as apiGetMyPendingClassrooms,
   cancelJoinRequest as apiCancelJoinRequest,
+  ClassroomPost,
+  getPosts as apiGetPosts,
+  createPost as apiCreatePost,
+  updatePost as apiUpdatePost,
+  deletePost as apiDeletePost,
+  ClassroomPostComment,
+  getComments as apiGetComments,
+  createComment as apiCreateComment,
+  updateComment as apiUpdateComment,
+  deleteComment as apiDeleteComment,
 } from '@/api/classroom';
 
 export type Classroom = {
@@ -76,6 +86,20 @@ interface ClassroomContextType {
   loadingPendingClassrooms: boolean;
   fetchPendingClassrooms: () => Promise<void>;
   cancelJoinRequest: (classroomId: string, userId: string) => Promise<void>;
+
+  // Posts
+  posts: ClassroomPost[];
+  loadingPosts: boolean;
+  fetchPosts: (classroomId: string) => Promise<void>;
+  createPost: (classroomId: string, content: string) => Promise<void>;
+  updatePost: (classroomId: string, postId: string, content: string) => Promise<void>;
+  deletePost: (classroomId: string, postId: string) => Promise<void>;
+
+  // Comments
+  fetchComments: (classroomId: string, postId: string) => Promise<ClassroomPostComment[]>;
+  createComment: (classroomId: string, postId: string, content: string) => Promise<void>;
+  updateComment: (classroomId: string, commentId: string, content: string) => Promise<void>;
+  deleteComment: (classroomId: string, commentId: string) => Promise<void>;
 }
 
 const ClassroomContext = createContext<ClassroomContextType | undefined>(
@@ -97,6 +121,9 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
 
   const [pendingClassrooms, setPendingClassrooms] = useState<PendingClassroomRequest[]>([]);
   const [loadingPendingClassrooms, setLoadingPendingClassrooms] = useState(false);
+
+  const [posts, setPosts] = useState<ClassroomPost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
 
   const fetchClassrooms = useCallback(async () => {
     setLoading(true);
@@ -242,6 +269,61 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     await fetchClassroom(classroomId);
   };
 
+  const fetchPosts = useCallback(async (classroomId: string) => {
+    setLoadingPosts(true);
+    try {
+      const res = await apiGetPosts(classroomId);
+      if (res.success && res.data) {
+        setPosts(res.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingPosts(false);
+    }
+  }, []);
+
+  const createPost = async (classroomId: string, content: string) => {
+    const res = await apiCreatePost(classroomId, content);
+    if (!res.success) throw new Error(res.error || 'Đăng bài thất bại');
+    await fetchPosts(classroomId);
+  };
+
+  const updatePost = async (classroomId: string, postId: string, content: string) => {
+    const res = await apiUpdatePost(classroomId, postId, content);
+    if (!res.success) throw new Error(res.error || 'Cập nhật bài viết thất bại');
+    await fetchPosts(classroomId);
+  };
+
+  const deletePost = async (classroomId: string, postId: string) => {
+    const res = await apiDeletePost(classroomId, postId);
+    if (!res.success) throw new Error(res.error || 'Xóa bài viết thất bại');
+    await fetchPosts(classroomId);
+  };
+
+  const fetchComments = useCallback(async (classroomId: string, postId: string) => {
+    const res = await apiGetComments(classroomId, postId);
+    if (res.success && res.data) {
+      return res.data;
+    }
+    return [];
+  }, []);
+
+  const createComment = async (classroomId: string, postId: string, content: string) => {
+    const res = await apiCreateComment(classroomId, postId, content);
+    if (!res.success) throw new Error(res.error || 'Gửi bình luận thất bại');
+  };
+
+  const updateComment = async (classroomId: string, commentId: string, content: string) => {
+    const res = await apiUpdateComment(classroomId, commentId, content);
+    if (!res.success) throw new Error(res.error || 'Cập nhật bình luận thất bại');
+  };
+
+  const deleteComment = async (classroomId: string, commentId: string) => {
+    const res = await apiDeleteComment(classroomId, commentId);
+    if (!res.success) throw new Error(res.error || 'Xóa bình luận thất bại');
+  };
+
   return (
     <ClassroomContext.Provider
       value={{
@@ -270,6 +352,16 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
         loadingPendingClassrooms,
         fetchPendingClassrooms,
         cancelJoinRequest,
+        posts,
+        loadingPosts,
+        fetchPosts,
+        createPost,
+        updatePost,
+        deletePost,
+        fetchComments,
+        createComment,
+        updateComment,
+        deleteComment,
       }}
     >
       {children}

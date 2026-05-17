@@ -9,7 +9,12 @@ import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { UpdateClassroomDto } from './dto/update-classroom.dto';
 import { ClassroomRole, GlobalRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
+} from '@aws-sdk/client-s3';
 
 function generateInviteCode(): string {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -42,7 +47,7 @@ export class ClassroomsService {
       });
       if (!existing) break;
       tries++;
-    } while (tries < 5);
+    } while (tries < 100);
 
     const classroom = await this.prisma.classroom.create({
       data: {
@@ -61,10 +66,12 @@ export class ClassroomsService {
     });
 
     try {
-      await this.s3Client.send(new PutObjectCommand({
-        Bucket: this.bucketName,
-        Key: `classrooms/${classroom.id}/`,
-      }));
+      await this.s3Client.send(
+        new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: `classrooms/${classroom.id}/`,
+        }),
+      );
     } catch (err) {
       console.error('Failed to create S3 folder for classroom', err);
     }
@@ -116,7 +123,12 @@ export class ClassroomsService {
         linkedCourses: {
           include: {
             course: {
-              select: { id: true, title: true, description: true, thumbnailUrl: true },
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                thumbnailUrl: true,
+              },
             },
           },
         },
@@ -141,7 +153,9 @@ export class ClassroomsService {
     });
 
     if (!member) {
-      throw new NotFoundException(`Classroom not found or you are not a member`);
+      throw new NotFoundException(
+        `Classroom not found or you are not a member`,
+      );
     }
 
     if (
@@ -165,7 +179,9 @@ export class ClassroomsService {
     });
 
     if (!member) {
-      throw new NotFoundException(`Classroom not found or you are not a member`);
+      throw new NotFoundException(
+        `Classroom not found or you are not a member`,
+      );
     }
 
     if (member.role !== ClassroomRole.owner) {
@@ -175,15 +191,19 @@ export class ClassroomsService {
     // Delete all objects in S3 folder
     try {
       const prefix = `classrooms/${id}/`;
-      const listedObjects = await this.s3Client.send(new ListObjectsV2Command({
-        Bucket: this.bucketName,
-        Prefix: prefix,
-      }));
+      const listedObjects = await this.s3Client.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucketName,
+          Prefix: prefix,
+        }),
+      );
 
       if (listedObjects.Contents && listedObjects.Contents.length > 0) {
         const deleteParams = {
           Bucket: this.bucketName,
-          Delete: { Objects: listedObjects.Contents.map(({ Key }) => ({ Key })) },
+          Delete: {
+            Objects: listedObjects.Contents.map(({ Key }) => ({ Key })),
+          },
         };
         await this.s3Client.send(new DeleteObjectsCommand(deleteParams));
       }
@@ -216,7 +236,9 @@ export class ClassroomsService {
       where: { classroomId_userId: { classroomId: classroom.id, userId } },
     });
     if (existingRequest) {
-      throw new ConflictException(`You already have a pending join request for this classroom`);
+      throw new ConflictException(
+        `You already have a pending join request for this classroom`,
+      );
     }
 
     // Always create a join request — owner approves it
@@ -234,7 +256,14 @@ export class ClassroomsService {
         classroom: {
           include: {
             _count: { select: { members: true } },
-            owner: { select: { id: true, fullName: true, avatarUrl: true, email: true } },
+            owner: {
+              select: {
+                id: true,
+                fullName: true,
+                avatarUrl: true,
+                email: true,
+              },
+            },
           },
         },
       },
@@ -274,7 +303,10 @@ export class ClassroomsService {
     } else if (course.visibility === 'public') {
       // Điều kiện 1: Khóa học là public
       hasCourseAccess = true;
-    } else if (course.visibility === 'private' && course.instructorId === userId) {
+    } else if (
+      course.visibility === 'private' &&
+      course.instructorId === userId
+    ) {
       // Điều kiện 2: Khóa học là private nhưng userId chính là instructor_id
       hasCourseAccess = true;
     } else if (course.visibility === 'sale') {
@@ -317,10 +349,198 @@ export class ClassroomsService {
       where: { classroomId_courseId: { classroomId, courseId } },
     });
 
-    if (!linkedCourse) throw new NotFoundException('Không tìm thấy liên kết khóa học trong lớp này.');
+    if (!linkedCourse)
+      throw new NotFoundException(
+        'Không tìm thấy liên kết khóa học trong lớp này.',
+      );
 
     return this.prisma.classroomLinkedCourse.delete({
       where: { classroomId_courseId: { classroomId, courseId } },
+    });
+  }
+
+  // --- POSTS ---
+  async getPosts(classroomId: string, userId: string) {
+    // Check membership
+    const member = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId } },
+    });
+    if (!member) throw new ForbiddenException('Not a member of this classroom');
+
+    return this.prisma.classroomPost.findMany({
+      where: {
+        classroomId,
+        nextVersions: { none: {} }, // Only fetch active posts, not history snapshots
+      },
+      include: {
+        author: { select: { id: true, fullName: true, avatarUrl: true } },
+        previousVersion: true,
+        _count: { select: { comments: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createPost(classroomId: string, userId: string, content: string) {
+    const member = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId } },
+    });
+    if (!member) throw new ForbiddenException('Not a member of this classroom');
+
+    return this.prisma.classroomPost.create({
+      data: {
+        classroomId,
+        authorId: userId,
+        content,
+      },
+      include: {
+        author: { select: { id: true, fullName: true, avatarUrl: true } },
+      },
+    });
+  }
+
+  async updatePost(
+    classroomId: string,
+    postId: string,
+    userId: string,
+    content: string,
+  ) {
+    const post = await this.prisma.classroomPost.findUnique({
+      where: { id: postId },
+    });
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.classroomId !== classroomId)
+      throw new BadRequestException('Post does not belong to this classroom');
+    if (post.authorId !== userId)
+      throw new ForbiddenException('Only the author can edit this post');
+
+    // Create a history snapshot
+    const historyPost = await this.prisma.classroomPost.create({
+      data: {
+        classroomId: post.classroomId,
+        authorId: post.authorId,
+        content: post.content,
+        createdAt: post.createdAt,
+        previousVersionId: post.previousVersionId, // preserve chain
+      },
+    });
+
+    // Update current post
+    return this.prisma.classroomPost.update({
+      where: { id: postId },
+      data: {
+        content,
+        previousVersionId: historyPost.id,
+      },
+      include: {
+        author: { select: { id: true, fullName: true, avatarUrl: true } },
+        previousVersion: true,
+      },
+    });
+  }
+
+  async deletePost(classroomId: string, postId: string, userId: string) {
+    const post = await this.prisma.classroomPost.findUnique({
+      where: { id: postId },
+    });
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.classroomId !== classroomId)
+      throw new BadRequestException('Post does not belong to this classroom');
+    if (post.authorId !== userId)
+      throw new ForbiddenException('Only the author can delete this post');
+
+    return this.prisma.classroomPost.delete({ where: { id: postId } });
+  }
+
+  // --- COMMENTS ---
+  async getComments(classroomId: string, postId: string, userId: string) {
+    // Check membership
+    const member = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId } },
+    });
+    if (!member) throw new ForbiddenException('Not a member of this classroom');
+
+    return this.prisma.classroomPostComment.findMany({
+      where: { postId },
+      include: {
+        author: { select: { id: true, fullName: true, avatarUrl: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async createComment(
+    classroomId: string,
+    postId: string,
+    userId: string,
+    content: string,
+  ) {
+    const member = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId } },
+    });
+    if (!member) throw new ForbiddenException('Not a member of this classroom');
+
+    return this.prisma.classroomPostComment.create({
+      data: {
+        postId,
+        authorId: userId,
+        content,
+      },
+      include: {
+        author: { select: { id: true, fullName: true, avatarUrl: true } },
+      },
+    });
+  }
+
+  async updateComment(
+    classroomId: string,
+    commentId: string,
+    userId: string,
+    content: string,
+  ) {
+    const comment = await this.prisma.classroomPostComment.findUnique({
+      where: { id: commentId },
+      include: { post: true },
+    });
+
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.post.classroomId !== classroomId)
+      throw new BadRequestException(
+        'Comment does not belong to this classroom',
+      );
+    if (comment.authorId !== userId)
+      throw new ForbiddenException('Only the author can edit this comment');
+
+    return this.prisma.classroomPostComment.update({
+      where: { id: commentId },
+      data: { content },
+      include: {
+        author: { select: { id: true, fullName: true, avatarUrl: true } },
+      },
+    });
+  }
+
+  async deleteComment(classroomId: string, commentId: string, userId: string) {
+    const comment = await this.prisma.classroomPostComment.findUnique({
+      where: { id: commentId },
+      include: { post: true },
+    });
+
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.post.classroomId !== classroomId)
+      throw new BadRequestException(
+        'Comment does not belong to this classroom',
+      );
+
+    // Author of comment OR Author of post can delete
+    if (comment.authorId !== userId && comment.post.authorId !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this comment',
+      );
+    }
+
+    return this.prisma.classroomPostComment.delete({
+      where: { id: commentId },
     });
   }
 }

@@ -2,80 +2,111 @@
 
 import Link from 'next/link';
 import { useCourses } from '@/contexts/CourseContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CoursesCatalogPage() {
   const { courses, isLoading, error } = useCourses();
+  const { user } = useAuth();
+  
+  // Filter logic: Only PUBLIC courses, optionally excluding courses the user already owns if you want
+  const publicCourses = courses.filter(c => c.visibility === 'PUBLIC');
 
   return (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-2xl font-semibold tracking-tight'>
-          Danh mục khóa học
-        </h1>
-        <p className='text-muted-foreground mt-1 text-sm'>
-          Khám phá các khóa học mới nhất từ Glacier Learning.
-        </p>
+    <div className='space-y-8 min-h-screen pb-12 transition-all'>
+      {/* Hero Header Section */}
+      <section className='relative overflow-hidden rounded-2xl bg-slate-900 aspect-[21/9] md:aspect-[4/1] flex flex-col justify-center px-8 md:px-12 group shadow-lg'>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent z-10"></div>
+        <div className="absolute inset-0 z-0">
+          <img 
+            className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" 
+            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop" 
+            alt="Hero background" 
+          />
+        </div>
+        <div className='relative z-20 max-w-2xl'>
+          <span className="inline-block px-3 py-1 rounded-full bg-sky-400/20 text-sky-300 text-xs font-bold tracking-widest uppercase mb-4 border border-sky-400/30">
+            Khóa Học Trực Tuyến
+          </span>
+          <h2 className='text-3xl md:text-5xl font-black text-white leading-tight mb-4 tracking-tight drop-shadow-md'>
+            Khám Phá <span className="text-sky-400">Khóa Học</span>
+          </h2>
+          <p className='text-slate-300 text-sm md:text-base leading-relaxed max-w-xl'>
+            Mở khóa hàng trăm khóa học chất lượng từ các chuyên gia hàng đầu. Bắt đầu hành trình nâng cao kỹ năng của bạn ngay hôm nay.
+          </p>
+        </div>
+      </section>
+
+      {/* Header and Filters (Optional) */}
+      <div className='flex items-center justify-between'>
+        <h3 className='text-xl font-bold text-slate-800'>Tất cả khóa học</h3>
+        <Link 
+          href='/my-courses'
+          className='text-sky-600 hover:text-sky-700 font-semibold text-sm flex items-center gap-1 hover:underline'
+        >
+          Đến Khóa học của tôi <span className='material-symbols-outlined text-[16px]'>arrow_forward</span>
+        </Link>
       </div>
 
       {isLoading ? (
-        <div className='flex items-center gap-2 text-muted-foreground text-sm'>
-          <div className='h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent'></div>
-          <span>Đang tải danh sách khóa học…</span>
+        <div className='flex items-center justify-center py-20 text-slate-400'>
+          <span className='material-symbols-outlined animate-spin mr-2 text-3xl'>progress_activity</span>
+          <span className='font-medium'>Đang tải danh sách...</span>
         </div>
       ) : error ? (
-        <div className='rounded-lg bg-destructive/10 p-4 text-destructive text-sm'>
-          <p className='font-medium'>Không thể tải khóa học</p>
-          <p>{error}</p>
+        <div className='rounded-xl bg-red-50 p-6 text-red-600 text-center border border-red-100'>
+          <span className='material-symbols-outlined text-4xl mb-2'>error</span>
+          <p className='font-bold text-lg'>Không thể tải khóa học</p>
+          <p className='text-sm mt-1'>{error}</p>
         </div>
-      ) : courses.length === 0 ? (
-        <p className='text-muted-foreground text-sm italic'>
-          Hiện chưa có khóa học nào được đăng tải.
-        </p>
+      ) : publicCourses.length === 0 ? (
+        <div className='text-center py-20 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200'>
+          <span className='material-symbols-outlined text-5xl text-slate-300 mb-3 block'>search_off</span>
+          <p className='text-slate-500 font-medium'>
+            Hiện chưa có khóa học public nào.
+          </p>
+        </div>
       ) : (
-        <ul className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-          {courses.map((c) => (
-            <li
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+          {publicCourses.map((c) => (
+            <div
               key={c.id}
-              className='glass-elevated group relative flex flex-col rounded-2xl p-5 transition-all hover:ring-2 hover:ring-primary/20'
+              className='bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl overflow-hidden group flex flex-col hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300'
             >
-              <div className='flex-1'>
-                <div className='mb-3 flex items-center justify-between'>
-                  <span className='rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-primary uppercase'>
-                    {c.visibility}
-                  </span>
-                  {c.price != null && (
-                    <span className='text-xs font-semibold text-primary'>
-                      {c.price === 0
-                        ? 'Miễn phí'
-                        : `${c.price.toLocaleString()} VNĐ`}
-                    </span>
-                  )}
+              <div className='relative h-48 overflow-hidden bg-slate-100'>
+                <img 
+                  src={c.imageUrl || `https://source.unsplash.com/random/800x600?technology,learning&sig=${c.id}`} 
+                  alt={c.title} 
+                  className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-700' 
+                />
+                <div className='absolute top-3 left-3 px-2.5 py-1 bg-slate-900/80 backdrop-blur-md rounded-md flex items-center gap-1 border border-white/10'>
+                  <span className='text-amber-400 material-symbols-outlined text-[12px]' style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  <span className='text-white text-[10px] font-black uppercase tracking-wider'>4.9</span>
                 </div>
-                <h2 className='text-lg font-bold leading-tight tracking-tight group-hover:text-primary transition-colors'>
-                  {c.title}
-                </h2>
-                <p className='text-muted-foreground mt-2 line-clamp-2 text-sm leading-relaxed'>
-                  {c.description ?? 'Chưa có mô tả cho khóa học này.'}
+              </div>
+              
+              <div className='p-5 flex flex-col flex-1'>
+                <div className='flex justify-between items-start mb-2'>
+                  <h3 className='font-bold text-slate-800 leading-snug group-hover:text-sky-600 transition-colors line-clamp-2'>
+                    {c.title}
+                  </h3>
+                </div>
+                
+                <p className='text-slate-500 text-xs mb-4 line-clamp-2'>
+                  {c.description || 'Chưa có mô tả cho khóa học này.'}
                 </p>
-              </div>
-
-              <div className='mt-6 flex items-center justify-between border-t border-white/10 pt-4'>
-                <div className='flex items-center gap-2'>
-                  <div className='h-6 w-6 rounded-full bg-muted'></div>
-                  <span className='text-xs text-muted-foreground'>
-                    Giảng viên
+                
+                <div className='mt-auto flex items-center justify-between pt-4 border-t border-slate-100'>
+                  <span className='text-lg font-black text-slate-800'>
+                    {c.price ? `${c.price.toLocaleString()}đ` : 'Miễn phí'}
                   </span>
+                  <button className='px-5 py-2 rounded-lg bg-sky-500 text-white text-xs font-bold hover:bg-sky-600 transition-all active:scale-95 shadow-md shadow-sky-500/20'>
+                    Đăng ký
+                  </button>
                 </div>
-                <Link
-                  href={`/courses/${c.id}`}
-                  className='text-xs font-bold text-primary hover:underline'
-                >
-                  Xem chi tiết →
-                </Link>
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
