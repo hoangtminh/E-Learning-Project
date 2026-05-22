@@ -22,10 +22,16 @@ import {
   getSubmissionDownloadUrl as apiGetSubmissionDownloadUrl,
   getMySubmissionDownloadUrl as apiGetMySubmissionDownloadUrl,
   gradeSubmission as apiGrade,
+  createPost as apiCreatePost,
 } from '@/api/classroom';
 
 export type SubmissionWithUser = TaskSubmission & {
-  user: { id: string; fullName: string | null; avatarUrl: string | null; email: string };
+  user: {
+    id: string;
+    fullName: string | null;
+    avatarUrl: string | null;
+    email: string;
+  };
 };
 
 interface TaskContextType {
@@ -41,7 +47,13 @@ interface TaskContextType {
   updateTask: (
     classroomId: string,
     taskId: string,
-    payload: { title?: string; description?: string; deadline?: string | null; attachmentKey?: string; attachmentName?: string },
+    payload: {
+      title?: string;
+      description?: string;
+      deadline?: string | null;
+      attachmentKey?: string;
+      attachmentName?: string;
+    },
   ) => Promise<void>;
 
   deleteTask: (classroomId: string, taskId: string) => Promise<void>;
@@ -61,7 +73,10 @@ interface TaskContextType {
   ) => Promise<{ url: string; s3Key: string; filename: string }>;
 
   /** Any member: get presigned download URL for task attachment */
-  getTaskAttachmentDownloadUrl: (classroomId: string, taskId: string) => Promise<string>;
+  getTaskAttachmentDownloadUrl: (
+    classroomId: string,
+    taskId: string,
+  ) => Promise<string>;
 
   /** Returns { url, s3Key } for direct PUT to S3 */
   getSubmissionPresignedUpload: (
@@ -123,13 +138,29 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   ) => {
     const res = await apiCreateTask(classroomId, payload);
     if (!res.success) throw new Error(res.error || 'Tạo bài tập thất bại');
+    
+    // Automatically emit systemic announcement post
+    if (res.data?.id) {
+      try {
+        await apiCreatePost(classroomId, `[SYSTEM_TASK]:${res.data.id}:${payload.title}`);
+      } catch (postErr) {
+        console.error('Failed to create systemic announcement post for task:', postErr);
+      }
+    }
+
     await fetchTasks(classroomId);
   };
 
   const updateTask = async (
     classroomId: string,
     taskId: string,
-    payload: { title?: string; description?: string; deadline?: string | null; attachmentKey?: string; attachmentName?: string },
+    payload: {
+      title?: string;
+      description?: string;
+      deadline?: string | null;
+      attachmentKey?: string;
+      attachmentName?: string;
+    },
   ) => {
     const res = await apiUpdateTask(classroomId, taskId, payload);
     if (!res.success) throw new Error(res.error || 'Cập nhật bài tập thất bại');
@@ -142,8 +173,14 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     filename: string,
     mimeType: string,
   ): Promise<{ url: string; s3Key: string; filename: string }> => {
-    const res = await apiGetTaskAttachmentPresignedUpload(classroomId, taskId, filename, mimeType);
-    if (!res.success || !res.data) throw new Error(res.error || 'Lấy URL upload thất bại');
+    const res = await apiGetTaskAttachmentPresignedUpload(
+      classroomId,
+      taskId,
+      filename,
+      mimeType,
+    );
+    if (!res.success || !res.data)
+      throw new Error(res.error || 'Lấy URL upload thất bại');
     return res.data;
   };
 
@@ -152,7 +189,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     taskId: string,
   ): Promise<string> => {
     const res = await apiGetTaskAttachmentDownloadUrl(classroomId, taskId);
-    if (!res.success || !res.data) throw new Error(res.error || 'Lấy URL tải xuống thất bại');
+    if (!res.success || !res.data)
+      throw new Error(res.error || 'Lấy URL tải xuống thất bại');
     return res.data.url;
   };
 
@@ -178,8 +216,14 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     filename: string,
     mimeType: string,
   ): Promise<{ url: string; s3Key: string; filename: string }> => {
-    const res = await apiGetSubmissionPresignedUpload(classroomId, taskId, filename, mimeType);
-    if (!res.success || !res.data) throw new Error(res.error || 'Lấy URL upload thất bại');
+    const res = await apiGetSubmissionPresignedUpload(
+      classroomId,
+      taskId,
+      filename,
+      mimeType,
+    );
+    if (!res.success || !res.data)
+      throw new Error(res.error || 'Lấy URL upload thất bại');
     return res.data;
   };
 
@@ -188,8 +232,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     taskId: string,
     submissionId: string,
   ): Promise<string> => {
-    const res = await apiGetSubmissionDownloadUrl(classroomId, taskId, submissionId);
-    if (!res.success || !res.data) throw new Error(res.error || 'Lấy URL tải xuống thất bại');
+    const res = await apiGetSubmissionDownloadUrl(
+      classroomId,
+      taskId,
+      submissionId,
+    );
+    if (!res.success || !res.data)
+      throw new Error(res.error || 'Lấy URL tải xuống thất bại');
     return res.data.url;
   };
 
@@ -198,7 +247,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     taskId: string,
   ): Promise<string> => {
     const res = await apiGetMySubmissionDownloadUrl(classroomId, taskId);
-    if (!res.success || !res.data) throw new Error(res.error || 'Lấy URL tải xuống thất bại');
+    if (!res.success || !res.data)
+      throw new Error(res.error || 'Lấy URL tải xuống thất bại');
     return res.data.url;
   };
 
@@ -207,7 +257,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     taskId: string,
   ): Promise<SubmissionWithUser[]> => {
     const res = await apiGetSubmissions(classroomId, taskId);
-    if (!res.success || !res.data) throw new Error(res.error || 'Tải bài nộp thất bại');
+    if (!res.success || !res.data)
+      throw new Error(res.error || 'Tải bài nộp thất bại');
     return res.data;
   };
 

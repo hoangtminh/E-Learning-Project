@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { WebrtcGateway } from './webrtc.gateway';
 import { PrismaModule } from '../prisma/prisma.module';
+import { CallsModule } from '../modules/calls/calls.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, CallsModule],
   providers: [WebrtcGateway],
   exports: [WebrtcGateway],
 })

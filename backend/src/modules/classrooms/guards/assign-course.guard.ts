@@ -16,17 +16,17 @@ export class AssignCourseGuard implements CanActivate {
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (user?.role === 'admin') {
-      return true; // Admin has full access
+      return true; // Site Admin has full access
     }
 
-    const classroom = await this.prisma.classroom.findUnique({
-      where: { id: classId },
+    const member = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId: classId, userId } },
     });
 
-    if (classroom?.ownerId === userId) {
-      return true; // Owner of the classroom has access
+    if (member && (member.role === 'owner' || member.role === 'admin')) {
+      return true; // Classroom Owner or Admin has access
     }
 
-    throw new ForbiddenException('Chỉ Admin hoặc Chủ lớp học mới có quyền thực hiện.');
+    throw new ForbiddenException('Chỉ Admin hoặc Chủ lớp học/Trợ giảng mới có quyền thực hiện.');
   }
 }

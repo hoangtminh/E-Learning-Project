@@ -60,6 +60,14 @@ enum CallStatus {
   @@map("call_status")
 }
 
+enum CallType {
+  channel
+  private
+  public
+
+  @@map("call_type")
+}
+
 enum QuestionType {
   single_choice
   multiple_choice
@@ -100,6 +108,11 @@ model User {
   quizSubmissions       QuizSubmission[]
 
   uploadedFiles       ClassroomFile[]
+  classroomPosts      ClassroomPost[]        @relation("PostAuthor")
+  classroomPostComments ClassroomPostComment[] @relation("PostCommentAuthor")
+  
+  notifications         Notification[]         @relation("UserNotification")
+  triggeredNotifications Notification[]       @relation("NotificationCreator")
 
   @@map("users")
 }
@@ -123,6 +136,7 @@ model Classroom {
   notes         Note[]
   calls         Call[]
   files         ClassroomFile[]
+  posts         ClassroomPost[]
 
   @@index([ownerId])
   @@map("classrooms")
@@ -274,6 +288,7 @@ model Conversation {
   classroom Classroom?           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   members   ConversationMember[]
   messages  Message[]
+  calls     Call[]
 
   @@index([classroomId])
   @@map("conversations")
@@ -402,21 +417,25 @@ model Note {
 }
 
 model Call {
-  id               String     @id @default(cuid())
-  creatorId        String     @map("creator_id")
-  title            String?    @db.VarChar(255)
-  classroomId      String?    @map("classroom_id")
-  status           CallStatus @default(ongoing)
-  participantCount Int        @default(0) @map("participant_count")
-  createdAt        DateTime   @default(now()) @map("created_at")
-  startedAt        DateTime?  @map("started_at")
-  endedAt          DateTime?  @map("ended_at")
+  id               String       @id @default(cuid())
+  creatorId        String       @map("creator_id")
+  title            String?      @db.VarChar(255)
+  classroomId      String?      @map("classroom_id")
+  conversationId   String?      @map("conversation_id")
+  status           CallStatus   @default(ongoing)
+  type             CallType     @default(public)
+  participantCount Int          @default(0) @map("participant_count")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  startedAt        DateTime?    @map("started_at")
+  endedAt          DateTime?    @map("ended_at")
 
-  creator   User       @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  classroom Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  creator      User          @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  classroom    Classroom?    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([creatorId])
   @@index([classroomId])
+  @@index([conversationId])
   @@map("calls")
 }
 
@@ -530,3 +549,55 @@ model UserAnswerOption {
   @@index([optionId])
   @@map("user_answer_options")
 }
+
+model ClassroomPost {
+  id          String   @id @default(cuid())
+  classroomId String   @map("classroom_id")
+  authorId    String   @map("author_id")
+  content     String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  classroom Classroom              @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  author    User                   @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  comments  ClassroomPostComment[]
+
+  @@index([classroomId])
+  @@index([authorId])
+  @@map("classroom_posts")
+}
+
+model ClassroomPostComment {
+  id          String   @id @default(cuid())
+  postId      String   @map("post_id")
+  authorId    String   @map("author_id")
+  content     String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  post        ClassroomPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author      User          @relation("PostCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([authorId])
+  @@map("classroom_post_comments")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  creatorId String?  @map("creator_id")
+  type      String
+  content   String   @db.Text
+  link      String?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User  @relation("UserNotification", fields: [userId], references: [id], onDelete: Cascade)
+  creator User? @relation("NotificationCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([creatorId])
+  @@map("notifications")
+}
+

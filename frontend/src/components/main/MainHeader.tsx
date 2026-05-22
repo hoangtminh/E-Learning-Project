@@ -11,9 +11,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationBell from './NotificationBell';
 import {
   Search,
-  Bell,
   Settings,
   LogOut,
   User,
@@ -134,13 +134,7 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
             type='text'
           />
         </div>
-        <Button
-          variant='ghost'
-          size='icon'
-          className='text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded-full'
-        >
-          <Bell className='size-5' />
-        </Button>
+        <NotificationBell />
         <div className='h-6 w-px bg-slate-200 mx-1' />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

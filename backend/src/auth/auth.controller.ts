@@ -6,6 +6,7 @@ import {
   Request,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -41,5 +42,12 @@ export class AuthController {
   @Get('me') // Endpoint for getUser() in frontend
   getMe(@Request() req) {
     return this.authService.getMe(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('users')
+  async getUsers(@Request() req: any, @Query('search') search?: string) {
+    const currentUserId = req.user?.userId || req.user?.sub;
+    return this.authService.searchUsers(search || '', currentUserId);
   }
 }

@@ -114,6 +114,26 @@ export class AuthService {
     });
   }
 
+  async searchUsers(search: string = '', currentUserId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        id: { not: currentUserId },
+        OR: [
+          { fullName: { contains: search } },
+          { email: { contains: search } },
+        ],
+      },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        avatarUrl: true,
+        role: true,
+      },
+      take: 20,
+    });
+  }
+
   private signToken(payload: AuthPayload) {
     return this.jwtService.signAsync(payload);
   }

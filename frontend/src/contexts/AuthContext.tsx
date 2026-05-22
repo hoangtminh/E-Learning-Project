@@ -23,6 +23,7 @@ export interface User {
   id?: string;
   email: string;
   fullname: string | null;
+  fullName?: string | null;
   name?: string;
   imageUrl: string | null | undefined;
   avatar?: string;
@@ -47,10 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  const setMappedUser = (userVal: any) => {
+    if (userVal) {
+      setUser({
+        ...userVal,
+        userId: userVal.id || userVal.userId,
+        fullname: userVal.fullName || userVal.fullname || null,
+        fullName: userVal.fullName || userVal.fullname || null,
+      });
+    } else {
+      setUser(null);
+    }
+  };
+
   const logout = () => {
     removeTokenCookie();
     setAuthToken(null);
-    setUser(null);
+    setMappedUser(null);
     router.push('/login');
   };
 
@@ -58,10 +72,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = getTokenCookie();
     if (token) {
       setAuthToken(token);
-      const res = await apiGetUser();
-      if (res.success && res.data) {
-        setUser(res.data);
+      try {
+        const res = await apiGetUser();
+        if (res.success && res.data) {
+          setMappedUser(res.data);
+        } else {
+          // Token is stale or invalid on the server side
+          removeTokenCookie();
+          setAuthToken(null);
+          setMappedUser(null);
+          router.push('/login');
+        }
+      } catch (err) {
+        console.error('Failed to authenticate token with server:', err);
+        removeTokenCookie();
+        setAuthToken(null);
+        setMappedUser(null);
+        router.push('/login');
       }
+    } else {
+      setMappedUser(null);
     }
   };
 
@@ -78,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.success && result.data) {
       setTokenCookie(result.data.accessToken);
       setAuthToken(result.data.accessToken);
-      setUser(result?.data?.user as User);
+      setMappedUser(result?.data?.user);
     } else {
       throw new Error(result.error || 'Login failed');
     }
@@ -89,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.success && result.data) {
       setTokenCookie(result.data.accessToken);
       setAuthToken(result.data.accessToken);
-      setUser(result.data.user);
+      setMappedUser(result.data.user);
     } else {
       throw new Error(result.error || 'Registration failed');
     }

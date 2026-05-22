@@ -54,6 +54,27 @@ export type ClassroomLinkedCourse = {
   course: CourseRef;
 };
 
+export type ClassroomPost = {
+  id: string;
+  classroomId: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  author: ClassroomMemberUser;
+  _count?: { comments: number };
+};
+
+export type ClassroomPostComment = {
+  id: string;
+  postId: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  author: ClassroomMemberUser;
+};
+
 // ── Members ──────────────────────────────────────────────────────────────────
 
 export const getMembers = (classroomId: string) =>
@@ -61,6 +82,9 @@ export const getMembers = (classroomId: string) =>
 
 export const removeMember = (classroomId: string, userId: string) =>
   apiDelete(`/classrooms/${classroomId}/members/${userId}`);
+
+export const addMemberByEmail = (classroomId: string, email: string) =>
+  apiPost<ClassroomMember>(`/classrooms/${classroomId}/members/email`, { email });
 
 export const joinByCode = (code: string) =>
   apiPost('/classrooms/join-by-code', { code });
@@ -71,10 +95,20 @@ export const getPendingMembers = (classroomId: string) =>
   );
 
 export const approveMember = (classroomId: string, userId: string) =>
-  apiPatch(`/classrooms/${classroomId}/members/${userId}/approve`, {});
+  apiPatch<ClassroomMember>(`/classrooms/${classroomId}/members/${userId}/approve`, {});
 
 export const rejectMember = (classroomId: string, userId: string) =>
   apiDelete(`/classrooms/${classroomId}/members/pending/${userId}`);
+
+export const updateMemberRole = (
+  classroomId: string,
+  userId: string,
+  role: 'owner' | 'admin' | 'member',
+) =>
+  apiPatch<ClassroomMember>(`/classrooms/${classroomId}/members/${userId}/role`, { role });
+
+export const leaveClassroom = (classroomId: string) =>
+  apiPost(`/classrooms/${classroomId}/leave`, {});
 
 export type PendingClassroomRequest = {
   requestId: string;
@@ -224,3 +258,32 @@ export const renameFile = (classroomId: string, fileId: string, name: string) =>
 
 export const deleteFile = (classroomId: string, fileId: string) =>
   apiDelete(`/classrooms/${classroomId}/files/${fileId}`);
+
+// ── Posts ─────────────────────────────────────────────────────────────────────
+
+export const getPosts = (classroomId: string) =>
+  apiGet<ClassroomPost[]>(`/classrooms/${classroomId}/posts`);
+
+export const createPost = (classroomId: string, content: string) =>
+  apiPost<ClassroomPost>(`/classrooms/${classroomId}/posts`, { content });
+
+export const updatePost = (classroomId: string, postId: string, content: string) =>
+  apiPatch<ClassroomPost>(`/classrooms/${classroomId}/posts/${postId}`, { content });
+
+export const deletePost = (classroomId: string, postId: string) =>
+  apiDelete(`/classrooms/${classroomId}/posts/${postId}`);
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+
+export const getComments = (classroomId: string, postId: string) =>
+  apiGet<ClassroomPostComment[]>(`/classrooms/${classroomId}/posts/${postId}/comments`);
+
+export const createComment = (classroomId: string, postId: string, content: string) =>
+  apiPost<ClassroomPostComment>(`/classrooms/${classroomId}/posts/${postId}/comments`, { content });
+
+export const updateComment = (classroomId: string, commentId: string, content: string) =>
+  apiPatch<ClassroomPostComment>(`/classrooms/${classroomId}/comments/${commentId}`, { content });
+
+export const deleteComment = (classroomId: string, commentId: string) =>
+  apiDelete(`/classrooms/${classroomId}/comments/${commentId}`);
+

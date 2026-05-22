@@ -21,8 +21,8 @@ export default function ClassroomCoursesPage() {
   const linkedCourses = classroom?.linkedCourses || [];
 
   return (
-    <div className='p-6 lg:p-10 max-w-7xl mx-auto w-full'>
-      <div className='flex justify-between items-center mb-8'>
+    <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full'>
+      <div className='flex justify-between items-center mb-6'>
         <div>
           <h2 className='text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
             <span className='material-symbols-outlined text-indigo-600' style={{ fontVariationSettings: "'FILL' 1" }}>

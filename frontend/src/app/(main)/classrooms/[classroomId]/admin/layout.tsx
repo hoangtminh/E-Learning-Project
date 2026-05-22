@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useClassrooms } from '@/contexts/ClassroomContext';
@@ -12,7 +13,56 @@ export default function AdminLayout({
   const pathname = usePathname();
   const params = useParams();
   const classroomId = params.classroomId as string;
-  const { classroom } = useClassrooms();
+  const { classroom, loadingClassroom, fetchClassroom } = useClassrooms();
+
+  useEffect(() => {
+    if (classroomId && (!classroom || classroom.id !== classroomId)) {
+      fetchClassroom(classroomId);
+    }
+  }, [classroomId, classroom, fetchClassroom]);
+
+  const isAdminOrOwner = classroom?.role === 'owner' || classroom?.role === 'admin';
+
+  if (loadingClassroom) {
+    return (
+      <div className='flex items-center justify-center min-h-screen bg-slate-50'>
+        <div className='flex flex-col items-center gap-4'>
+          <div className='w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin'></div>
+          <p className='text-slate-500 text-sm font-medium'>Đang xác thực quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdminOrOwner) {
+    return (
+      <div className='flex items-center justify-center min-h-screen bg-slate-50 p-6'>
+        <div className='max-w-md w-full bg-white/80 backdrop-blur-md border border-slate-200 shadow-xl rounded-3xl p-8 text-center flex flex-col items-center relative overflow-hidden'>
+          <div className='absolute -top-10 -left-10 w-40 h-40 bg-red-500/5 rounded-full blur-2xl'></div>
+          <div className='absolute -bottom-10 -right-10 w-40 h-40 bg-indigo-500/5 rounded-full blur-2xl'></div>
+          
+          <div className='w-16 h-16 bg-red-50 border border-red-100 text-red-500 rounded-2xl flex items-center justify-center shadow-inner mb-6 relative z-10 animate-bounce'>
+            <span className='material-symbols-outlined text-3xl font-bold'>lock</span>
+          </div>
+          
+          <h2 className='text-2xl font-black text-slate-800 mb-3 relative z-10 tracking-tight'>
+            Không Có Quyền Truy Cập
+          </h2>
+          
+          <p className='text-sm text-slate-500 mb-8 leading-relaxed relative z-10'>
+            Bạn không có quyền quản trị để vào khu vực này. Chỉ chủ lớp học và quản trị viên mới có thể truy cập các cài đặt nâng cao.
+          </p>
+          
+          <Link
+            href={`/classrooms/${classroomId}`}
+            className='w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-semibold text-sm transition-all hover:shadow-lg hover:shadow-indigo-500/10 active:scale-[0.98]'
+          >
+            Quay lại lớp học
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const adminTabs = [
     { name: 'Quản lý khóa học', path: `/classrooms/${classroom?.id || classroomId}/admin/courses`, icon: 'menu_book' },

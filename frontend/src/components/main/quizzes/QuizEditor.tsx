@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, ListChecks, ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useQuiz } from '@/contexts/QuizContext';
 import { Quiz } from '@/api/quizzes';
+import { toast } from 'sonner';
 
 interface QuizEditorProps {
   quiz?: Quiz | null;
@@ -65,7 +66,7 @@ export function QuizEditor({ quiz }: QuizEditorProps) {
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      alert('Vui lòng nhập tiêu đề bài thi');
+      toast.warning('Vui lòng nhập tiêu đề bài thi');
       return;
     }
 
@@ -95,12 +96,15 @@ export function QuizEditor({ quiz }: QuizEditorProps) {
 
       if (quiz?.id) {
         await handleUpdateQuiz(quiz.id, dataToSave);
+        toast.success('Cập nhật bài thi thành công!');
       } else {
         await handleAddQuiz(dataToSave);
+        toast.success('Tạo bài thi mới thành công!');
       }
       router.push('/quizzes');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save quiz:', error);
+      toast.error(error.message || 'Lưu bài thi thất bại.');
     } finally {
       setIsSaving(false);
     }
