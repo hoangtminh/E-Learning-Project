@@ -68,6 +68,27 @@ export class TasksService {
     });
   }
 
+  async findAllForUser(userId: string) {
+    // Find all classrooms the user is a member of
+    const memberships = await this.prisma.classroomMember.findMany({
+      where: { userId },
+      select: { classroomId: true },
+    });
+
+    const classroomIds = memberships.map(m => m.classroomId);
+
+    return this.prisma.classroomTask.findMany({
+      where: { classroomId: { in: classroomIds } },
+      include: {
+        classroom: { select: { id: true, title: true } },
+        creator: { select: { id: true, fullName: true, avatarUrl: true } },
+        submissions: { where: { userId } },
+        _count: { select: { submissions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async create(userId: string, classroomId: string, dto: CreateTaskDto) {
     await this.assertAdminOrOwner(userId, classroomId);
     const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });

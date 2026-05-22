@@ -22,6 +22,7 @@ import {
   MessagesSquare,
   MessageSquare,
   Settings,
+  ClipboardList,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { name: 'Courses', icon: <GraduationCap size={20} />, path: '/courses' },
   { name: 'My Courses', icon: <BookOpen size={20} />, path: '/my-courses' },
   { name: 'Classrooms', icon: <Users size={20} />, path: '/classrooms' },
+  { name: 'Assignments', icon: <ClipboardList size={20} />, path: '/assignments' },
   { name: 'Video Call', icon: <Video size={20} />, path: '/call' },
   { name: 'Chat', icon: <MessageSquare size={20} />, path: '/chat' },
   { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
