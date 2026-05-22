@@ -8,9 +8,9 @@ export default function ClassroomDetailPage() {
   if (!classroom) return null;
 
   return (
-    <div className='p-6 lg:p-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 w-full'>
+    <div className='p-3 sm:p-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 w-full'>
       {/* Right Column: Activity Feed (Posts) */}
-      <div className='lg:col-span-8'>
+      <div className='lg:col-span-8 w-full'>
         <PostList />
       </div>
     </div>

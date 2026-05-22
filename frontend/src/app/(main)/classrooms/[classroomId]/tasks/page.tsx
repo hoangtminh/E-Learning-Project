@@ -413,7 +413,7 @@ function TaskRow({
     <>
       <button
         onClick={() => setOpen(true)}
-        className='w-full flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left group'
+        className='w-full flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left group'
       >
         {/* Status dot */}
         <div
@@ -524,7 +524,7 @@ export default function ClassroomTasksPage() {
   }
 
   return (
-    <div className='max-w-2xl mx-auto px-4 py-6'>
+    <div className='max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6'>
       {/* Summary bar */}
       <div className='flex items-center justify-between mb-4 px-1'>
         <div className='flex items-center gap-3'>

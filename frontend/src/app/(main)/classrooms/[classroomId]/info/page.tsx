@@ -84,10 +84,10 @@ export default function ClassroomInfoPage() {
   };
 
   return (
-    <div className='p-6 lg:p-10 max-w-7xl mx-auto w-full'>
-      <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+    <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full'>
+      <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start'>
         {/* Left Column */}
-        <div className='lg:col-span-8 space-y-8'>
+        <div className='lg:col-span-8 space-y-6 sm:space-y-8'>
           {/* General Info */}
           <section>
             <h2 className='text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2 mb-4 px-2'>
@@ -99,7 +99,7 @@ export default function ClassroomInfoPage() {
               </span>
               Thông tin chung
             </h2>
-            <div className='p-6 bg-white border border-slate-200 space-y-5 rounded-md shadow-sm'>
+            <div className='p-4 sm:p-6 bg-white border border-slate-200 space-y-4 sm:space-y-5 rounded-md shadow-sm'>
               <div>
                 <h3 className='text-xs font-bold text-slate-400 uppercase tracking-wider mb-1'>
                   Tên lớp học
@@ -204,7 +204,7 @@ export default function ClassroomInfoPage() {
                 Đang tải danh sách thành viên...
               </div>
             ) : (
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                 {filteredMembers.map((m) => {
                   const roleStyle =
                     ROLE_LABELS[m?.role || 'member'] ?? ROLE_LABELS.member;
@@ -217,7 +217,7 @@ export default function ClassroomInfoPage() {
                   return (
                     <div
                       key={m?.id}
-                      className='bg-white border border-slate-200 p-4 rounded-md flex items-center justify-between gap-4 transition-all hover:border-slate-300 shadow-sm'
+                      className='bg-white border border-slate-200 p-3 sm:p-4 rounded-md flex items-center justify-between gap-3 sm:gap-4 transition-all hover:border-slate-300 shadow-sm'
                     >
                       <div className='flex items-center gap-3 min-w-0 flex-1'>
                         {m?.user?.avatarUrl ? (

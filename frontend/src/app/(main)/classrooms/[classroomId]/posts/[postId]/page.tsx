@@ -7,6 +7,7 @@ import { usePosts } from '@/contexts/PostContext';
 import { ChevronLeft } from 'lucide-react';
 import { CommentItem } from './CommentItem';
 import { CommentInput } from './CommentInput';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 
 export default function PostDetailPage() {
   const { classroomId, postId } = useParams();
@@ -77,14 +78,14 @@ export default function PostDetailPage() {
       </div>
 
       {/* Content Area */}
-      <div className='flex-1 overflow-y-auto px-4 py-6 max-w-3xl mx-auto w-full space-y-6 scrollbar-thin scrollbar-thumb-slate-200'>
+      <div className='flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 max-w-3xl mx-auto w-full space-y-5 sm:space-y-6 scrollbar-thin scrollbar-thumb-slate-200'>
         {/* Original Post Card */}
-        <article className='bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm relative overflow-hidden'>
+        <article className='bg-white rounded-2xl p-3.5 sm:p-4.5 border border-slate-200/60 shadow-sm relative overflow-hidden'>
           <div className='absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-sky-500 to-indigo-500'></div>
-          <div className='flex items-center gap-3 mb-3'>
+          <div className='flex items-center gap-2.5 mb-2.5'>
             <img
               alt='Avatar'
-              className='w-9 h-9 rounded-full object-cover border border-slate-100 shadow-sm'
+              className='w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-slate-100 shadow-sm shrink-0'
               src={post.author.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName || 'User')}&background=random`}
             />
             <div>
@@ -99,9 +100,9 @@ export default function PostDetailPage() {
               </p>
             </div>
           </div>
-          <p className='text-sm text-slate-700 whitespace-pre-wrap leading-relaxed pl-1.5 font-medium'>
-            {post.content}
-          </p>
+          <div className='pl-1.5'>
+            <MarkdownRenderer content={post.content} />
+          </div>
         </article>
 
         {/* Comments Section */}

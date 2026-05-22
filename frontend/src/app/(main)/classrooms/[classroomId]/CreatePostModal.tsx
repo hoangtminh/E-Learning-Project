@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -36,19 +37,20 @@ export function CreatePostModal({
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4'>
-      <div className='bg-white rounded-md p-6 w-full max-w-xl shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-150 border border-slate-100'>
+      <div className='bg-white rounded-md p-6 w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-150 border border-slate-100'>
         <h2 className='text-lg font-black text-slate-800 mb-4 flex items-center gap-2 tracking-tight uppercase'>
           <span className='material-symbols-outlined text-sky-600'>
             campaign
           </span>
           Tạo Thông Báo Mới
         </h2>
-        <textarea
+        
+        <RichTextEditor
+          id='create-post-editor'
           value={newContent}
-          onChange={(e) => setNewContent(e.target.value)}
-          className='w-full bg-slate-50 border border-slate-200 rounded-md p-4 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/20 transition-all min-h-[130px] resize-none text-slate-700'
+          onChange={setNewContent}
           placeholder='Nhập nội dung thông báo cho lớp học của bạn...'
-          autoFocus
+          minHeight='220px'
         />
         <div className='mt-5 flex justify-end gap-3'>
           <button

@@ -106,8 +106,8 @@ export default function ClassroomFilesPage() {
   };
 
   return (
-    <div className='p-4 lg:p-8 max-w-7xl mx-auto w-full flex-1'>
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4'>
+    <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full flex-1'>
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4'>
         <div>
           <h2 className='text-xl font-bold text-slate-800'>
             Tài nguyên lớp học
@@ -137,19 +137,19 @@ export default function ClassroomFilesPage() {
             <table className='w-full text-left text-sm border-collapse'>
               <thead>
                 <tr className='border-b border-slate-100 bg-slate-50/50'>
-                  <th className='px-6 py-4 font-semibold text-slate-600'>
+                  <th className='px-4 sm:px-6 py-3 sm:py-4 font-semibold text-slate-600'>
                     Tên tài liệu
                   </th>
-                  <th className='px-6 py-4 font-semibold text-slate-600 hidden md:table-cell'>
+                  <th className='px-4 sm:px-6 py-3 sm:py-4 font-semibold text-slate-600 hidden md:table-cell'>
                     Dung lượng
                   </th>
-                  <th className='px-6 py-4 font-semibold text-slate-600 hidden lg:table-cell'>
+                  <th className='px-4 sm:px-6 py-3 sm:py-4 font-semibold text-slate-600 hidden lg:table-cell'>
                     Ngày tải
                   </th>
-                  <th className='px-6 py-4 font-semibold text-slate-600 hidden sm:table-cell'>
+                  <th className='px-4 sm:px-6 py-3 sm:py-4 font-semibold text-slate-600 hidden sm:table-cell'>
                     Người đăng
                   </th>
-                  <th className='px-6 py-4 font-semibold text-slate-600 text-right'>
+                  <th className='px-4 sm:px-6 py-3 sm:py-4 font-semibold text-slate-600 text-right'>
                     Tải về
                   </th>
                 </tr>
@@ -162,7 +162,7 @@ export default function ClassroomFilesPage() {
                       key={file.id}
                       className='border-b border-slate-50 hover:bg-slate-50/80 transition-colors group'
                     >
-                      <td className='px-6 py-4'>
+                      <td className='px-4 sm:px-6 py-2.5 sm:py-3.5'>
                         <div className='flex items-center gap-3'>
                           <div
                             className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${ui.bg} ${ui.color}`}
@@ -187,13 +187,13 @@ export default function ClassroomFilesPage() {
                           </div>
                         </div>
                       </td>
-                      <td className='px-6 py-4 text-slate-500 hidden md:table-cell whitespace-nowrap'>
+                      <td className='px-4 sm:px-6 py-2.5 sm:py-3.5 text-slate-500 hidden md:table-cell whitespace-nowrap'>
                         {formatBytes(file.sizeBytes)}
                       </td>
-                      <td className='px-6 py-4 text-slate-500 hidden lg:table-cell whitespace-nowrap'>
+                      <td className='px-4 sm:px-6 py-2.5 sm:py-3.5 text-slate-500 hidden lg:table-cell whitespace-nowrap'>
                         {new Date(file.uploadedAt).toLocaleDateString('vi-VN')}
                       </td>
-                      <td className='px-6 py-4 hidden sm:table-cell'>
+                      <td className='px-4 sm:px-6 py-2.5 sm:py-3.5 hidden sm:table-cell'>
                         <div className='flex items-center gap-2'>
                           <div className='w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden'>
                             {file.uploader.avatarUrl ? (
@@ -211,7 +211,7 @@ export default function ClassroomFilesPage() {
                           </span>
                         </div>
                       </td>
-                      <td className='px-6 py-4 text-right'>
+                      <td className='px-4 sm:px-6 py-2.5 sm:py-3.5 text-right'>
                         <button
                           onClick={() => handleDownload(file.id)}
                           className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm'
