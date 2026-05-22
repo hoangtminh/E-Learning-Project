@@ -55,6 +55,17 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
           } catch (e) {
             console.error(e);
           }
+        } else if (currentSegments[i] === 'courses' && currentSegments[i + 1]) {
+          const id = currentSegments[i + 1];
+          try {
+            const res = await apiGet<any>(`/courses/${id}`);
+            if (res.success && res.data) {
+              newLabels[id] = res.data.title;
+              hasNew = true;
+            }
+          } catch (e) {
+            console.error(e);
+          }
         }
       }
       if (hasNew) {
@@ -130,16 +141,16 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
             <div className='flex items-center gap-3 cursor-pointer group'>
               <div className='text-right hidden sm:block'>
                 <p className='text-sm font-semibold text-slate-800 leading-tight group-hover:text-sky-600 transition-colors'>
-                  {user?.name || 'User'}
+                  {(user as any)?.fullName || user?.fullname || 'Học viên'}
                 </p>
                 <p className='text-[10px] text-slate-500 font-medium'>
                   {user?.email || 'user@glacier.com'}
                 </p>
               </div>
               <Avatar className='h-9 w-9 border-2 border-slate-100 group-hover:border-sky-200 transition-all shadow-sm'>
-                <AvatarImage src={(user as any)?.avatar} alt={user?.name} />
+                <AvatarImage src={(user as any)?.avatar} alt={(user as any)?.fullName || user?.fullname || 'User'} />
                 <AvatarFallback className='bg-sky-50 text-sky-600 font-bold'>
-                  {user?.name?.charAt(0) || 'U'}
+                  {((user as any)?.fullName || user?.fullname || 'U').charAt(0)}
                 </AvatarFallback>
               </Avatar>
             </div>

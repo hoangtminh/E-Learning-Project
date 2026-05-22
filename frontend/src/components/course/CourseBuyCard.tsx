@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { enrollCourse, checkEnrollment } from '@/api/enrollment';
+import { getCourse } from '@/api/courses';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CourseBuyCardProps {
   course: {
@@ -8,6 +12,7 @@ interface CourseBuyCardProps {
     originalPrice: number;
     thumbnailUrl: string;
   };
+  courseId?: string;
 }
 
 const includes = [
@@ -52,9 +57,67 @@ function useCountdown(durationMs: number) {
   return `${d} ngày ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function CourseBuyCard({ course }: CourseBuyCardProps) {
+export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
   const discount = Math.round((1 - course.price / course.originalPrice) * 100);
-  const countdown = useCountdown(38528000); // ~10.7 hours
+  const countdown = useCountdown(38528000);
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const [enrolled, setEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [firstLessonId, setFirstLessonId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (courseId && user) {
+      checkEnrollment(courseId).then((res) => {
+        if (res.success && res.data?.enrolled) {
+          setEnrolled(true);
+        }
+      });
+      // Get first lesson for "continue learning" link
+      getCourse(courseId).then((res) => {
+        if (res.success && res.data) {
+          const sections = res.data.sections || [];
+          for (const section of sections) {
+            if (section.lessons && section.lessons.length > 0) {
+              setFirstLessonId(section.lessons[0].id);
+              break;
+            }
+          }
+        }
+      });
+    }
+  }, [courseId, user]);
+
+  const handleEnroll = async () => {
+    if (!courseId) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setEnrolling(true);
+    try {
+      const res = await enrollCourse(courseId);
+      if (res.success) {
+        setEnrolled(true);
+        if (firstLessonId) {
+          router.push(`/learning/${courseId}/${firstLessonId}`);
+        }
+      } else {
+        alert(res.error || 'Đăng ký thất bại');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Đã xảy ra lỗi');
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const handleContinueLearning = () => {
+    if (courseId && firstLessonId) {
+      router.push(`/learning/${courseId}/${firstLessonId}`);
+    }
+  };
 
   return (
     <div className="sticky top-[84px] space-y-5">
@@ -108,13 +171,32 @@ export function CourseBuyCard({ course }: CourseBuyCardProps) {
           </div>
 
           {/* CTA Buttons */}
-          <button type="button" className="w-full py-4 bg-[#006382] text-white font-black text-base rounded-2xl shadow-xl shadow-[#006382]/30 hover:bg-[#005672] transition-all active:scale-[0.98] flex items-center justify-center gap-3">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-            Đăng ký ngay
-          </button>
-          <button type="button" className="w-full py-3 border-2 border-[#006382] text-[#006382] font-bold rounded-2xl hover:bg-[#006382]/5 transition-all active:scale-[0.98]">
-            Thử miễn phí 7 ngày
-          </button>
+          {enrolled ? (
+            <button
+              onClick={handleContinueLearning}
+              disabled={!firstLessonId}
+              type="button"
+              className="w-full py-4 bg-emerald-600 text-white font-black text-base rounded-2xl shadow-xl hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+              Tiếp tục học
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleEnroll}
+                disabled={enrolling}
+                type="button"
+                className="w-full py-4 bg-[#006382] text-white font-black text-base rounded-2xl shadow-xl shadow-[#006382]/30 hover:bg-[#005672] transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+                {enrolling ? 'Đang xử lý...' : 'Đăng ký ngay'}
+              </button>
+              <button type="button" className="w-full py-3 border-2 border-[#006382] text-[#006382] font-bold rounded-2xl hover:bg-[#006382]/5 transition-all active:scale-[0.98]">
+                Thử miễn phí 7 ngày
+              </button>
+            </>
+          )}
 
           <p className="text-center text-[11px] text-[#525b72] flex items-center justify-center gap-1">
             <span className="material-symbols-outlined text-sm text-emerald-600" style={{ fontVariationSettings: "'FILL' 1" }}>

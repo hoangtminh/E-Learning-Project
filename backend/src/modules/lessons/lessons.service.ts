@@ -18,12 +18,17 @@ export class LessonsService {
       throw new NotFoundException(`Section with ID ${sectionId} not found`);
     }
 
-    return this.prisma.lesson.create({
-      data: {
-        ...dto,
-        sectionId,
-      },
-    });
+    try {
+      return await this.prisma.lesson.create({
+        data: {
+          ...dto,
+          sectionId,
+        },
+      });
+    } catch (error: any) {
+      require('fs').appendFileSync('error.log', new Date().toISOString() + ' ' + error.stack + '\n');
+      throw error;
+    }
   }
 
   async findAllBySection(sectionId: string) {

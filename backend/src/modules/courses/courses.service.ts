@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -64,7 +65,7 @@ export class CoursesService {
       where: { id },
       include: {
         instructor: {
-          select: { id: true, fullName: true, avatarUrl: true },
+          select: { id: true, fullName: true, avatarUrl: true, email: true },
         },
         sections: {
           orderBy: { orderIndex: 'asc' },
@@ -118,6 +119,127 @@ export class CoursesService {
 
     return this.prisma.course.delete({
       where: { id },
+    });
+  }
+
+  // ── Enrollment ──────────────────────────────────────────
+
+  async enrollCourse(userId: string, courseId: string) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    // Check if already enrolled
+    const existing = await this.prisma.courseMember.findUnique({
+      where: { courseId_userId: { courseId, userId } },
+    });
+
+    if (existing) {
+      throw new ConflictException('You are already enrolled in this course');
+    }
+
+    // Private courses require invitation
+    if (course.visibility === 'private') {
+      const invitation = await this.prisma.courseInvitation.findFirst({
+        where: { courseId, inviteeId: userId, acceptedAt: null },
+      });
+
+      if (!invitation && course.instructorId !== userId) {
+        throw new ForbiddenException(
+          'This is a private course. You need an invitation to enroll.',
+        );
+      }
+
+      // Mark invitation as accepted
+      if (invitation) {
+        await this.prisma.courseInvitation.update({
+          where: { id: invitation.id },
+          data: { acceptedAt: new Date() },
+        });
+      }
+    }
+
+    return this.prisma.courseMember.create({
+      data: { courseId, userId },
+    });
+  }
+
+  async checkEnrollment(userId: string, courseId: string) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      select: { instructorId: true },
+    });
+
+    if (course?.instructorId === userId) {
+      return { enrolled: true, enrolledAt: new Date() };
+    }
+
+    const member = await this.prisma.courseMember.findUnique({
+      where: { courseId_userId: { courseId, userId } },
+    });
+
+    return {
+      enrolled: !!member,
+      enrolledAt: member?.enrolledAt ?? null,
+    };
+  }
+
+  async getEnrolledCourses(userId: string) {
+    const memberships = await this.prisma.courseMember.findMany({
+      where: { userId },
+      include: {
+        course: {
+          include: {
+            instructor: {
+              select: { id: true, fullName: true, avatarUrl: true },
+            },
+            _count: {
+              select: { sections: true, members: true },
+            },
+          },
+        },
+      },
+      orderBy: { enrolledAt: 'desc' },
+    });
+
+    return memberships.map((m) => ({
+      ...m.course,
+      enrolledAt: m.enrolledAt,
+    }));
+  }
+
+  async unenrollCourse(userId: string, courseId: string) {
+    const member = await this.prisma.courseMember.findUnique({
+      where: { courseId_userId: { courseId, userId } },
+    });
+
+    if (!member) {
+      throw new NotFoundException('You are not enrolled in this course');
+    }
+
+    return this.prisma.courseMember.delete({
+      where: { courseId_userId: { courseId, userId } },
+    });
+  }
+
+  // ── Instructor ──────────────────────────────────────────
+
+  async findMyCoursesAsInstructor(userId: string) {
+    return this.prisma.course.findMany({
+      where: { instructorId: userId },
+      include: {
+        instructor: {
+          select: { id: true, fullName: true, avatarUrl: true },
+        },
+        _count: {
+          select: { sections: true, members: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

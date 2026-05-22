@@ -1,13 +1,270 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  InstructorCourse,
+  getMyTeachingCourses,
+} from '@/api/instructor';
+import { createCourse, deleteCourse } from '@/api/courses';
+
 export default function InstructorStudioPage() {
+  const { user } = useAuth();
+  const [courses, setCourses] = useState<InstructorCourse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [visibility, setVisibility] = useState<'public' | 'private'>('public');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchCourses = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getMyTeachingCourses();
+      if (res.success && res.data) {
+        setCourses(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch courses', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const handleCreate = async () => {
+    if (!title.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        + '-' + Date.now().toString(36);
+
+      const res = await createCourse({
+        title: title.trim(),
+        slug,
+        description: description.trim() || undefined,
+        visibility,
+      });
+
+      if (res.success) {
+        setShowForm(false);
+        setTitle('');
+        setDescription('');
+        await fetchCourses();
+      } else {
+        alert(res.error || 'Tạo khóa học thất bại');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Đã xảy ra lỗi');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa khóa học này? Mọi dữ liệu liên quan sẽ bị xóa vĩnh viễn.')) return;
+    try {
+      const res = await deleteCourse(courseId);
+      if (res.success) {
+        setCourses((prev) => prev.filter((c) => c.id !== courseId));
+      } else {
+        alert(res.error || 'Xóa khóa học thất bại');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Đã xảy ra lỗi khi xóa khóa học');
+    }
+  };
+
+  if (!user || (user.role !== 'instructor' && user.role !== 'admin')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md">
+          <span className="material-symbols-outlined text-5xl text-slate-300">lock</span>
+          <h1 className="text-xl font-bold text-slate-800">Không có quyền truy cập</h1>
+          <p className="text-slate-500 text-sm">
+            Khu vực này dành cho giảng viên. Liên hệ admin để được cấp quyền instructor.
+          </p>
+          <Link href="/dashboard" className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors">
+            Về Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Course Builder / Studio</h1>
-      <p className="text-muted-foreground text-sm">
-        Khung giảng viên: syllabus drag-drop, upload, quiz — nối module{" "}
-        <code className="text-primary/90">courses</code> phía NestJS.
-      </p>
-      <div className="glass-elevated rounded-xl p-6 text-sm text-muted-foreground">
-        Placeholder theo màn hình 7 (Course Builder) trong đặc tả.
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 px-6 py-5">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <span className="material-symbols-outlined text-indigo-600 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              Instructor Studio
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">Quản lý khóa học của bạn</p>
+          </div>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all shadow-sm"
+          >
+            <span className="material-symbols-outlined text-lg">add</span>
+            Tạo khóa học mới
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Create Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-800">Tạo khóa học mới</h2>
+                <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Tên khóa học <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                    placeholder="Ví dụ: Lập trình Web với React"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Mô tả</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 resize-none"
+                    placeholder="Mô tả ngắn gọn về khóa học..."
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Chế độ hiển thị</label>
+                  <select
+                    value={visibility}
+                    onChange={(e) => setVisibility(e.target.value as 'public' | 'private')}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                  >
+                    <option value="public">Công khai — ai cũng có thể tìm thấy</option>
+                    <option value="private">Riêng tư — chỉ qua lời mời</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 text-slate-600 hover:text-slate-800 text-sm font-medium"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleCreate}
+                  disabled={!title.trim() || isSubmitting}
+                  className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Đang tạo...' : 'Tạo khóa học'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Course list */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+          </div>
+        ) : courses.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300 space-y-4">
+            <span className="material-symbols-outlined text-5xl text-slate-300">library_books</span>
+            <h3 className="text-lg font-semibold text-slate-700">Chưa có khóa học nào</h3>
+            <p className="text-slate-500 text-sm">Bắt đầu tạo khóa học đầu tiên của bạn ngay!</p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+            >
+              <span className="material-symbols-outlined text-lg">add</span>
+              Tạo khóa học
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
+              <div key={course.id} className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 transition-all">
+                <Link
+                  href={`/instructor/studio/${course.id}`}
+                  className="block h-full"
+                >
+                  <div className="h-36 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative">
+                    {course.thumbnailUrl ? (
+                      <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined text-white/40 text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                        play_circle
+                      </span>
+                    )}
+                    <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      course.visibility === 'public'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {course.visibility === 'public' ? 'Công khai' : 'Riêng tư'}
+                    </span>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                      {course.title}
+                    </h3>
+                    <p className="text-slate-500 text-sm mt-1 line-clamp-2">
+                      {course.description || 'Chưa có mô tả'}
+                    </p>
+                    <div className="flex items-center gap-4 mt-4 text-xs text-slate-400">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">list</span>
+                        {course._count.sections} phần
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">group</span>
+                        {course._count.members} học viên
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDeleteCourse(course.id);
+                  }}
+                  className="absolute top-3 left-3 p-1.5 bg-red-100 text-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-200 shadow-sm"
+                  title="Xóa khóa học"
+                >
+                  <span className="material-symbols-outlined text-[16px] leading-none">delete</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
