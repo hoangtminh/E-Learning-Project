@@ -60,6 +60,14 @@ enum CallStatus {
   @@map("call_status")
 }
 
+enum CallType {
+  channel
+  private
+  public
+
+  @@map("call_type")
+}
+
 enum QuestionType {
   single_choice
   multiple_choice
@@ -280,6 +288,7 @@ model Conversation {
   classroom Classroom?           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   members   ConversationMember[]
   messages  Message[]
+  calls     Call[]
 
   @@index([classroomId])
   @@map("conversations")
@@ -408,21 +417,25 @@ model Note {
 }
 
 model Call {
-  id               String     @id @default(cuid())
-  creatorId        String     @map("creator_id")
-  title            String?    @db.VarChar(255)
-  classroomId      String?    @map("classroom_id")
-  status           CallStatus @default(ongoing)
-  participantCount Int        @default(0) @map("participant_count")
-  createdAt        DateTime   @default(now()) @map("created_at")
-  startedAt        DateTime?  @map("started_at")
-  endedAt          DateTime?  @map("ended_at")
+  id               String       @id @default(cuid())
+  creatorId        String       @map("creator_id")
+  title            String?      @db.VarChar(255)
+  classroomId      String?      @map("classroom_id")
+  conversationId   String?      @map("conversation_id")
+  status           CallStatus   @default(ongoing)
+  type             CallType     @default(public)
+  participantCount Int          @default(0) @map("participant_count")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  startedAt        DateTime?    @map("started_at")
+  endedAt          DateTime?    @map("ended_at")
 
-  creator   User       @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  classroom Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  creator      User          @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  classroom    Classroom?    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([creatorId])
   @@index([classroomId])
+  @@index([conversationId])
   @@map("calls")
 }
 

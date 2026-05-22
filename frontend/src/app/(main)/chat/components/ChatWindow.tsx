@@ -28,6 +28,9 @@ import ChatInput from './ChatInput';
 import { MessageItem } from './MessageItem';
 import { ChatInfo } from './ChatInfo';
 
+import { callsApi, CallType } from '@/api/calls';
+import { toast } from 'sonner';
+
 export const ChatWindow = () => {
   const {
     currentConversation,
@@ -44,6 +47,35 @@ export const ChatWindow = () => {
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [prevScrollHeight, setPrevScrollHeight] = useState(0);
+  const [isStartingCall, setIsStartingCall] = useState(false);
+
+  const handleStartCall = async () => {
+    if (!currentConversation?.id) return;
+    setIsStartingCall(true);
+    try {
+      const res = await callsApi.createCall({
+        title: `Cuộc họp nhóm - ${currentConversation.title || 'Trò chuyện'}`,
+        type: CallType.CHANNEL,
+        conversationId: currentConversation.id,
+      });
+
+      if (res.success && res.data) {
+        toast.success('Khởi động cuộc họp nhóm thành công!');
+        
+        // Auto-send call invitation card message to the chat
+        const inviteContent = `[CALL_INVITATION]:${res.data.id}:${currentConversation.title || 'Cuộc họp nhóm'}`;
+        await sendMessage(inviteContent);
+
+        window.open(`/call/${res.data.id}`, '_blank');
+      } else {
+        toast.error(res.error || 'Khởi tạo cuộc gọi thất bại!');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi hệ thống khi bắt đầu cuộc gọi.');
+    } finally {
+      setIsStartingCall(false);
+    }
+  };
 
   const handleScroll = useCallback(
     async (e: React.UIEvent<HTMLDivElement>) => {
@@ -149,16 +181,28 @@ export const ChatWindow = () => {
             <Button
               variant='ghost'
               size='icon'
+              onClick={handleStartCall}
+              disabled={isStartingCall}
               className='text-on-surface-variant hover:bg-primary/5 rounded-full'
             >
-              <Phone size={20} />
+              {isStartingCall ? (
+                <Loader2 className='size-5 animate-spin' />
+              ) : (
+                <Phone size={20} />
+              )}
             </Button>
             <Button
               variant='ghost'
               size='icon'
+              onClick={handleStartCall}
+              disabled={isStartingCall}
               className='text-on-surface-variant hover:bg-primary/5 rounded-full'
             >
-              <Video size={20} />
+              {isStartingCall ? (
+                <Loader2 className='size-5 animate-spin' />
+              ) : (
+                <Video size={20} />
+              )}
             </Button>
             <Button
               variant='ghost'
