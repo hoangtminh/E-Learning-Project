@@ -89,6 +89,37 @@ export class TasksService {
     });
   }
 
+  async findOne(userId: string, classroomId: string, taskId: string) {
+    await this.assertMembership(userId, classroomId);
+    const task = await this.prisma.classroomTask.findFirst({
+      where: { id: taskId, classroomId },
+      include: {
+        classroom: { select: { id: true, title: true } },
+        creator: { select: { id: true, fullName: true, avatarUrl: true } },
+        submissions: { where: { userId } },
+        _count: { select: { submissions: true } },
+      },
+    });
+    if (!task) throw new NotFoundException('Task not found');
+    return task;
+  }
+
+  async findOneForUser(userId: string, taskId: string) {
+    const task = await this.prisma.classroomTask.findUnique({
+      where: { id: taskId },
+      include: {
+        classroom: { select: { id: true, title: true } },
+        creator: { select: { id: true, fullName: true, avatarUrl: true } },
+        submissions: { where: { userId } },
+        _count: { select: { submissions: true } },
+      },
+    });
+    if (!task) throw new NotFoundException('Task not found');
+
+    await this.assertMembership(userId, task.classroomId);
+    return task;
+  }
+
   async create(userId: string, classroomId: string, dto: CreateTaskDto) {
     await this.assertAdminOrOwner(userId, classroomId);
     const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });

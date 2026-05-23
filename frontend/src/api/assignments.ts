@@ -46,3 +46,11 @@ export const getMyAssignments = async (): Promise<Assignment[]> => {
   }
   return res.data;
 };
+
+export const getAssignmentDetail = async (id: string): Promise<Assignment> => {
+  const res = await apiGet<Assignment>(`/assignments/${id}`);
+  if (!res.success || !res.data) {
+    throw new Error(res.error || 'Failed to fetch assignment details');
+  }
+  return res.data;
+};

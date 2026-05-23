@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Req,
+  Param,
   UnauthorizedException,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
@@ -20,5 +21,11 @@ export class UserTasksController {
   @Get()
   findAllForUser(@Req() req: any) {
     return this.tasksService.findAllForUser(this.getUserId(req));
+  }
+
+  /** GET /assignments/:id */
+  @Get(':id')
+  findOneForUser(@Req() req: any, @Param('id') id: string) {
+    return this.tasksService.findOneForUser(this.getUserId(req), id);
   }
 }

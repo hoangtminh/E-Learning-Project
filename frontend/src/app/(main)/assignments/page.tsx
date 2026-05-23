@@ -95,7 +95,7 @@ export default function AssignmentsPage() {
           const isOverdue = item.deadline && isPast(new Date(item.deadline)) && !isSubmitted;
 
           return (
-            <Link key={item.id} href={`/classrooms/${item.classroomId}/tasks`}>
+            <Link key={item.id} href={`/assignments/${item.id}`}>
               <div className='group flex items-center justify-between p-4 bg-white border border-slate-200 rounded-full hover:border-sky-300 hover:shadow-sm transition-all cursor-pointer mb-3'>
                 {/* Left Side: Dot and Title */}
                 <div className='flex items-center gap-4'>

@@ -401,8 +401,6 @@ function TaskRow({
   task: ClassroomTask;
   classroomId: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const { fetchTasks } = useTasks();
   const existing = task.submissions[0];
   const submitted = !!existing;
   const graded = existing?.grade !== null && existing?.grade !== undefined;
@@ -410,59 +408,48 @@ function TaskRow({
   const isPast = task.deadline && new Date(task.deadline) < new Date();
 
   return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className='w-full flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left group'
-      >
-        {/* Status dot */}
-        <div
-          className={`w-2 h-2 rounded-full shrink-0 ${graded ? 'bg-green-500' : submitted ? 'bg-sky-400' : isPast ? 'bg-red-400' : 'bg-slate-300'}`}
-        />
+    <Link
+      href={`/assignments/${task.id}`}
+      className='w-full flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left group'
+    >
+      {/* Status dot */}
+      <div
+        className={`w-2 h-2 rounded-full shrink-0 ${graded ? 'bg-green-500' : submitted ? 'bg-sky-400' : isPast ? 'bg-red-400' : 'bg-slate-300'}`}
+      />
 
-        {/* Title */}
-        <p className='flex-1 text-sm font-medium text-slate-800 truncate group-hover:text-sky-700 transition-colors'>
-          {task.title}
-        </p>
+      {/* Title */}
+      <p className='flex-1 text-sm font-medium text-slate-800 truncate group-hover:text-sky-700 transition-colors'>
+        {task.title}
+      </p>
 
-        {/* Status badge */}
-        {graded ? (
-          <span className='shrink-0 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full'>
-            {Number(existing.grade).toFixed(0)}/100
-          </span>
-        ) : submitted ? (
-          <span className='shrink-0 text-xs font-semibold text-sky-600 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full'>
-            Đã nộp
-          </span>
-        ) : (
-          <span className='shrink-0 text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full'>
-            Chưa nộp
-          </span>
-        )}
-
-        {/* Deadline */}
-        {dlLabel && (
-          <span
-            className={`shrink-0 text-xs ${dlColor} hidden sm:block min-w-[80px] text-right`}
-          >
-            {dlLabel}
-          </span>
-        )}
-
-        <span className='material-symbols-outlined text-slate-300 group-hover:text-slate-400 text-[18px] shrink-0 transition-colors'>
-          chevron_right
+      {/* Status badge */}
+      {graded ? (
+        <span className='shrink-0 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full'>
+          {Number(existing.grade).toFixed(0)}/100
         </span>
-      </button>
-
-      {open && (
-        <TaskDetailPanel
-          task={task}
-          classroomId={classroomId}
-          onClose={() => setOpen(false)}
-          onRefresh={() => fetchTasks(classroomId)}
-        />
+      ) : submitted ? (
+        <span className='shrink-0 text-xs font-semibold text-sky-600 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full'>
+          Đã nộp
+        </span>
+      ) : (
+        <span className='shrink-0 text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full'>
+          Chưa nộp
+        </span>
       )}
-    </>
+
+      {/* Deadline */}
+      {dlLabel && (
+        <span
+          className={`shrink-0 text-xs ${dlColor} hidden sm:block min-w-[80px] text-right`}
+        >
+          {dlLabel}
+        </span>
+      )}
+
+      <span className='material-symbols-outlined text-slate-300 group-hover:text-slate-400 text-[18px] shrink-0 transition-colors'>
+        chevron_right
+      </span>
+    </Link>
   );
 }
 
