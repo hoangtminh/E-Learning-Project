@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { EnrolledCourse, getMyEnrolledCourses } from '@/api/enrollment';
 import { getMyTeachingCourses, InstructorCourse } from '@/api/instructor';
 import { useAuth } from '@/contexts/AuthContext';
@@ -165,9 +166,10 @@ export default function MyCoursesPage() {
         </div>
         <Link
           href='/courses'
-          className='text-sky-600 font-semibold hover:bg-sky-50 px-4 py-2 rounded-lg transition-colors'
+          className='px-4 py-2 bg-sky-50 text-sky-600 font-semibold rounded-lg hover:bg-sky-100 transition-colors inline-flex items-center gap-1.5 text-sm shadow-xs border-0'
         >
           Khám phá thêm
+          <ArrowRight className='size-4' />
         </Link>
       </div>
 
