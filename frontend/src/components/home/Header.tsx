@@ -11,7 +11,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   const linked = [
     {
@@ -65,12 +65,29 @@ export function Header() {
           {isLoading ? (
             <div className='h-9 w-20 bg-slate-100 animate-pulse rounded-lg' />
           ) : isAuthenticated ? (
-            <Button
-              className='bg-sky-500 text-white hover:bg-sky-500/90 rounded-lg shadow-lg shadow-sky-500/20 font-semibold'
-              onClick={() => router.push('/dashboard')}
-            >
-              To Dashboard
-            </Button>
+            <>
+              <div className='hidden sm:flex flex-col items-end leading-tight'>
+                <span className='text-sm font-bold text-slate-800 max-w-[150px] truncate'>
+                  {user?.fullName || 'Học viên'}
+                </span>
+                <span className='text-[11px] text-slate-500 max-w-[150px] truncate'>
+                  {user?.email}
+                </span>
+              </div>
+              <Button
+                className='bg-sky-500 text-white hover:bg-sky-500/90 rounded-lg shadow-lg shadow-sky-500/20 font-semibold'
+                onClick={() => router.push('/dashboard')}
+              >
+                Dashboard
+              </Button>
+              <Button
+                variant='ghost'
+                className='text-slate-600 hover:text-red-600 hover:bg-red-50 font-semibold'
+                onClick={logout}
+              >
+                Đăng xuất
+              </Button>
+            </>
           ) : (
             <>
               <Button

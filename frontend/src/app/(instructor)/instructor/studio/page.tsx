@@ -85,7 +85,7 @@ export default function InstructorStudioPage() {
 
   if (!user || (user.role !== 'instructor' && user.role !== 'admin')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-full flex items-center justify-center bg-slate-50">
         <div className="text-center space-y-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md">
           <span className="material-symbols-outlined text-5xl text-slate-300">lock</span>
           <h1 className="text-xl font-bold text-slate-800">Không có quyền truy cập</h1>
@@ -101,7 +101,7 @@ export default function InstructorStudioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-full bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between">

@@ -28,6 +28,16 @@ const SEGMENT_LABELS: Record<string, string> = {
   settings: 'Cài đặt',
   notes: 'Ghi chú',
   quizzes: 'Bài kiểm tra',
+  resources: 'Tài nguyên',
+  pathway: 'Lộ trình',
+  community: 'Cộng đồng',
+  instructor: 'Giảng dạy',
+  studio: 'Studio',
+  learning: 'Học bài',
+  new: 'Tạo mới',
+  edit: 'Chỉnh sửa',
+  take: 'Làm bài',
+  result: 'Kết quả',
 };
 
 export function MainHeader() {
@@ -97,18 +107,24 @@ export function MainHeader() {
     <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm flex items-center justify-between px-6 z-10 sticky top-0 shrink-0">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
-        {breadcrumbs.map((crumb, i) => (
-          <span key={i} className="flex items-center gap-1.5">
-            {i > 0 && <ChevronRight className="size-3.5 text-slate-400" />}
-            {i < breadcrumbs.length - 1 ? (
-              <Link href={crumb.href} className="text-slate-500 hover:text-slate-900 font-medium capitalize transition-colors">
-                {crumb.label}
-              </Link>
-            ) : (
-              <span className="font-bold text-slate-900 capitalize">{crumb.label}</span>
-            )}
-          </span>
-        ))}
+        {breadcrumbs.length === 0 ? (
+          <Link href='/' className='font-black text-slate-900 hover:text-sky-600 transition-colors'>
+            Glacier Learning
+          </Link>
+        ) : (
+          breadcrumbs.map((crumb, i) => (
+            <span key={i} className="flex items-center gap-1.5">
+              {i > 0 && <ChevronRight className="size-3.5 text-slate-400" />}
+              {i < breadcrumbs.length - 1 ? (
+                <Link href={crumb.href} className="text-slate-500 hover:text-slate-900 font-medium capitalize transition-colors">
+                  {crumb.label}
+                </Link>
+              ) : (
+                <span className="font-bold text-slate-900 capitalize">{crumb.label}</span>
+              )}
+            </span>
+          ))
+        )}
       </nav>
 
       {/* Right actions */}
@@ -171,8 +187,7 @@ export function MainHeader() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              variant="destructive"
-              className="cursor-pointer gap-2.5 rounded-xl hover:bg-red-50 focus:bg-red-50"
+              className="cursor-pointer gap-2.5 rounded-xl text-slate-700 hover:bg-red-50 focus:bg-red-50 hover:text-red-600 focus:text-red-600"
               onClick={logout}
             >
               <LogOut className="size-4" />

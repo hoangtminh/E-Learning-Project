@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { getCourses, CourseListItem } from '@/api/courses';
-import { Header } from '@/components/home/Header';
 
 const PATHWAYS = [
   {
@@ -74,7 +73,6 @@ export default function Home() {
 
   return (
     <div className="bg-white text-slate-900 min-h-screen flex flex-col font-sans selection:bg-sky-500/20">
-      <Header />
       <main className="flex-1">
 
         {/* ── Hero ── */}

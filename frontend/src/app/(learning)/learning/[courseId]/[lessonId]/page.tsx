@@ -95,14 +95,14 @@ export default function LearningLessonPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f1524]">
+      <div className="min-h-full flex items-center justify-center bg-[#0f1524]">
         <div className="w-8 h-8 border-4 border-indigo-800 border-t-indigo-400 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f1524] text-white flex flex-col">
+    <div className="min-h-full bg-[#0f1524] text-white flex flex-col">
       {/* Top bar */}
       <header className="bg-[#161d2e] border-b border-white/10 px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3 min-w-0">

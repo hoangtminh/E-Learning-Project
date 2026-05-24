@@ -21,6 +21,8 @@ const NAV_SECTIONS = [
       { name: 'Khoá học của tôi', icon: 'bookmark', path: '/my-courses' },
       { name: 'Lớp học', icon: 'groups', path: '/classrooms' },
       { name: 'Bài tập', icon: 'assignment', path: '/assignments' },
+      { name: 'Bài kiểm tra', icon: 'quiz', path: '/quizzes' },
+      { name: 'Ghi chú', icon: 'edit_note', path: '/notes' },
     ],
   },
   {
@@ -30,14 +32,13 @@ const NAV_SECTIONS = [
       { name: 'Tin nhắn', icon: 'chat_bubble', path: '/chat' },
     ],
   },
-  {
-    label: 'Cá nhân',
-    items: [
-      { name: 'Hồ sơ', icon: 'person', path: '/profile' },
-      { name: 'Cài đặt', icon: 'settings', path: '/settings' },
-    ],
-  },
 ];
+
+const INSTRUCTOR_NAV_ITEM = {
+  name: 'Instructor Studio',
+  icon: 'workspace_premium',
+  path: '/instructor/studio',
+};
 
 const MainSidebar = memo(() => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -50,6 +51,17 @@ const MainSidebar = memo(() => {
     .slice(0, 2)
     .join('')
     .toUpperCase();
+
+  const navSections =
+    user?.role === 'instructor' || user?.role === 'admin'
+      ? [
+          ...NAV_SECTIONS,
+          {
+            label: 'Giảng dạy',
+            items: [INSTRUCTOR_NAV_ITEM],
+          },
+        ]
+      : NAV_SECTIONS;
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -90,7 +102,7 @@ const MainSidebar = memo(() => {
 
         {/* Nav */}
         <nav className="flex-1 py-4 px-2 space-y-4 overflow-y-auto overflow-x-hidden no-scrollbar">
-          {NAV_SECTIONS.map((section) => (
+          {navSections.map((section) => (
             <div key={section.label}>
               <AnimatePresence>
                 {!isCollapsed && (

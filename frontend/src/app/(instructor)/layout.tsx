@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { AppShell } from '@/components/main/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function InstructorGroupLayout({
@@ -38,5 +39,5 @@ export default function InstructorGroupLayout({
     );
   }
 
-  return <div className='min-h-screen bg-slate-50'>{children}</div>;
+  return <AppShell>{children}</AppShell>;
 }
