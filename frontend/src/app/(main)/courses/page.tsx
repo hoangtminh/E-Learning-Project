@@ -1,18 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCourses } from '@/contexts/CourseContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CourseCard } from '@/components/course/CourseCard';
 import { Search, Filter, SearchX, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 export default function CoursesCatalogPage() {
   const { courses, isLoading, error } = useCourses();
-  const { user } = useAuth();
-
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'free' | 'paid'>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -163,11 +159,49 @@ export default function CoursesCatalogPage() {
         <div className='space-y-8'>
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
             {paginatedCourses.map((c) => (
-              <CourseCard key={c.id} course={c} />
+              <div
+                key={c.id}
+                className='bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl overflow-hidden group flex flex-col hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300'
+              >
+                <div className='relative h-48 overflow-hidden bg-slate-100'>
+                  <img
+                    src={c.thumbnailUrl || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop&sig=${c.id}`}
+                    alt={c.title}
+                    className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-700'
+                  />
+                  <div className='absolute top-3 left-3 px-2.5 py-1 bg-slate-900/80 backdrop-blur-md rounded-md flex items-center gap-1 border border-white/10'>
+                    <span className='text-amber-400 material-symbols-outlined text-[12px]' style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className='text-white text-[10px] font-black uppercase tracking-wider'>4.9</span>
+                  </div>
+                </div>
+
+                <div className='p-5 flex flex-col flex-1'>
+                  <div className='flex justify-between items-start mb-2'>
+                    <h3 className='font-bold text-slate-800 leading-snug group-hover:text-sky-600 transition-colors line-clamp-2'>
+                      {c.title}
+                    </h3>
+                  </div>
+
+                  <p className='text-slate-500 text-xs mb-4 line-clamp-2'>
+                    {c.description || 'Chưa có mô tả cho khóa học này.'}
+                  </p>
+
+                  <div className='mt-auto flex items-center justify-between pt-4 border-t border-slate-100'>
+                    <span className='text-lg font-black text-slate-800'>
+                      {Number(c.price) === 0 ? 'Miễn phí' : `${Number(c.price).toLocaleString()}đ`}
+                    </span>
+                    <Link
+                      href={`/courses/${c.id}`}
+                      className='px-5 py-2 rounded-lg bg-sky-500 text-white text-xs font-bold hover:bg-sky-600 transition-all active:scale-95 shadow-md shadow-sky-500/20'
+                    >
+                      Đăng ký
+                    </Link>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className='flex justify-center items-center gap-2 pt-8'>
               <Button

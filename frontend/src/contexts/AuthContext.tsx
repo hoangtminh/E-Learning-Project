@@ -22,13 +22,9 @@ export interface User {
   userId: string;
   id?: string;
   email: string;
-  fullname: string | null;
-  fullName?: string | null;
-  name?: string;
-  imageUrl: string | null | undefined;
-  avatar?: string;
+  fullName: string | null;
+  avatarUrl: string | null;
   role?: string;
-  // Add other user properties here based on your backend response
 }
 
 interface AuthContextType {
@@ -39,6 +35,7 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => void;
   getUser: () => Promise<void>;
+  updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,12 +50,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser({
         ...userVal,
         userId: userVal.id || userVal.userId,
-        fullname: userVal.fullName || userVal.fullname || null,
         fullName: userVal.fullName || userVal.fullname || null,
+        avatarUrl: userVal.avatarUrl || userVal.imageUrl || userVal.avatar || null,
       });
     } else {
       setUser(null);
     }
+  };
+
+  const updateUser = (data: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...data } : prev));
   };
 
   const logout = () => {
@@ -77,7 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (res.success && res.data) {
           setMappedUser(res.data);
         } else {
-          // Token is stale or invalid on the server side
           removeTokenCookie();
           setAuthToken(null);
           setMappedUser(null);
@@ -135,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         getUser,
+        updateUser,
       }}
     >
       {children}

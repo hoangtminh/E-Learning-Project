@@ -343,7 +343,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
     const currentUserId = user?.userId || user?.id;
     const displayName =
-      user?.fullName || user?.fullname || user?.name || 'Người dùng';
+      user?.fullName || user?.fullName || user?.fullName || 'Người dùng';
 
     socketRef.current = io('http://localhost:3001/webrtc', {
       auth: { userId: currentUserId },
@@ -720,7 +720,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       isCamOn,
       isMicOn: nextState,
       email: user?.email,
-      name: user?.fullName || user?.fullname || user?.name || 'Người dùng',
+      name: user?.fullName || user?.fullName || user?.fullName || 'Người dùng',
       cameraStreamId: localStreamRef.current?.id,
     });
   };
@@ -764,7 +764,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         isCamOn: false,
         isMicOn,
         email: user?.email,
-        name: user?.fullName || user?.fullname || user?.name || 'Người dùng',
+        name: user?.fullName || user?.fullName || user?.fullName || 'Người dùng',
         cameraStreamId: null,
       });
     } else {
@@ -817,7 +817,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           isCamOn: true,
           isMicOn,
           email: user?.email,
-          name: user?.fullName || user?.fullname || user?.name || 'Người dùng',
+          name: user?.fullName || user?.fullName || user?.fullName || 'Người dùng',
           cameraStreamId: localStreamRef.current?.id,
         });
       } catch (err) {
@@ -841,7 +841,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       setScreenStream(stream);
       setIsSharingScreen(true);
       setScreenSharerId(socketRef.current?.id || 'me');
-      setScreenSharerName(user?.fullName || user?.fullname || 'Bạn');
+      setScreenSharerName(user?.fullName || user?.fullName || 'Bạn');
       setScreenStreamId(stream.id);
       screenStreamIdRef.current = stream.id;
 
@@ -867,7 +867,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
       socketRef.current?.emit('screen-share-started', {
         roomId,
-        name: user?.fullName || user?.fullname || 'Bạn',
+        name: user?.fullName || user?.fullName || 'Bạn',
         streamId: stream.id,
       });
     } catch (err) {

@@ -163,8 +163,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         fileUrl: null,
         sender: {
           id: user.userId,
-          fullName: user.fullname,
-          avatarUrl: user.imageUrl || null,
+          fullName: user.fullName,
+          avatarUrl: user.avatarUrl || null,
         },
         status: 'pending',
       };

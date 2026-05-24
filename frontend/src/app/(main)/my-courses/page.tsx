@@ -10,7 +10,7 @@ export default function MyCoursesPage() {
   
   // Filter logic: 
   // 1. My created courses
-  const myCreatedCourses = courses.filter(c => c.instructor.id === user?.userId);
+  const myCreatedCourses = courses.filter(c => c.instructor?.id === user?.userId);
   
   // 2. Enrolled courses (currently approximated or empty if no backend support)
   // For now, we leave it empty or you can mock it.
@@ -94,7 +94,7 @@ export default function MyCoursesPage() {
                   >
                     <div className='relative h-40 overflow-hidden bg-slate-100'>
                       <img 
-                        src={c.thumbnailUrl || `https://source.unsplash.com/random/800x600?education&sig=${c.id}`} 
+                        src={c.thumbnailUrl || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop&sig=${c.id}`} 
                         alt={c.title} 
                         className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500' 
                       />
