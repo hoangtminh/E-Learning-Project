@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useCallContext } from '../../../../contexts/CallContext';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 interface RemoteVideoProps {
   id: string;
@@ -103,9 +104,9 @@ function RemoteVideo({
 
       {isHost && (
         <button
-          onClick={() => {
+          onClick={async () => {
             if (
-              confirm(`Bạn có chắc chắn muốn mời ${name} ra khỏi cuộc gọi?`)
+              await appConfirm({ title: 'Mời ra khỏi cuộc gọi?', description: `Bạn có chắc chắn muốn mời ${name} ra khỏi cuộc gọi?`, confirmLabel: 'Mời ra', variant: 'destructive' })
             ) {
               onKick(id);
             }

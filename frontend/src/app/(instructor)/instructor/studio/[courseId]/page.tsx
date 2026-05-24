@@ -18,6 +18,7 @@ import {
   deleteLesson,
 } from '@/api/instructor';
 import { Quiz, getCreatedQuizzes } from '@/api/quizzes';
+import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
@@ -110,7 +111,7 @@ export default function CourseEditorPage() {
   };
 
   const handleDeleteSection = async (sectionId: string) => {
-    if (!confirm('Xóa phần này? Tất cả bài học bên trong sẽ bị xóa.')) return;
+    if (!(await appConfirm({ title: 'Xóa phần học?', description: 'Tất cả bài học bên trong sẽ bị xóa.', confirmLabel: 'Xóa phần', variant: 'destructive' }))) return;
     try {
       await deleteSection(sectionId);
       setSections((prev) => prev.filter((s) => s.id !== sectionId));
@@ -150,16 +151,16 @@ export default function CourseEditorPage() {
         setNewLessonType('video');
         setAddingLessonTo(null);
       } else {
-        alert(res.error || 'Thêm bài học thất bại');
+        void appAlert(res.error || 'Thêm bài học thất bại');
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Đã xảy ra lỗi');
+      void appAlert(err.message || 'Đã xảy ra lỗi');
     }
   };
 
   const handleDeleteLesson = async (sectionId: string, lessonId: string) => {
-    if (!confirm('Xóa bài học này?')) return;
+    if (!(await appConfirm({ title: 'Xóa bài học?', description: 'Bạn có chắc chắn muốn xóa bài học này?', confirmLabel: 'Xóa bài học', variant: 'destructive' }))) return;
     try {
       await deleteLesson(lessonId);
       setSections((prev) =>
@@ -395,7 +396,7 @@ export default function CourseEditorPage() {
                                     onChange={(e) => {
                                       if (e.target.files && e.target.files.length > 0) {
                                         setNewLessonUrl('/dummy-video.mp4'); // Simulated upload
-                                        alert('Đã giả lập upload file: ' + e.target.files[0].name);
+                                        void appAlert('Đã giả lập upload file: ' + e.target.files[0].name);
                                       }
                                     }}
                                     className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
@@ -431,7 +432,7 @@ export default function CourseEditorPage() {
                                     onChange={(e) => {
                                       if (e.target.files && e.target.files.length > 0) {
                                         setNewLessonBody('Nội dung được trích xuất từ file: ' + e.target.files[0].name); // Simulated upload
-                                        alert('Đã giả lập upload và đọc file: ' + e.target.files[0].name);
+                                        void appAlert('Đã giả lập upload và đọc file: ' + e.target.files[0].name);
                                       }
                                     }}
                                     className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"

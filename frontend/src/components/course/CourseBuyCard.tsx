@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { enrollCourse, checkEnrollment } from '@/api/enrollment';
 import { getCourse } from '@/api/courses';
 import { useAuth } from '@/contexts/AuthContext';
+import { appAlert } from '@/components/ui/app-dialog-provider';
 
 import { paymentApi } from '@/api/payment';
 
@@ -106,7 +107,7 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
         if (res.paymentUrl) {
           window.location.href = res.paymentUrl;
         } else {
-          alert('Không thể tạo giao dịch thanh toán. Vui lòng thử lại.');
+          void appAlert('Không thể tạo giao dịch thanh toán. Vui lòng thử lại.');
         }
       } else {
         const res = await enrollCourse(courseId);
@@ -116,11 +117,11 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
             router.push(`/learning/${courseId}/${firstLessonId}`);
           }
         } else {
-          alert(res.error || 'Đăng ký thất bại');
+          void appAlert(res.error || 'Đăng ký thất bại');
         }
       }
     } catch (err: any) {
-      alert(err.message || 'Đã xảy ra lỗi');
+      void appAlert(err.message || 'Đã xảy ra lỗi');
     } finally {
       setEnrolling(false);
     }
@@ -140,7 +141,7 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
       }
     } catch (error) {
       console.error('Lỗi khi tạo payment request', error);
-      alert('Không thể tạo giao dịch. Vui lòng thử lại.');
+      void appAlert('Không thể tạo giao dịch. Vui lòng thử lại.');
     } finally {
       setIsProcessing(false);
     }

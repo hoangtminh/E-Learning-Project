@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { appAlert } from '@/components/ui/app-dialog-provider';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
@@ -399,7 +400,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
     // When host rejects this client
     socketRef.current.on('join-rejected', (data: { message: string }) => {
-      alert(data.message);
+      void appAlert(data.message);
       leaveCall();
     });
 
@@ -408,25 +409,25 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       'host-changed',
       (data: { newHostId: string; newHostName: string }) => {
         setHostId(data.newHostId);
-        alert(`Chủ phòng đã chuyển sang: ${data.newHostName}`);
+        void appAlert(`Chủ phòng đã chuyển sang: ${data.newHostName}`);
       },
     );
 
     // When the call room is ended by host
     socketRef.current.on('call-ended', (data: { message: string }) => {
-      alert(data.message);
+      void appAlert(data.message);
       exitAndRedirect();
     });
 
     // General authorization/join errors
     socketRef.current.on('join-error', (data: { message: string }) => {
-      alert(data.message);
+      void appAlert(data.message);
       exitAndRedirect();
     });
 
     // Kicked out listener
     socketRef.current.on('kicked-out', (data: { message: string }) => {
-      alert(data.message);
+      void appAlert(data.message);
       leaveCall();
       router.push('/call');
     });

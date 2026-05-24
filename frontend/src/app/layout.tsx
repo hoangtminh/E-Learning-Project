@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { AppDialogProvider } from '@/components/ui/app-dialog-provider';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -38,8 +39,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <NotificationProvider>
-            {children}
-            <Toaster richColors position='top-right' closeButton />
+            <AppDialogProvider>
+              {children}
+              <Toaster richColors position='top-right' closeButton />
+            </AppDialogProvider>
           </NotificationProvider>
         </AuthProvider>
       </body>

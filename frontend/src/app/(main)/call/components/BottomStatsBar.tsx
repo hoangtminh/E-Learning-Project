@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCallContext } from '../../../../contexts/CallContext';
+import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
 
 export default function BottomStatsBar() {
   const {
@@ -40,9 +41,9 @@ export default function BottomStatsBar() {
     return () => clearInterval(interval);
   }, [joinedAt]);
 
-  const handleLeave = () => {
+  const handleLeave = async () => {
     if (isHost) {
-      if (confirm('Bạn là chủ phòng. Rời phòng sẽ chuyển quyền chủ phòng cho người khác. Bạn vẫn muốn rời?')) {
+      if (await appConfirm({ title: 'Rời phòng gọi?', description: 'Bạn là chủ phòng. Rời phòng sẽ chuyển quyền chủ phòng cho người khác. Bạn vẫn muốn rời?', confirmLabel: 'Rời phòng', variant: 'destructive' })) {
         exitAndRedirect();
       }
     } else {
@@ -50,8 +51,8 @@ export default function BottomStatsBar() {
     }
   };
 
-  const handleEndCall = () => {
-    if (confirm('Bạn có chắc chắn muốn KẾT THÚC cuộc gọi cho toàn bộ thành viên?')) {
+  const handleEndCall = async () => {
+    if (await appConfirm({ title: 'Kết thúc cuộc gọi?', description: 'Bạn có chắc chắn muốn KẾT THÚC cuộc gọi cho toàn bộ thành viên?', confirmLabel: 'Kết thúc', variant: 'destructive' })) {
       endCall();
     }
   };
@@ -159,7 +160,7 @@ export default function BottomStatsBar() {
         <button 
           onClick={() => {
             navigator.clipboard.writeText(window.location.href);
-            alert('Đã sao chép đường dẫn cuộc gọi vào bộ nhớ tạm!');
+            void appAlert('Đã sao chép đường dẫn cuộc gọi vào bộ nhớ tạm!');
           }}
           className='bg-primary px-4 py-2 rounded-lg text-white font-bold text-xs shadow-md hover:bg-primary-dim transition-all flex items-center gap-1.5 shrink-0'
         >

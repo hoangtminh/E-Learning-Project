@@ -8,6 +8,7 @@ import { CourseHero } from '@/components/course/CourseHero';
 import { CourseBuyCard } from '@/components/course/CourseBuyCard';
 import { CourseTabs } from '@/components/course/CourseTabs';
 import { stripHtml } from '@/lib/utils';
+import { appAlert } from '@/components/ui/app-dialog-provider';
 
 import { paymentApi } from '@/api/payment';
 
@@ -148,7 +149,7 @@ export default function CourseDetailPage() {
       }
     } catch (error) {
       console.error('Lỗi khi tạo payment request', error);
-      alert('Không thể tạo giao dịch. Vui lòng thử lại.');
+      void appAlert('Không thể tạo giao dịch. Vui lòng thử lại.');
     }
   };
 

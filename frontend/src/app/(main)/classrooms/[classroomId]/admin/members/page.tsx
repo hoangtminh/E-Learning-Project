@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useClassrooms } from '@/contexts/ClassroomContext';
 import { toast } from 'sonner';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return '?';
@@ -57,7 +58,7 @@ export default function AdminMembersPage() {
 
   const handleRemove = async (userId: string, name: string | null) => {
     if (
-      !confirm(`Bạn có chắc muốn xóa ${name ?? 'thành viên này'} khỏi lớp học?`)
+      !(await appConfirm({ title: 'Xóa thành viên?', description: `Bạn có chắc muốn xóa ${name ?? 'thành viên này'} khỏi lớp học?`, confirmLabel: 'Xóa', variant: 'destructive' }))
     )
       return;
     try {

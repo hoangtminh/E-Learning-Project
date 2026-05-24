@@ -6,6 +6,7 @@ import { useClassrooms } from '@/contexts/ClassroomContext';
 import { getCourses } from '@/api/courses';
 import type { CourseListItem } from '@/api/courses';
 import { toast } from 'sonner';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 export default function AdminCoursesPage() {
   const params = useParams();
@@ -53,7 +54,7 @@ export default function AdminCoursesPage() {
 
   const handleUnlink = async (courseId: string, courseTitle: string) => {
     if (
-      !confirm(`Bạn có chắc chắn muốn hủy liên kết khóa học "${courseTitle}"?`)
+      !(await appConfirm({ title: 'Hủy liên kết?', description: `Bạn có chắc chắn muốn hủy liên kết khóa học "${courseTitle}"?`, confirmLabel: 'Hủy liên kết', variant: 'destructive' }))
     )
       return;
     try {

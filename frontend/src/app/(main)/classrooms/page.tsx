@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useClassrooms } from '@/contexts/ClassroomContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 const mockImages = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCvz6dRTaGnLp3HCtAnUdFeqPCG--8LDSkS_kIcRWF7YWP0FCxFmMSW13aLrBFMLDoBai-M594I-qogj1gqDul0Maz6pPWi6cvRzgrY2AsTIJhiu7uPjIT96j6CUWdvzaDmXLA61S0kCKoSTOjyRmnFs9jY1eqPTxz1dKrTBwj-Bfn1V9-CQ2kmQnwJZzrxlfFTicoMH9lhguYzCK9NO2x5yG9KIFRlmT1Pkk6g9hkWohZ39mUTXwyDUN4Q7NpnU_TSQjo9xmK42kf6',
@@ -73,7 +74,7 @@ export default function ClassroomsPage() {
   // ── Leave ───────────────────────────────────────────────────────────
 
   const handleLeave = async (id: string) => {
-    if (!confirm('Bạn có chắc chắn muốn rời khỏi lớp học này?')) return;
+    if (!(await appConfirm({ title: 'Rời lớp học?', description: 'Bạn có chắc chắn muốn rời khỏi lớp học này?', confirmLabel: 'Rời lớp', variant: 'destructive' }))) return;
     try {
       const currentUserId = user?.id || user?.userId;
       if (currentUserId) {
@@ -111,7 +112,7 @@ export default function ClassroomsPage() {
   };
 
   const handleCancelRequest = async (classroomId: string, name: string) => {
-    if (!confirm(`Hủy yêu cầu tham gia lớp "${name}"?`)) return;
+    if (!(await appConfirm({ title: 'Hủy yêu cầu?', description: `Hủy yêu cầu tham gia lớp "${name}"?`, confirmLabel: 'Hủy yêu cầu', variant: 'destructive' }))) return;
     const currentUserId = user?.userId || user?.id;
     if (!currentUserId) return;
     try {

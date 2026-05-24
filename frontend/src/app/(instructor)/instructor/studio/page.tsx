@@ -8,6 +8,7 @@ import {
   getMyTeachingCourses,
 } from '@/api/instructor';
 import { createCourse, deleteCourse } from '@/api/courses';
+import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
 
 export default function InstructorStudioPage() {
   const { user } = useAuth();
@@ -60,26 +61,26 @@ export default function InstructorStudioPage() {
         setDescription('');
         await fetchCourses();
       } else {
-        alert(res.error || 'Tạo khóa học thất bại');
+        void appAlert(res.error || 'Tạo khóa học thất bại');
       }
     } catch (err: any) {
-      alert(err.message || 'Đã xảy ra lỗi');
+      void appAlert(err.message || 'Đã xảy ra lỗi');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteCourse = async (courseId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa khóa học này? Mọi dữ liệu liên quan sẽ bị xóa vĩnh viễn.')) return;
+    if (!(await appConfirm({ title: 'Xóa khóa học?', description: 'Bạn có chắc chắn muốn xóa khóa học này? Mọi dữ liệu liên quan sẽ bị xóa vĩnh viễn.', confirmLabel: 'Xóa khóa học', variant: 'destructive' }))) return;
     try {
       const res = await deleteCourse(courseId);
       if (res.success) {
         setCourses((prev) => prev.filter((c) => c.id !== courseId));
       } else {
-        alert(res.error || 'Xóa khóa học thất bại');
+        void appAlert(res.error || 'Xóa khóa học thất bại');
       }
     } catch (err: any) {
-      alert(err.message || 'Đã xảy ra lỗi khi xóa khóa học');
+      void appAlert(err.message || 'Đã xảy ra lỗi khi xóa khóa học');
     }
   };
 

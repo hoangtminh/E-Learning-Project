@@ -20,6 +20,7 @@ import {
   Download,
 } from 'lucide-react';
 import Link from 'next/link';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 interface PostItemProps {
   post: ClassroomPost;
@@ -70,7 +71,7 @@ export default function PostItem({ post }: PostItemProps) {
 
   const handleDelete = async () => {
     if (!classroom?.id) return;
-    if (!confirm('Bạn có chắc muốn xóa thông báo này?')) return;
+    if (!(await appConfirm({ title: 'Xóa thông báo?', description: 'Bạn có chắc muốn xóa thông báo này?', confirmLabel: 'Xóa', variant: 'destructive' }))) return;
     setIsDeleting(true);
     try {
       await deletePost(classroom.id, post.id);

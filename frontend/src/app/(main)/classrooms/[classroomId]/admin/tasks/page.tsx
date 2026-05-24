@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useTasks, SubmissionWithUser } from '@/contexts/TaskContext';
 import type { ClassroomTask } from '@/api/classroom';
 import { toast } from 'sonner';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -539,7 +540,7 @@ export default function AdminTasksPage() {
   }, [tasks]);
 
   const handleDelete = async (task: ClassroomTask) => {
-    if (!confirm(`Xóa bài tập "${task.title}"? Tất cả bài nộp sẽ bị xóa theo.`))
+    if (!(await appConfirm({ title: 'Xóa bài tập?', description: `Xóa bài tập "${task.title}"? Tất cả bài nộp sẽ bị xóa theo.`, confirmLabel: 'Xóa bài tập', variant: 'destructive' })))
       return;
     try {
       await deleteTask(classroomId, task.id);
