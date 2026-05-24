@@ -113,14 +113,14 @@ export default function AdminCoursesPage() {
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {linkedCourses.map(({ course }) => (
               <div
-                key={course.id}
+                key={course?.id}
                 className='flex gap-4 p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors bg-white'
               >
                 <div className='w-24 h-16 bg-slate-100 rounded-lg overflow-hidden shrink-0'>
-                  {course.thumbnailUrl ? (
+                  {course?.thumbnailUrl ? (
                     <img
-                      src={course.thumbnailUrl}
-                      alt={course.title}
+                      src={course?.thumbnailUrl}
+                      alt={course?.title}
                       className='w-full h-full object-cover'
                     />
                   ) : (
@@ -131,15 +131,15 @@ export default function AdminCoursesPage() {
                 </div>
                 <div className='flex-1 min-w-0'>
                   <h4 className='font-bold text-slate-800 text-sm truncate'>
-                    {course.title}
+                    {course?.title}
                   </h4>
                   <p className='text-slate-500 text-xs mt-1 truncate'>
-                    {course.description || 'Không có mô tả'}
+                    {course?.description || 'Không có mô tả'}
                   </p>
                 </div>
                 <div className='shrink-0 flex items-center'>
                   <button
-                    onClick={() => handleUnlink(course.id, course.title)}
+                    onClick={() => handleUnlink(course?.id, course?.title)}
                     className='text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors'
                     title='Hủy liên kết'
                   >
@@ -191,13 +191,13 @@ export default function AdminCoursesPage() {
                   );
                   return (
                     <div
-                      key={course.id}
+                      key={course?.id}
                       className='flex items-center gap-4 p-3 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors bg-slate-50'
                     >
                       <div className='w-16 h-12 bg-slate-200 rounded-lg overflow-hidden shrink-0'>
-                        {course.thumbnailUrl && (
+                        {course?.thumbnailUrl && (
                           <img
-                            src={course.thumbnailUrl}
+                            src={course?.thumbnailUrl}
                             alt=''
                             className='w-full h-full object-cover'
                           />
@@ -205,10 +205,10 @@ export default function AdminCoursesPage() {
                       </div>
                       <div className='flex-1 min-w-0'>
                         <h4 className='font-bold text-slate-800 truncate text-sm'>
-                          {course.title}
+                          {course?.title}
                         </h4>
                         <p className='text-xs text-slate-500 truncate'>
-                          Bởi {course.owner?.fullName || 'N/A'}
+                          Bởi {course?.owner?.fullName || 'N/A'}
                         </p>
                       </div>
                       <div className='shrink-0'>
@@ -221,7 +221,7 @@ export default function AdminCoursesPage() {
                           </span>
                         ) : (
                           <button
-                            onClick={() => handleLink(course.id)}
+                            onClick={() => handleLink(course?.id)}
                             disabled={linking}
                             className='px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 transition-colors'
                           >

@@ -1,7 +1,7 @@
 'use client';
 
 import { use } from 'react';
-import { QuizResultView } from '@/components/main/quizzes/QuizResultView';
+import { QuizResultView } from '@/app/(main)/quizzes/components/QuizResultView';
 
 export default function QuizResultPage({
   params,

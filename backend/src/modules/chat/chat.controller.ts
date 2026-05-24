@@ -74,7 +74,7 @@ export class ChatController {
     @Query('limit') limit?: number,
   ) {
     return this.chatService.getMessages(
-      req.user.id,
+      req.user.userId,
       id,
       page ? Number(page) : 1,
       limit ? Number(limit) : 20,

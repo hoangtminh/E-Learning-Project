@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { QuizEditor } from '@/components/main/quizzes/QuizEditor';
+import { QuizEditor } from '@/app/(main)/quizzes/components/QuizEditor';
 import { useQuiz } from '@/contexts/QuizContext';
 import { Quiz } from '@/api/quizzes';
 import { Loader2 } from 'lucide-react';
