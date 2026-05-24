@@ -125,22 +125,6 @@ export function Footer() {
               </li>
             </ul>
           </div>
-          <div className='space-y-6'>
-            <h4 className='text-white font-bold'>Newsletter</h4>
-            <p className='text-sky-100/60 text-sm'>
-              Nhận thông báo về các khóa học mới nhất và ưu đãi đặc biệt.
-            </p>
-            <div className='flex flex-col space-y-2'>
-              <Input
-                className='bg-white/5 border-white/10 placeholder:text-sky-100/30 text-white focus-visible:ring-sky-500/40 rounded-lg'
-                placeholder='Email của bạn'
-                type='email'
-              />
-              <Button className='w-full bg-sky-500 text-white rounded-lg font-bold hover:bg-sky-500/90 shadow-md shadow-sky-500/10'>
-                Đăng ký
-              </Button>
-            </div>
-          </div>
         </motion.div>
         <motion.div
           initial={{ opacity: 0 }}

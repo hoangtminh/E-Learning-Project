@@ -44,10 +44,10 @@ export default function ClassroomCoursesPage() {
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
           {linkedCourses.map(({ course }) => (
-            <div key={course.id} className='bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-shadow group flex flex-col'>
+            <div key={course?.id} className='bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-shadow group flex flex-col'>
               <div className='h-40 bg-slate-100 relative overflow-hidden'>
-                {course.thumbnailUrl ? (
-                  <img src={course.thumbnailUrl} alt={course.title} className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500' />
+                {course?.thumbnailUrl ? (
+                  <img src={course?.thumbnailUrl} alt={course?.title} className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500' />
                 ) : (
                   <div className='w-full h-full flex items-center justify-center text-slate-300'>
                     <span className='material-symbols-outlined text-5xl'>image</span>
@@ -55,12 +55,12 @@ export default function ClassroomCoursesPage() {
                 )}
               </div>
               <div className='p-5 flex-1 flex flex-col'>
-                <h3 className='font-bold text-slate-800 text-lg mb-2 line-clamp-2'>{course.title}</h3>
+                <h3 className='font-bold text-slate-800 text-lg mb-2 line-clamp-2'>{course?.title}</h3>
                 <p className='text-slate-500 text-sm line-clamp-2 mb-4 flex-1'>
-                  {course.description || 'Không có mô tả.'}
+                  {course?.description || 'Không có mô tả.'}
                 </p>
                 <Link
-                  href={`/courses/${course.id}`}
+                  href={`/courses/${course?.id}`}
                   className='text-center w-full block py-2.5 bg-indigo-50 text-indigo-700 font-semibold rounded-xl hover:bg-indigo-100 transition-colors text-sm'
                 >
                   Vào học ngay

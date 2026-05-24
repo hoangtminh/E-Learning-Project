@@ -27,58 +27,49 @@ import {
 
 const NAV_ITEMS = [
   { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
+  { name: 'Classrooms', icon: <Users size={20} />, path: '/classrooms' },
+  { name: 'Assignments  ', icon: <ClipboardList size={20} />, path: '/assignments' },
+  { name: 'Chat', icon: <MessageSquare size={20} />, path: '/chat' },
   { name: 'Courses', icon: <GraduationCap size={20} />, path: '/courses' },
   { name: 'My Courses', icon: <BookOpen size={20} />, path: '/my-courses' },
-  { name: 'Classrooms', icon: <Users size={20} />, path: '/classrooms' },
-  { name: 'Assignments', icon: <ClipboardList size={20} />, path: '/assignments' },
   { name: 'Video Call', icon: <Video size={20} />, path: '/call' },
-  { name: 'Chat', icon: <MessageSquare size={20} />, path: '/chat' },
   { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
 ];
 
 
 const MainSidebar = memo(() => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const pathname = usePathname();
 
   return (
     <TooltipProvider delayDuration={0}>
       <motion.aside
-        initial={{ width: 260, opacity: 0, x: -50 }}
+        initial={{ width: 220, opacity: 0, x: -50 }}
         animate={{ width: isCollapsed ? 60 : 220, opacity: 1, x: 0 }}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        transition={{ duration: 0.5, ease: 'easeInOut' }}
         className='h-screen bg-[#0a0e1a] text-slate-300 flex flex-col border-r border-white/10 relative z-20 shrink-0'
       >
         {/* Toggle Button */}
-        {!isCollapsed && (
+                  <div className='absolute -right-4 top-4.5 w-5 h-5 rounded-xl bg-sky-400/20 border border-sky-400/30 flex items-center justify-center shrink-0 hover:cursor-pointer'>
+
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className='absolute -right-4.5 top-3 bg-sky-500 border-white border text-white rounded-full p-0.5 shadow-md hover:bg-sky-400 z-50 flex items-center justify-center transition-colors'
+            className='bg-sky-500 border-white border text-white rounded-full p-0.5 shadow-md hover:bg-sky-400 z-50 flex items-center justify-center transition-colors'
           >
-            <span className='material-symbols-outlined text-sm'>
-              {isCollapsed ? 'chevron_right' : 'chevron_left'}
-            </span>
+            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
-        )}
+          </div>
 
         {/* Logo */}
 
         <div className='h-14 flex items-center justify-center border-b border-white/10 shrink-0'>
           <div className='w-9 h-9 rounded-xl bg-sky-400/20 border border-sky-400/30 flex items-center justify-center shrink-0 hover:cursor-pointer'>
-            {isCollapsed ? (
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className='bg-sky-500 border-white border text-white rounded-full p-0.5 shadow-md hover:bg-sky-400 z-50 flex items-center justify-center transition-colors'
-              >
-                <ChevronRight className='text-sm' />
-              </button>
-            ) : (
+            
               <Snowflake
                 className='text-sky-400'
                 size={22} // Standard size to match a 10rem/40px container
                 fill='currentColor' // Use this if you want the 'FILL 1' look
               />
-            )}
           </div>
           <AnimatePresence>
             {!isCollapsed && (

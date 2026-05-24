@@ -196,15 +196,10 @@ export const MessageItem = React.memo(
               className={cn(
                 'px-4 py-2.5 text-[0.95rem] leading-relaxed wrap-break-words shadow-sm relative',
                 isMe
-                  ? 'bg-primary text-white rounded-l-2xl'
-                  : 'bg-surface-container-high text-on-surface rounded-r-2xl',
+                  ? 'bg-primary text-on-primary rounded-2xl rounded-tr-none shadow-md'
+                  : 'bg-surface-container-highest text-on-surface rounded-2xl rounded-tl-none shadow-sm',
                 status === 'error' &&
                   'bg-error text-white border-2 border-error-container',
-                isFirstOfGroup && isMe && 'rounded-tr-2xl',
-                isLastOfGroup && isMe && 'rounded-br-2xl',
-
-                isFirstOfGroup && !isMe && 'rounded-tl-2xl',
-                isLastOfGroup && !isMe && 'rounded-bl-2xl',
               )}
             >
               {content}

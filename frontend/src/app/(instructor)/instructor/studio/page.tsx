@@ -210,14 +210,14 @@ export default function InstructorStudioPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <div key={course.id} className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 transition-all">
+              <div key={course?.id} className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 transition-all">
                 <Link
-                  href={`/instructor/studio/${course.id}`}
+                  href={`/instructor/studio/${course?.id}`}
                   className="block h-full"
                 >
                   <div className="h-36 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative">
-                    {course.thumbnailUrl ? (
-                      <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                    {course?.thumbnailUrl ? (
+                      <img src={course?.thumbnailUrl} alt={course?.title} className="w-full h-full object-cover" />
                     ) : (
                       <span className="material-symbols-outlined text-white/40 text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                         play_circle
@@ -228,24 +228,24 @@ export default function InstructorStudioPage() {
                         ? 'bg-green-100 text-green-700'
                         : 'bg-amber-100 text-amber-700'
                     }`}>
-                      {course.visibility === 'public' ? 'Công khai' : 'Riêng tư'}
+                      {course?.visibility === 'public' ? 'Công khai' : 'Riêng tư'}
                     </span>
                   </div>
                   <div className="p-5">
                     <h3 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-2">
-                      {course.title}
+                      {course?.title}
                     </h3>
                     <p className="text-slate-500 text-sm mt-1 line-clamp-2">
-                      {course.description || 'Chưa có mô tả'}
+                      {course?.description || 'Chưa có mô tả'}
                     </p>
                     <div className="flex items-center gap-4 mt-4 text-xs text-slate-400">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">list</span>
-                        {course._count.sections} phần
+                        {course?._count.sections} phần
                       </span>
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">group</span>
-                        {course._count.members} học viên
+                        {course?._count.members} học viên
                       </span>
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export default function InstructorStudioPage() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleDeleteCourse(course.id);
+                    handleDeleteCourse(course?.id);
                   }}
                   className="absolute top-3 left-3 p-1.5 bg-red-100 text-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-200 shadow-sm"
                   title="Xóa khóa học"

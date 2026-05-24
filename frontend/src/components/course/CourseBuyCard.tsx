@@ -99,14 +99,24 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
     }
     setEnrolling(true);
     try {
-      const res = await enrollCourse(courseId);
-      if (res.success) {
-        setEnrolled(true);
-        if (firstLessonId) {
-          router.push(`/learning/${courseId}/${firstLessonId}`);
+      if (course.price > 0) {
+        const res = await paymentApi.createPaymentUrl(courseId);
+        console.log(res)
+        if (res.paymentUrl) {
+          window.location.href = res.paymentUrl;
+        } else {
+          alert('Không thể tạo giao dịch thanh toán. Vui lòng thử lại.');
         }
       } else {
-        alert(res.error || 'Đăng ký thất bại');
+        const res = await enrollCourse(courseId);
+        if (res.success) {
+          setEnrolled(true);
+          if (firstLessonId) {
+            router.push(`/learning/${courseId}/${firstLessonId}`);
+          }
+        } else {
+          alert(res.error || 'Đăng ký thất bại');
+        }
       }
     } catch (err: any) {
       alert(err.message || 'Đã xảy ra lỗi');

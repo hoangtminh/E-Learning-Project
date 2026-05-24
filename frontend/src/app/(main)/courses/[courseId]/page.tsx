@@ -142,6 +142,7 @@ export default function CourseDetailPage() {
     if (!course) return;
     try {
       const res = await paymentApi.createPaymentUrl(course.id);
+      console.log(res);
       if (res.paymentUrl) {
         window.location.href = res.paymentUrl;
       }

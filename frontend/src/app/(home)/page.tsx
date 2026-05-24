@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
-import { getCourses, CourseListItem } from '@/api/courses';
+import { CourseListItem } from '@/api/courses';
+import { useCourses } from '@/contexts/CourseContext';
 
 // Fallback data when API returns no courses
 const fallbackCourses: CourseListItem[] = [
@@ -52,26 +53,12 @@ const fallbackCourses: CourseListItem[] = [
 ];
 
 export default function Home() {
-  const [courses, setCourses] = useState<CourseListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { courses: dbCourses, isLoading } = useCourses();
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const res = await getCourses({ limit: 6 });
-        if (res.success && res.data && res.data.data.length > 0) {
-          setCourses(res.data.data);
-        } else {
-          setCourses(fallbackCourses);
-        }
-      } catch {
-        setCourses(fallbackCourses);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchCourses();
-  }, []);
+  // Use first 6 courses from database, fall back to mock data if empty and not loading
+  const courses = dbCourses && dbCourses.length > 0
+    ? dbCourses.slice(0, 6)
+    : (isLoading ? [] : fallbackCourses);
 
   return (
     <div className='bg-white text-slate-900 selection:bg-sky-500/20 font-sans min-h-screen flex flex-col'>
@@ -116,19 +103,6 @@ export default function Home() {
                   <span className='material-symbols-outlined'>
                     arrow_forward
                   </span>
-                </Button>
-                <Button
-                  variant='outline'
-                  size='lg'
-                  asChild
-                  className='bg-sky-50/70 backdrop-blur-md border-sky-500/10 text-slate-700 rounded-xl font-bold text-lg hover:bg-white shadow-sm h-auto py-4 px-8 flex items-center space-x-2'
-                >
-                  <Link href='/call'>
-                    <span className='material-symbols-outlined'>
-                      video_camera_front
-                    </span>
-                    <span>Test WebRTC Call</span>
-                  </Link>
                 </Button>
               </div>
               <div className='flex items-center space-x-4 pt-4'>
@@ -256,30 +230,32 @@ export default function Home() {
                     className='h-full'
                   >
                     <Card className='bg-white border border-slate-100 group rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-sky-500/5 hover:border-sky-500/20 transition-all duration-300 flex flex-col h-full'>
-                      <div className='relative h-48 overflow-hidden'>
+                      <Link href={`/courses/${course?.id}`} className='block relative h-48 overflow-hidden'>
                         <img
                           className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                          alt={course.title}
+                          alt={course?.title}
                           src={
-                            course.thumbnailUrl ||
+                            course?.thumbnailUrl ||
                             'https://placehold.co/600x400/e0f2fe/0ea5e9?text=Course'
                           }
                         />
                         <div className='absolute top-4 left-4 bg-sky-50/70 backdrop-blur-md border border-sky-500/10 px-3 py-1 rounded-full text-[10px] font-bold text-sky-500 uppercase'>
-                          {course._count.sections} Chương
+                          {course?._count.sections} Chương
                         </div>
-                      </div>
+                      </Link>
                       <CardContent className='p-6 space-y-4 grow flex flex-col'>
-                        <h3 className='text-xl font-bold leading-tight text-slate-900 group-hover:text-sky-500 transition-colors'>
-                          {course.title}
-                        </h3>
+                        <Link href={`/courses/${course?.id}`}>
+                          <h3 className='text-xl font-bold leading-tight text-slate-900 group-hover:text-sky-500 transition-colors line-clamp-2'>
+                            {course?.title}
+                          </h3>
+                        </Link>
                         <div className='flex items-center space-x-4 text-sm text-slate-500'>
                           <div className='flex items-center space-x-1'>
                             <span className='material-symbols-outlined text-[16px]'>
                               person
                             </span>
                             <span>
-                              {(course.instructor ?? course.owner)?.fullName ||
+                              {(course?.instructor ?? course?.owner)?.fullName ||
                                 'Instructor'}
                             </span>
                           </div>
@@ -287,14 +263,14 @@ export default function Home() {
                             <span className='material-symbols-outlined text-[16px]'>
                               group
                             </span>
-                            <span>{course._count.members} học viên</span>
+                            <span>{course?._count.members} học viên</span>
                           </div>
                         </div>
                         <div className='pt-4 mt-auto border-t border-slate-50 flex justify-between items-center'>
                           <span className='text-2xl font-bold text-sky-500'>
-                            {Number(course.price) === 0
+                            {Number(course?.price) === 0
                               ? 'Miễn phí'
-                              : `$${Number(course.price).toFixed(2)}`}
+                              : `$${Number(course?.price).toFixed(2)}`}
                           </span>
                           <Button
                             variant='secondary'

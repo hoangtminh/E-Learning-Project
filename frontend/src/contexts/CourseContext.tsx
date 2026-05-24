@@ -46,6 +46,7 @@ export function CourseProvider({ children }: { children: ReactNode }) {
       if (res.success && res.data) {
         // Backend returns { data: CourseListItem[], meta: {...} }
         const payload = res.data as CourseListResponse;
+        console.log(payload)
         if (payload.data && Array.isArray(payload.data)) {
           setCourses(payload.data);
         } else if (Array.isArray(res.data)) {

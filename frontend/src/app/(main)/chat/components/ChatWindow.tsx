@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ChatInput from './ChatInput';
 import { MessageItem } from './MessageItem';
 import { ChatInfo } from './ChatInfo';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { callsApi, CallType } from '@/api/calls';
 import { toast } from 'sonner';
@@ -144,11 +145,11 @@ export const ChatWindow = () => {
 
   return (
     <div className='flex-1 flex overflow-hidden'>
-      <div className='flex-2 flex flex-col bg-background relative border-r border-outline-variant'>
+      <div className='flex-2 flex flex-col bg-surface-container-low relative border-r border-outline-variant/10'>
         {/* Header */}
-        <div className='h-12 px-6 flex items-center justify-between border-b border-outline-variant bg-surface-container-low/50 backdrop-blur-md z-10'>
+        <div className='h-14 px-6 flex items-center justify-between border-b border-outline-variant/60 bg-white shadow-[0_0_30px_rgba(125,211,252,0.05)] z-10'>
           <div className='flex items-center gap-3'>
-            <Avatar className='h-8 w-8 border border-outline-variant'>
+            <Avatar className='h-8 w-8 border border-outline-variant/20'>
               <AvatarImage
                 src={
                   currentConversation.members.find(
@@ -165,30 +166,30 @@ export const ChatWindow = () => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className='font-semibold text-on-surface'>
+              <div className='font-semibold text-on-surface text-sm'>
                 {currentConversation.title ||
                   currentConversation.members.find(
                     (m) => m.userId !== user?.userId,
                   )?.user.fullName ||
                   'Trò chuyện'}
               </div>
-              <div className='text-xs text-green-500 font-medium'>
+              <div className='text-[10px] text-green-600 font-medium'>
                 Đang hoạt động
               </div>
             </div>
           </div>
-          <div className='flex items-center gap-1'>
+          <div className='flex items-center gap-2'>
             <Button
               variant='ghost'
               size='icon'
               onClick={handleStartCall}
               disabled={isStartingCall}
-              className='text-on-surface-variant hover:bg-primary/5 rounded-full'
+              className='text-on-surface-variant bg-surface-container-low/70 hover:bg-surface-container-high rounded-xl h-9 w-9 transition-colors'
             >
               {isStartingCall ? (
-                <Loader2 className='size-5 animate-spin' />
+                <Loader2 className='size-4 animate-spin' />
               ) : (
-                <Phone size={20} />
+                <Phone size={18} />
               )}
             </Button>
             <Button
@@ -196,12 +197,12 @@ export const ChatWindow = () => {
               size='icon'
               onClick={handleStartCall}
               disabled={isStartingCall}
-              className='text-on-surface-variant hover:bg-primary/5 rounded-full'
+              className='text-on-surface-variant bg-surface-container-low/70 hover:bg-surface-container-high rounded-xl h-9 w-9 transition-colors'
             >
               {isStartingCall ? (
-                <Loader2 className='size-5 animate-spin' />
+                <Loader2 className='size-4 animate-spin' />
               ) : (
-                <Video size={20} />
+                <Video size={18} />
               )}
             </Button>
             <Button
@@ -209,11 +210,13 @@ export const ChatWindow = () => {
               size='icon'
               onClick={() => setShowInfo(!showInfo)}
               className={cn(
-                'text-on-surface-variant hover:bg-primary/5 rounded-full',
-                showInfo && 'bg-primary/10 text-primary',
+                'rounded-xl h-9 w-9 transition-all',
+                showInfo
+                  ? 'bg-primary text-on-primary hover:bg-primary-dim shadow-xs'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
               )}
             >
-              <MoreHorizontal size={22} />
+              <Info size={18} />
             </Button>
           </div>
         </div>
@@ -245,7 +248,7 @@ export const ChatWindow = () => {
             </div>
           )}
           {!hasMore && !messageLoadingError && messages.length > 0 && (
-            <div className='flex flex-col items-center py-8 opacity-50'>
+            <div className='flex flex-col items-center pt-8'>
               <div className='h-px w-full bg-linear-to-r from-transparent via-outline-variant to-transparent mb-4' />
               <p className='text-[11px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/40 bg-surface px-4 py-1 rounded-full border border-outline-variant/30'>
                 Đã tải hết tin nhắn
@@ -311,7 +314,19 @@ export const ChatWindow = () => {
       </div>
 
       {/* Chat Info Sidebar */}
-      {showInfo && <ChatInfo onClose={() => setShowInfo(false)} />}
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 288, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="h-full flex-shrink-0 overflow-hidden"
+          >
+            <ChatInfo onClose={() => setShowInfo(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

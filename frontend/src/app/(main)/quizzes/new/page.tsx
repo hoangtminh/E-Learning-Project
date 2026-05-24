@@ -1,6 +1,6 @@
 'use client';
 
-import { QuizEditor } from "@/components/main/quizzes/QuizEditor";
+import { QuizEditor } from "@/app/(main)/quizzes/components/QuizEditor";
 
 export default function NewQuizPage() {
   return (

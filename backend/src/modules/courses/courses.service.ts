@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -145,6 +146,11 @@ export class CoursesService {
 
     if (existing) {
       throw new ConflictException('You are already enrolled in this course');
+    }
+
+    // Block direct enrollment for paid courses
+    if (Number(course.price) > 0) {
+      throw new BadRequestException('This is a paid course. You must pay to enroll.');
     }
 
     // Private courses require invitation

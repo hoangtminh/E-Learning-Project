@@ -112,12 +112,12 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
               {crumb.href && i < displayBreadcrumbs.length - 1 ? (
                 <Link
                   href={crumb.href}
-                  className='text-slate-500 hover:text-slate-900 font-medium text-sm transition-colors'
+                  className='text-slate-500 hover:text-slate-900 font-medium text-base transition-colors'
                 >
                   {crumb.label}
                 </Link>
               ) : (
-                <h2 className='text-sm font-semibold text-slate-900 truncate max-w-xs'>
+                <h2 className='text-base font-semibold text-slate-900 truncate max-w-xs'>
                   {crumb.label}
                 </h2>
               )}
@@ -126,14 +126,6 @@ export function MainHeader({ breadcrumbs }: MainHeaderProps = {}) {
         </nav>
       </div>
       <div className='flex items-center gap-4'>
-        <div className='relative hidden md:block'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4' />
-          <input
-            className='bg-slate-100 border-none rounded-full py-1.5 pl-9 pr-4 text-sm text-slate-700 focus:ring-2 focus:ring-sky-500/20 outline-none w-48 transition-all'
-            placeholder='Tìm kiếm...'
-            type='text'
-          />
-        </div>
         <NotificationBell />
         <div className='h-6 w-px bg-slate-200 mx-1' />
         <DropdownMenu>

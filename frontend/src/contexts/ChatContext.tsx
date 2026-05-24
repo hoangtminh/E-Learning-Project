@@ -35,6 +35,7 @@ interface ChatContextType {
   removeMember: (conversationId: string, userId: string) => Promise<void>;
   showInfo: boolean;
   setShowInfo: (show: boolean) => void;
+  unreadConversations: Record<string, boolean>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -51,6 +52,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [messageLoadingError, setMessageLoadingError] = useState(false);
   const [page, setPage] = useState(1);
   const [showInfo, setShowInfo] = useState(false);
+  const [unreadConversations, setUnreadConversations] = useState<Record<string, boolean>>({});
 
   const fetchConversations = useCallback(async () => {
     setIsLoading(true);
@@ -119,9 +121,20 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setPage(1);
       setHasMore(true);
+
+      // Clear unread flag for this conversation
+      setUnreadConversations((prev) => {
+        if (prev[id]) {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        }
+        return prev;
+      });
+
       await loadMessages(id, 1);
     },
-    [conversations, hasMore, loadMessages],
+    [conversations, hasMore, loadMessages, setUnreadConversations],
   );
 
   const loadMoreMessages = useCallback(async () => {
@@ -275,6 +288,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             return [{ ...message, status: 'sent' }, ...prev];
           });
         }
+      } else {
+        // If message is from someone else and not current conversation, mark as unread
+        if (message.senderId !== user?.userId) {
+          setUnreadConversations((prev) => ({
+            ...prev,
+            [message.conversationId]: true,
+          }));
+        }
       }
       // 2. Update conversations list (sidebar) - Move to top
       setConversations((prev) => {
@@ -309,7 +330,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       chatSocket.off('new_message', handleNewMessage);
       notificationSocket.off('new_message', handleNewMessage);
     };
-  }, [user, currentConversation, isChatPage]);
+  }, [user, currentConversation, isChatPage, setUnreadConversations]);
 
   useEffect(() => {
     if (user && isChatPage) {
@@ -338,6 +359,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         removeMember,
         showInfo,
         setShowInfo,
+        unreadConversations,
       }}
     >
       {children}
