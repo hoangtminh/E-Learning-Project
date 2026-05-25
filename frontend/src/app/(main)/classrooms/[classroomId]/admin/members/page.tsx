@@ -8,6 +8,12 @@ import { toast } from 'sonner';
 import { appConfirm } from '@/components/ui/app-dialog-provider';
 import { callsApi } from '@/api/calls';
 import { addMembers } from '@/api/classroom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return '?';
@@ -19,11 +25,139 @@ function getInitials(name: string | null | undefined): string {
     .toUpperCase();
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   owner: { label: 'Chủ phòng', color: 'bg-indigo-100 text-indigo-700' },
   admin: { label: 'Quản trị', color: 'bg-sky-100 text-sky-700' },
   member: { label: 'Thành viên', color: 'bg-slate-100 text-slate-600' },
 };
+
+type EditableClassroomRole = 'admin' | 'member';
+
+type SearchUser = {
+  id: string;
+  email: string;
+  fullName: string | null;
+  avatarUrl?: string | null;
+};
+
+const EDITABLE_ROLE_OPTIONS: Array<{
+  value: EditableClassroomRole;
+  label: string;
+  icon: string;
+  triggerClass: string;
+  dotClass: string;
+  activeClass: string;
+}> = [
+  {
+    value: 'admin',
+    label: 'Quản trị',
+    icon: 'admin_panel_settings',
+    triggerClass: 'bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100',
+    dotClass: 'bg-sky-500',
+    activeClass: 'bg-sky-50 text-sky-700',
+  },
+  {
+    value: 'member',
+    label: 'Thành viên',
+    icon: 'person',
+    triggerClass: 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100',
+    dotClass: 'bg-slate-400',
+    activeClass: 'bg-slate-50 text-slate-700',
+  },
+];
+
+function MemberRoleDropdown({
+  value,
+  onChange,
+}: {
+  value: EditableClassroomRole;
+  onChange: (nextRole: EditableClassroomRole) => Promise<void> | void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const current =
+    EDITABLE_ROLE_OPTIONS.find((role) => role.value === value) ??
+    EDITABLE_ROLE_OPTIONS[1];
+
+  const handleSelect = async (nextRole: EditableClassroomRole) => {
+    setOpen(false);
+    if (nextRole === value || isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      await onChange(nextRole);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  return (
+    <DropdownMenu open={open} onOpenChange={(nextOpen) => !isUpdating && setOpen(nextOpen)}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type='button'
+          disabled={isUpdating}
+          className={[
+            'inline-flex h-8 min-w-[8.75rem] items-center justify-between gap-2 rounded-full border px-2.5 text-xs font-bold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-sky-500/20 disabled:cursor-wait disabled:opacity-70',
+            current.triggerClass,
+          ].join(' ')}
+        >
+          <span className='inline-flex min-w-0 items-center gap-1.5'>
+            <span className='material-symbols-outlined text-[16px] leading-none'>
+              {current.icon}
+            </span>
+            <span className='truncate'>{current.label}</span>
+          </span>
+          <span
+            className={[
+              'material-symbols-outlined text-[16px] leading-none transition-transform',
+              isUpdating ? 'animate-spin' : open ? 'rotate-180' : '',
+            ].join(' ')}
+          >
+            {isUpdating ? 'progress_activity' : 'expand_more'}
+          </span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align='end'
+        sideOffset={6}
+        className='w-44 rounded-xl border-slate-200 bg-white p-1 shadow-xl'
+      >
+        {EDITABLE_ROLE_OPTIONS.map((role) => {
+          const isActive = role.value === value;
+          return (
+            <DropdownMenuItem
+              key={role.value}
+              onSelect={(event) => {
+                event.preventDefault();
+                void handleSelect(role.value);
+              }}
+              className={[
+                'flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-bold transition-colors',
+                isActive ? role.activeClass : 'text-slate-600',
+              ].join(' ')}
+            >
+              <span className={['h-2 w-2 rounded-full', role.dotClass].join(' ')} />
+              <span className='material-symbols-outlined text-[16px] leading-none'>
+                {role.icon}
+              </span>
+              <span className='flex-1'>{role.label}</span>
+              {isActive && (
+                <span className='material-symbols-outlined text-[16px] leading-none'>
+                  check
+                </span>
+              )}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function AdminMembersPage() {
   const params = useParams();
@@ -38,7 +172,6 @@ export default function AdminMembersPage() {
     fetchPendingMembers,
     approveMember,
     rejectMember,
-    addMemberByEmail,
     updateMemberRole,
   } = useClassrooms();
   const { user } = useAuth();
@@ -50,9 +183,9 @@ export default function AdminMembersPage() {
   const [isAdding, setIsAdding] = useState(false);
 
   // Database autocomplete query matching
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<SearchUser[]>([]);
 
   const handleCloseAddModal = () => {
     setShowAddModal(false);
@@ -104,8 +237,8 @@ export default function AdminMembersPage() {
       } else {
         throw new Error(res.error || 'Thêm thành viên thất bại');
       }
-    } catch (err: any) {
-      setAddingError(err.message || 'Có lỗi xảy ra khi thêm thành viên');
+    } catch (err: unknown) {
+      setAddingError(getErrorMessage(err, 'Có lỗi xảy ra khi thêm thành viên'));
     } finally {
       setIsAdding(false);
     }
@@ -136,8 +269,8 @@ export default function AdminMembersPage() {
     try {
       await removeMember(classroomId, userId);
       toast.success(`Đã xóa thành viên ${name || ''} khỏi lớp học.`);
-    } catch (e: any) {
-      toast.error(e.message || 'Xóa thành viên thất bại');
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Xóa thành viên thất bại'));
     }
   };
 
@@ -145,8 +278,8 @@ export default function AdminMembersPage() {
     try {
       await approveMember(classroomId, userId);
       toast.success(`Đã duyệt thành viên ${name || ''} vào lớp học.`);
-    } catch (e: any) {
-      toast.error(e.message || 'Duyệt thành viên thất bại');
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Duyệt thành viên thất bại'));
     }
   };
 
@@ -154,8 +287,8 @@ export default function AdminMembersPage() {
     try {
       await rejectMember(classroomId, userId);
       toast.success(`Đã từ chối thành viên ${name || ''}.`);
-    } catch (e: any) {
-      toast.error(e.message || 'Từ chối thành viên thất bại');
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Từ chối thành viên thất bại'));
     }
   };
 
@@ -307,10 +440,9 @@ export default function AdminMembersPage() {
                     </div>
                     <div className='flex items-center gap-3 shrink-0'>
                       {m.role !== 'owner' && currentUserRole === 'owner' ? (
-                        <select
-                          value={m.role}
-                          onChange={async (e) => {
-                            const nextRole = e.target.value as 'admin' | 'member';
+                        <MemberRoleDropdown
+                          value={m.role as EditableClassroomRole}
+                          onChange={async (nextRole) => {
                             try {
                               await updateMemberRole(
                                 classroomId,
@@ -318,15 +450,11 @@ export default function AdminMembersPage() {
                                 nextRole,
                               );
                               toast.success('Cập nhật vai trò thành công!');
-                            } catch (e: any) {
-                              toast.error(e.message || 'Lỗi cập nhật vai trò');
+                            } catch (e: unknown) {
+                              toast.error(getErrorMessage(e, 'Lỗi cập nhật vai trò'));
                             }
                           }}
-                          className='text-xs font-semibold bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer shadow-sm hover:bg-slate-100/80'
-                        >
-                          <option value='member'>Thành viên</option>
-                          <option value='admin'>Quản trị viên</option>
-                        </select>
+                        />
                       ) : (
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${roleStyle.color}`}
