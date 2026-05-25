@@ -1,13 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCourse, CourseDetail } from '@/api/courses';
 import { CourseHero } from '@/components/course/CourseHero';
 import { CourseBuyCard } from '@/components/course/CourseBuyCard';
 import { CourseTabs } from '@/components/course/CourseTabs';
 import { stripHtml } from '@/lib/utils';
+import { appAlert } from '@/components/ui/app-dialog-provider';
+import { useAuth } from '@/contexts/AuthContext';
+import { enrollCourse, checkEnrollment } from '@/api/enrollment';
 
 import { paymentApi } from '@/api/payment';
 
@@ -21,7 +24,7 @@ const DEFAULT_AVATAR =
 /**
  * Map API CourseDetail data into the shape each UI component expects.
  */
-function mapCourseToHeroProps(course: CourseDetail) {
+function mapCourseToHeroProps(course: CourseDetail, enrolled: boolean) {
   const totalLessons = course.sections.reduce(
     (acc, s) => acc + s.lessons.length,
     0,
@@ -48,6 +51,7 @@ function mapCourseToHeroProps(course: CourseDetail) {
       name: (course.instructor ?? course.owner)?.fullName ?? 'Giảng viên',
       avatarUrl: (course.instructor ?? course.owner)?.avatarUrl ?? DEFAULT_AVATAR,
     },
+    enrolled,
   };
 }
 
@@ -62,11 +66,17 @@ function mapCourseToBuyCardProps(course: CourseDetail) {
 
 export default function CourseDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const courseId = params.courseId as string;
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [enrolled, setEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [firstLessonId, setFirstLessonId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!courseId) return;
@@ -78,6 +88,13 @@ export default function CourseDetailPage() {
         const res = await getCourse(courseId);
         if (res.success && res.data) {
           setCourse(res.data);
+          const sections = res.data.sections || [];
+          for (const section of sections) {
+            if (section.lessons && section.lessons.length > 0) {
+              setFirstLessonId(section.lessons[0].id);
+              break;
+            }
+          }
         } else {
           setError(res.error || 'Không tìm thấy khóa học');
         }
@@ -89,6 +106,16 @@ export default function CourseDetailPage() {
     };
     fetchCourse();
   }, [courseId]);
+
+  useEffect(() => {
+    if (courseId && user) {
+      checkEnrollment(courseId).then((res) => {
+        if (res.success && res.data?.enrolled) {
+          setEnrolled(true);
+        }
+      });
+    }
+  }, [courseId, user]);
 
   // ── Loading state ──
   if (isLoading) {
@@ -135,20 +162,43 @@ export default function CourseDetailPage() {
   }
 
   // ── Render ──
-  const heroProps = mapCourseToHeroProps(course);
+  const heroProps = mapCourseToHeroProps(course, enrolled);
   const buyCardProps = mapCourseToBuyCardProps(course);
 
-  const handleMobileBuy = async () => {
+  const handleEnroll = async () => {
     if (!course) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setEnrolling(true);
     try {
-      const res = await paymentApi.createPaymentUrl(course.id);
-      console.log(res);
-      if (res.paymentUrl) {
-        window.location.href = res.paymentUrl;
+      if (Number(course.price) > 0) {
+        const res = await paymentApi.createPaymentUrl(course.id);
+        if (res.paymentUrl) {
+          window.location.href = res.paymentUrl;
+        } else {
+          void appAlert('Không thể tạo giao dịch thanh toán. Vui lòng thử lại.');
+        }
+      } else {
+        const res = await enrollCourse(course.id);
+        if (res.success) {
+          setEnrolled(true);
+          void appAlert('Đăng ký khóa học thành công!');
+        } else {
+          void appAlert(res.error || 'Đăng ký thất bại');
+        }
       }
-    } catch (error) {
-      console.error('Lỗi khi tạo payment request', error);
-      alert('Không thể tạo giao dịch. Vui lòng thử lại.');
+    } catch (err: any) {
+      void appAlert(err.message || 'Đã xảy ra lỗi');
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const handleContinueLearning = () => {
+    if (course && firstLessonId) {
+      router.push(`/learning/${course.id}/${firstLessonId}`);
     }
   };
 
@@ -157,7 +207,7 @@ export default function CourseDetailPage() {
       {/* Hero banner */}
       <CourseHero 
         course={heroProps} 
-        onBuy={handleMobileBuy} 
+        onBuy={handleEnroll} 
         price={Number(course.price)} 
       />
 
@@ -170,7 +220,13 @@ export default function CourseDetailPage() {
 
         {/* Right column: Buy card */}
         <aside className="hidden lg:block">
-          <CourseBuyCard courseId={course.id} course={buyCardProps} />
+          <CourseBuyCard 
+            courseId={course.id} 
+            course={buyCardProps} 
+            enrolled={enrolled} 
+            onEnroll={handleEnroll} 
+            enrolling={enrolling} 
+          />
         </aside>
       </div>
 
@@ -188,19 +244,34 @@ export default function CourseDetailPage() {
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={handleMobileBuy}
-          className="flex-1 max-w-[200px] py-3 bg-[#006382] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#006382]/25 hover:bg-[#005672] transition-all active:scale-95 flex items-center justify-center gap-2"
-        >
-          <span
-            className="material-symbols-outlined text-lg"
-            style={{ fontVariationSettings: "'FILL' 1" }}
+        {enrolled ? (
+          <button
+            type="button"
+            onClick={handleContinueLearning}
+            disabled={!firstLessonId}
+            className="flex-1 max-w-[200px] py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            bolt
-          </span>
-          Đăng ký ngay
-        </button>
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
+              play_arrow
+            </span>
+            Vào học
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleEnroll}
+            disabled={enrolling}
+            className="flex-1 max-w-[200px] py-3 bg-[#006382] hover:bg-[#005672] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#006382]/25 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <span
+              className="material-symbols-outlined text-lg"
+              style={{ fontVariationSettings: "'FILL' 1'" }}
+            >
+              bolt
+            </span>
+            {enrolling ? 'Đang xử lý...' : 'Đăng ký ngay'}
+          </button>
+        )}
       </div>
     </div>
   );

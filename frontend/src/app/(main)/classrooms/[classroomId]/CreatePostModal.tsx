@@ -44,7 +44,7 @@ export function CreatePostModal({
           </span>
           Tạo Thông Báo Mới
         </h2>
-        
+
         <RichTextEditor
           id='create-post-editor'
           value={newContent}

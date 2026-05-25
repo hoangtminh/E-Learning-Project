@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { UserPlus, LogOut, Info, Settings, Shield, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 export const ChatInfo = ({ onClose }: { onClose: () => void }) => {
   const { currentConversation, removeMember } = useChat();
@@ -22,7 +23,7 @@ export const ChatInfo = ({ onClose }: { onClose: () => void }) => {
   const handleLeave = async () => {
     if (
       user &&
-      window.confirm('Bạn có chắc chắn muốn rời khỏi cuộc trò chuyện này?')
+      (await appConfirm({ title: 'Rời cuộc trò chuyện?', description: 'Bạn có chắc chắn muốn rời khỏi cuộc trò chuyện này?', confirmLabel: 'Rời', variant: 'destructive' }))
     ) {
       await removeMember(currentConversation.id, user.userId);
       onClose();

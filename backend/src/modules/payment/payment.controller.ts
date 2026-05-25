@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Req, UseGuards, Param } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { GetCurrentUser } from '../../common/decorators/current-user.decorator';
@@ -22,6 +22,24 @@ export class PaymentController {
       req.ip || '127.0.0.1';
 
     return this.paymentService.createPaymentUrl(user.userId, courseId, ipAddr);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('transaction/:txnRef')
+  async getTransaction(
+    @GetCurrentUser() user: any,
+    @Param('txnRef') txnRef: string
+  ) {
+    return this.paymentService.getTransactionByTxnRef(user.userId, txnRef);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('vnpay_return')
+  async confirmVnpayReturn(
+    @GetCurrentUser() user: any,
+    @Body() body: any
+  ) {
+    return this.paymentService.confirmVnpayReturn(user.userId, body);
   }
 
   @Public()

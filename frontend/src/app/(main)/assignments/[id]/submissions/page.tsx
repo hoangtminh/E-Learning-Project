@@ -474,4 +474,4 @@ export default function SubmissionsPage() {
     </TaskProvider>
   );
 }
-export interface UsersProps {}
+export interface UsersProps { }

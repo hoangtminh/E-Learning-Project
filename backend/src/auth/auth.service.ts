@@ -69,11 +69,18 @@ export class AuthService {
         fullName: true,
         passwordHash: true,
         role: true,
+        isSuspended: true,
       },
     });
 
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    if (user.isSuspended) {
+      throw new UnauthorizedException(
+        'Tài khoản đang bị khóa, vui lòng liên hệ quản trị viên hệ thống',
+      );
     }
 
     const isValidPassword = await bcrypt.compare(

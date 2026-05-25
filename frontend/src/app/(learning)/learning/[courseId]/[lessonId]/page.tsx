@@ -95,36 +95,30 @@ export default function LearningLessonPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f1524]">
+      <div className="min-h-full flex items-center justify-center bg-[#0f1524]">
         <div className="w-8 h-8 border-4 border-indigo-800 border-t-indigo-400 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f1524] text-white flex flex-col">
-      {/* Top bar */}
+    <div className="min-h-full bg-[#0f1524] text-white flex flex-col">
+      {/* Top bar - chỉ back + progress */}
       <header className="bg-[#161d2e] border-b border-white/10 px-4 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link
-            href={`/courses/${courseId}`}
-            className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors text-sm shrink-0"
-          >
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
-          </Link>
-          <div className="min-w-0">
-            <h1 className="text-sm font-semibold text-white truncate">{course?.title}</h1>
-            <p className="text-[11px] text-slate-400 truncate">{currentLesson?.title}</p>
+        <Link
+          href={`/learning/${courseId}`}
+          className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm"
+        >
+          <span className="material-symbols-outlined text-lg">arrow_back</span>
+          <span className="hidden sm:inline">Danh sách bài</span>
+        </Link>
+
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          <span>{currentIndex + 1}/{totalLessons}</span>
+          <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-indigo-500 rounded-full transition-all" style={{ width: `${completedPercent}%` }} />
           </div>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
-            <span>{currentIndex + 1}/{totalLessons}</span>
-            <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-indigo-500 rounded-full transition-all" style={{ width: `${completedPercent}%` }} />
-            </div>
-            <span>{completedPercent}%</span>
-          </div>
+          <span>{completedPercent}%</span>
         </div>
       </header>
 
@@ -213,11 +207,10 @@ export default function LearningLessonPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-400'
                       : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
+                    }`}
                 >
                   <span className="material-symbols-outlined text-base">{tab.icon}</span>
                   {tab.label}
@@ -277,11 +270,10 @@ export default function LearningLessonPage() {
                         <Link
                           key={lesson.id}
                           href={`/learning/${courseId}/${lesson.id}`}
-                          className={`flex items-center gap-3 px-6 py-2.5 text-sm transition-colors ${
-                            isActive
+                          className={`flex items-center gap-3 px-6 py-2.5 text-sm transition-colors ${isActive
                               ? 'bg-indigo-500/15 text-indigo-400 border-l-2 border-indigo-500'
                               : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border-l-2 border-transparent'
-                          }`}
+                            }`}
                         >
                           <span className="material-symbols-outlined text-base shrink-0" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
                             {lesson.type === 'video' ? 'play_circle' : lesson.type === 'quiz' ? 'quiz' : 'article'}

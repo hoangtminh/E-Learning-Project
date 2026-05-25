@@ -8,7 +8,7 @@ import React, {
   useCallback,
 } from 'react';
 import { useAuth } from './AuthContext';
-import { chatSocket, notificationSocket } from '@/lib/socket';
+import { chatSocket } from '@/lib/socket';
 import { usePathname } from 'next/navigation';
 import { chatApi, Message, Conversation, ConversationType } from '@/api/chat';
 
@@ -163,8 +163,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         fileUrl: null,
         sender: {
           id: user.userId,
-          fullName: user.fullname,
-          avatarUrl: user.imageUrl || null,
+          fullName: user.fullName,
+          avatarUrl: user.avatarUrl || null,
         },
         status: 'pending',
       };
@@ -261,16 +261,13 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!user || !isChatPage) {
       if (chatSocket.connected) chatSocket.disconnect();
-      if (notificationSocket.connected) notificationSocket.disconnect();
       return;
     }
 
     // Configure and connect sockets
     chatSocket.auth = { userId: user.userId };
-    notificationSocket.auth = { userId: user.userId };
 
     if (!chatSocket.connected) chatSocket.connect();
-    if (!notificationSocket.connected) notificationSocket.connect();
 
     const handleNewMessage = (message: Message) => {
       console.log('Received new message:', message);
@@ -324,11 +321,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     chatSocket.on('new_message', handleNewMessage);
-    notificationSocket.on('new_message', handleNewMessage);
 
     return () => {
       chatSocket.off('new_message', handleNewMessage);
-      notificationSocket.off('new_message', handleNewMessage);
     };
   }, [user, currentConversation, isChatPage, setUnreadConversations]);
 

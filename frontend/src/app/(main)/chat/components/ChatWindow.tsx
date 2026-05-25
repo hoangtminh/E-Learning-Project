@@ -29,7 +29,7 @@ import { MessageItem } from './MessageItem';
 import { ChatInfo } from './ChatInfo';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { callsApi, CallType } from '@/api/calls';
+import { callsApi, CallStatus, CallType } from '@/api/calls';
 import { toast } from 'sonner';
 
 export const ChatWindow = () => {
@@ -49,6 +49,53 @@ export const ChatWindow = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [prevScrollHeight, setPrevScrollHeight] = useState(0);
   const [isStartingCall, setIsStartingCall] = useState(false);
+  const [callStatuses, setCallStatuses] = useState<Record<string, CallStatus>>({});
+
+
+  const callInvitationIds = useMemo(() => {
+    const ids = new Set<string>();
+    messages.forEach((message) => {
+      const content = message.content || '';
+      if (!content.startsWith('[CALL_INVITATION]:')) return;
+      const [, callId] = content.split(':');
+      if (callId) ids.add(callId);
+    });
+    return Array.from(ids);
+  }, [messages]);
+
+  useEffect(() => {
+    if (callInvitationIds.length === 0) return;
+
+    let cancelled = false;
+
+    const refreshCallStatuses = async () => {
+      const entries = await Promise.all(
+        callInvitationIds.map(async (callId) => {
+          const res = await callsApi.getCall(callId);
+          return res.success && res.data
+            ? ([callId, res.data.status] as const)
+            : null;
+        }),
+      );
+
+      if (cancelled) return;
+      setCallStatuses((prev) => {
+        const next = { ...prev };
+        entries.forEach((entry) => {
+          if (entry) next[entry[0]] = entry[1];
+        });
+        return next;
+      });
+    };
+
+    void refreshCallStatuses();
+    const interval = window.setInterval(refreshCallStatuses, 30000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [callInvitationIds]);
 
   const handleStartCall = async () => {
     if (!currentConversation?.id) return;
@@ -71,8 +118,8 @@ export const ChatWindow = () => {
       } else {
         toast.error(res.error || 'Khởi tạo cuộc gọi thất bại!');
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi hệ thống khi bắt đầu cuộc gọi.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi hệ thống khi bắt đầu cuộc gọi.');
     } finally {
       setIsStartingCall(false);
     }
@@ -280,6 +327,10 @@ export const ChatWindow = () => {
                 showTimeSeparator = true;
               }
 
+              const callId = msg.content?.startsWith('[CALL_INVITATION]:')
+                ? msg.content.split(':')[1]
+                : undefined;
+
               return (
                 <React.Fragment key={msg.id}>
                   <MessageItem
@@ -294,6 +345,7 @@ export const ChatWindow = () => {
                     status={msg.status}
                     createdAt={msg.createdAt}
                     showTimeSeparator={showTimeSeparator}
+                    callStatus={callId ? callStatuses[callId] : undefined}
                   />
                   {showTimeSeparator && msg.createdAt && (
                     <div className='flex justify-center my-6'>

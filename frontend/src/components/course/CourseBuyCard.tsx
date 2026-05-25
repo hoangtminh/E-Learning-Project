@@ -5,16 +5,20 @@ import { useRouter } from 'next/navigation';
 import { enrollCourse, checkEnrollment } from '@/api/enrollment';
 import { getCourse } from '@/api/courses';
 import { useAuth } from '@/contexts/AuthContext';
+import { appAlert } from '@/components/ui/app-dialog-provider';
 
 import { paymentApi } from '@/api/payment';
 
 interface CourseBuyCardProps {
+  courseId: string;
   course: {
     price: number;
     originalPrice: number;
     thumbnailUrl: string;
   };
-  courseId?: string;
+  enrolled?: boolean;
+  onEnroll?: () => void;
+  enrolling?: boolean;
 }
 
 const includes = [
@@ -59,7 +63,13 @@ function useCountdown(durationMs: number) {
   return `${d} ngày ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
+export function CourseBuyCard({ 
+  course, 
+  courseId, 
+  enrolled: propsEnrolled, 
+  onEnroll: propsOnEnroll, 
+  enrolling: propsEnrolling 
+}: CourseBuyCardProps) {
   const discount = Math.round((1 - course.price / course.originalPrice) * 100);
   const countdown = useCountdown(38528000);
   const router = useRouter();
@@ -68,14 +78,29 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
   const [enrolled, setEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [firstLessonId, setFirstLessonId] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (propsEnrolled !== undefined) {
+      setEnrolled(propsEnrolled);
+    }
+  }, [propsEnrolled]);
+
+  useEffect(() => {
+    if (propsEnrolling !== undefined) {
+      setEnrolling(propsEnrolling);
+    }
+  }, [propsEnrolling]);
 
   useEffect(() => {
     if (courseId && user) {
-      checkEnrollment(courseId).then((res) => {
-        if (res.success && res.data?.enrolled) {
-          setEnrolled(true);
-        }
-      });
+      if (propsEnrolled === undefined) {
+        checkEnrollment(courseId).then((res) => {
+          if (res.success && res.data?.enrolled) {
+            setEnrolled(true);
+          }
+        });
+      }
       // Get first lesson for "continue learning" link
       getCourse(courseId).then((res) => {
         if (res.success && res.data) {
@@ -89,9 +114,13 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
         }
       });
     }
-  }, [courseId, user]);
+  }, [courseId, user, propsEnrolled]);
 
   const handleEnroll = async () => {
+    if (propsOnEnroll) {
+      await propsOnEnroll();
+      return;
+    }
     if (!courseId) return;
     if (!user) {
       router.push('/login');
@@ -105,7 +134,7 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
         if (res.paymentUrl) {
           window.location.href = res.paymentUrl;
         } else {
-          alert('Không thể tạo giao dịch thanh toán. Vui lòng thử lại.');
+          void appAlert('Không thể tạo giao dịch thanh toán. Vui lòng thử lại.');
         }
       } else {
         const res = await enrollCourse(courseId);
@@ -115,13 +144,37 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
             router.push(`/learning/${courseId}/${firstLessonId}`);
           }
         } else {
-          alert(res.error || 'Đăng ký thất bại');
+          void appAlert(res.error || 'Đăng ký thất bại');
         }
       }
     } catch (err: any) {
-      alert(err.message || 'Đã xảy ra lỗi');
+      void appAlert(err.message || 'Đã xảy ra lỗi');
     } finally {
       setEnrolling(false);
+    }
+  };
+
+  const handleBuy = async () => {
+    if (propsOnEnroll) {
+      await propsOnEnroll();
+      return;
+    }
+    if (!courseId) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    try {
+      setIsProcessing(true);
+      const res = await paymentApi.createPaymentUrl(courseId);
+      if (res.paymentUrl) {
+        window.location.href = res.paymentUrl;
+      }
+    } catch (error) {
+      console.error('Lỗi khi tạo payment request', error);
+      void appAlert('Không thể tạo giao dịch. Vui lòng thử lại.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -194,20 +247,17 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
               Tiếp tục học
             </button>
           ) : (
-            <>
-              <button
-                onClick={handleEnroll}
-                disabled={enrolling}
-                type="button"
-                className="w-full py-4 bg-[#006382] text-white font-black text-base rounded-2xl shadow-xl shadow-[#006382]/30 hover:bg-[#005672] transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-                {enrolling ? 'Đang xử lý...' : 'Đăng ký ngay'}
-              </button>
-              <button type="button" className="w-full py-3 border-2 border-[#006382] text-[#006382] font-bold rounded-2xl hover:bg-[#006382]/5 transition-all active:scale-[0.98]">
-                Thử miễn phí 7 ngày
-              </button>
-            </>
+            <button
+              onClick={course.price > 0 ? handleBuy : handleEnroll}
+              disabled={course.price > 0 ? isProcessing : enrolling}
+              type="button"
+              className="w-full py-4 bg-[#006382] text-white font-black text-base rounded-2xl shadow-xl shadow-[#006382]/30 hover:bg-[#005672] transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-75 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                {(course.price > 0 ? isProcessing : enrolling) ? 'hourglass_empty' : 'bolt'}
+              </span>
+              {(course.price > 0 ? isProcessing : enrolling) ? 'Đang xử lý...' : 'Đăng ký ngay'}
+            </button>
           )}
 
           <p className="text-center text-[11px] text-[#525b72] flex items-center justify-center gap-1">

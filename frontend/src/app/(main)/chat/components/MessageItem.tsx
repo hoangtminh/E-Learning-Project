@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Video } from 'lucide-react';
+import { CallStatus } from '@/api/calls';
 
 interface MessageItemProps {
   id: string;
@@ -18,6 +19,7 @@ interface MessageItemProps {
   status?: 'pending' | 'sent' | 'error';
   createdAt?: string;
   showTimeSeparator?: boolean;
+  callStatus?: CallStatus;
 }
 
 export const MessageItem = React.memo(
@@ -32,6 +34,7 @@ export const MessageItem = React.memo(
     status,
     createdAt,
     showTimeSeparator,
+    callStatus,
   }: MessageItemProps) => {
     const formatTime = (dateStr?: string) => {
       if (!dateStr) return '';
@@ -47,12 +50,23 @@ export const MessageItem = React.memo(
     let callTitle = 'Cuộc họp nhóm';
 
     if (isCallInvitation) {
-      const parts = content.split(':');
-      callId = parts[1] || '';
-      callTitle = parts[2] || 'Cuộc họp nhóm';
+      const [, parsedCallId, ...titleParts] = content.split(':');
+      callId = parsedCallId || '';
+      callTitle = titleParts.join(':') || 'Cuộc họp nhóm';
     }
 
     if (isCallInvitation) {
+      const isCheckingCall = callStatus === undefined;
+      const hasEnded = callStatus === CallStatus.ENDED || callStatus === CallStatus.CANCELED;
+      const canJoinCall = callStatus === CallStatus.ONGOING;
+      const statusLabel = isCheckingCall
+        ? 'Đang kiểm tra trạng thái cuộc họp...'
+        : hasEnded
+          ? 'Cuộc họp đã kết thúc'
+          : canJoinCall
+            ? 'Cuộc họp trực tuyến đang diễn ra'
+            : 'Cuộc họp chưa sẵn sàng';
+
       return (
         <div
           className={cn(
@@ -89,30 +103,34 @@ export const MessageItem = React.memo(
             <div className='flex items-center gap-2'>
               <div
                 className={cn(
-                  'p-4 rounded-3xl border shadow-md flex flex-col gap-4 min-w-[260px] max-w-[320px] transition-all hover:shadow-xl hover:scale-[1.02] duration-300 relative',
-                  isMe
-                    ? 'bg-linear-to-br from-primary/95 to-primary text-white border-primary/20'
-                    : 'bg-linear-to-br from-surface-container-high to-surface-container border-outline-variant/30 text-on-surface',
+                  'p-4 rounded-3xl border shadow-md flex flex-col gap-4 min-w-[260px] max-w-[320px] transition-all duration-300 relative',
+                  hasEnded || isCheckingCall
+                    ? 'bg-slate-100 text-slate-500 border-slate-200'
+                    : isMe
+                      ? 'bg-linear-to-br from-primary/95 to-primary text-white border-primary/20 hover:shadow-xl hover:scale-[1.02]'
+                      : 'bg-linear-to-br from-surface-container-high to-surface-container border-outline-variant/30 text-on-surface hover:shadow-xl hover:scale-[1.02]',
                 )}
               >
                 <div className='flex items-center gap-3.5'>
                   <div
                     className={cn(
                       'w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm relative overflow-hidden',
-                      isMe ? 'bg-white/20' : 'bg-primary/10',
+                      hasEnded || isCheckingCall ? 'bg-slate-200' : isMe ? 'bg-white/20' : 'bg-primary/10',
                     )}
                   >
-                    <span className='absolute inset-0 bg-primary/5 animate-ping opacity-70 rounded-full' />
+                    {canJoinCall && (
+                      <span className='absolute inset-0 bg-primary/5 animate-ping opacity-70 rounded-full' />
+                    )}
                     <Video
                       size={20}
-                      className={isMe ? 'text-white' : 'text-primary'}
+                      className={hasEnded || isCheckingCall ? 'text-slate-500' : isMe ? 'text-white' : 'text-primary'}
                     />
                   </div>
                   <div className='flex-1 min-w-0'>
                     <h4
                       className={cn(
                         'text-sm font-bold truncate',
-                        isMe ? 'text-white' : 'text-on-surface',
+                        hasEnded || isCheckingCall ? 'text-slate-700' : isMe ? 'text-white' : 'text-on-surface',
                       )}
                     >
                       {callTitle}
@@ -120,27 +138,34 @@ export const MessageItem = React.memo(
                     <p
                       className={cn(
                         'text-[10px] mt-0.5 font-medium flex items-center gap-1.5',
-                        isMe ? 'text-white/80' : 'text-primary',
+                        hasEnded || isCheckingCall ? 'text-slate-500' : isMe ? 'text-white/80' : 'text-primary',
                       )}
                     >
-                      <span className='w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse' />
-                      <span>Cuộc họp trực tuyến đang diễn ra</span>
+                      <span
+                        className={cn(
+                          'w-1.5 h-1.5 rounded-full',
+                          canJoinCall ? 'bg-green-500 animate-pulse' : 'bg-slate-400',
+                        )}
+                      />
+                      <span>{statusLabel}</span>
                     </p>
                   </div>
                 </div>
 
-                <Button
-                  onClick={() => window.open(`/call/${callId}`, '_blank')}
-                  className={cn(
-                    'w-full py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md border',
-                    isMe
-                      ? 'bg-white text-primary hover:bg-white/95 hover:shadow-lg border-white/10'
-                      : 'bg-primary text-white hover:bg-primary-dim hover:shadow-lg border-primary/15',
-                  )}
-                >
-                  <Video size={14} />
-                  Tham gia cuộc họp
-                </Button>
+                {canJoinCall && (
+                  <Button
+                    onClick={() => window.open(`/call/${callId}`, '_blank')}
+                    className={cn(
+                      'w-full py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md border',
+                      isMe
+                        ? 'bg-white text-primary hover:bg-white/95 hover:shadow-lg border-white/10'
+                        : 'bg-primary text-white hover:bg-primary-dim hover:shadow-lg border-primary/15',
+                    )}
+                  >
+                    <Video size={14} />
+                    Tham gia cuộc họp
+                  </Button>
+                )}
 
                 {/* Time on hover */}
                 <div
@@ -226,3 +251,5 @@ export const MessageItem = React.memo(
     );
   },
 );
+
+MessageItem.displayName = "MessageItem";

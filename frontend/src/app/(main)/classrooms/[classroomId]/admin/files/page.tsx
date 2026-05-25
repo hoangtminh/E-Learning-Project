@@ -13,6 +13,7 @@ import {
   createPost,
 } from '@/api/classroom';
 import { toast } from 'sonner';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 export default function AdminFilesPage() {
   const params = useParams();
@@ -145,7 +146,7 @@ export default function AdminFilesPage() {
   };
 
   const handleDelete = async (fileId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa file này?')) return;
+    if (!(await appConfirm({ title: 'Xóa file?', description: 'Bạn có chắc chắn muốn xóa file này?', confirmLabel: 'Xóa file', variant: 'destructive' }))) return;
 
     try {
       await deleteFile(classroomId, fileId);

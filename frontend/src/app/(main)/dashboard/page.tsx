@@ -3,28 +3,37 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMyEnrolledCourses } from '@/api/enrollment';
+import { getUnfinishedStats, UnfinishedStats } from '@/api/assignments';
 import Link from 'next/link';
 import { stripHtml } from '@/lib/utils';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [courses, setCourses] = useState<any[]>([]);
+  const [stats, setStats] = useState<UnfinishedStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchData = async () => {
       try {
-        const res = await getMyEnrolledCourses();
-        if (res.data) {
-          setCourses(res.data);
+        const [coursesRes, statsRes] = await Promise.all([
+          getMyEnrolledCourses(),
+          getUnfinishedStats().catch(() => null)
+        ]);
+
+        if (coursesRes.data) {
+          setCourses(coursesRes.data);
+        }
+        if (statsRes) {
+          setStats(statsRes);
         }
       } catch (error) {
-        console.error('Error fetching enrolled courses:', error);
+        console.error('Error fetching dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchCourses();
+    fetchData();
   }, []);
 
   return (
@@ -45,7 +54,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-[#a3adc7]/20 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
           <div className="w-12 h-12 rounded-xl bg-[#006382]/10 flex items-center justify-center text-[#006382]">
             <span className="material-symbols-outlined text-2xl">school</span>
@@ -53,6 +62,15 @@ export default function Dashboard() {
           <div>
             <p className="text-sm font-medium text-[#525b72]">Khóa học đã đăng ký</p>
             <p className="text-2xl font-black text-[#252f43]">{courses.length}</p>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-[#a3adc7]/20 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+            <span className="material-symbols-outlined text-2xl">assignment_late</span>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-[#525b72]">Bài tập chưa làm</p>
+            <p className="text-2xl font-black text-[#252f43]">{stats?.totalUnfinished ?? 0}</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-[#a3adc7]/20 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">

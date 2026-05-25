@@ -8,6 +8,7 @@ import {
   getMyTeachingCourses,
 } from '@/api/instructor';
 import { createCourse, deleteCourse } from '@/api/courses';
+import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
 
 export default function InstructorStudioPage() {
   const { user } = useAuth();
@@ -16,7 +17,8 @@ export default function InstructorStudioPage() {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'private' | 'sale'>('public');
+  const [price, setPrice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchCourses = async () => {
@@ -39,6 +41,14 @@ export default function InstructorStudioPage() {
 
   const handleCreate = async () => {
     if (!title.trim()) return;
+
+    const parsedPrice = parseFloat(price.replace(/,/g, ''));
+    const finalPrice = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 0;
+
+    // Nếu nhập giá > 0 mà chọn public → tự đổi sang sale
+    const finalVisibility =
+      finalPrice > 0 && visibility === 'public' ? 'sale' : visibility;
+
     setIsSubmitting(true);
     try {
       const slug = title
@@ -51,48 +61,51 @@ export default function InstructorStudioPage() {
         title: title.trim(),
         slug,
         description: description.trim() || undefined,
-        visibility,
+        visibility: finalVisibility,
+        price: finalPrice > 0 ? finalPrice : undefined,
       });
 
       if (res.success) {
         setShowForm(false);
         setTitle('');
         setDescription('');
+        setPrice('');
+        setVisibility('public');
         await fetchCourses();
       } else {
-        alert(res.error || 'Tạo khóa học thất bại');
+        void appAlert(res.error || 'Tạo khóa học thất bại');
       }
     } catch (err: any) {
-      alert(err.message || 'Đã xảy ra lỗi');
+      void appAlert(err.message || 'Đã xảy ra lỗi');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteCourse = async (courseId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa khóa học này? Mọi dữ liệu liên quan sẽ bị xóa vĩnh viễn.')) return;
+    if (!(await appConfirm({ title: 'Xóa khóa học?', description: 'Bạn có chắc chắn muốn xóa khóa học này? Mọi dữ liệu liên quan sẽ bị xóa vĩnh viễn.', confirmLabel: 'Xóa khóa học', variant: 'destructive' }))) return;
     try {
       const res = await deleteCourse(courseId);
       if (res.success) {
         setCourses((prev) => prev.filter((c) => c.id !== courseId));
       } else {
-        alert(res.error || 'Xóa khóa học thất bại');
+        void appAlert(res.error || 'Xóa khóa học thất bại');
       }
     } catch (err: any) {
-      alert(err.message || 'Đã xảy ra lỗi khi xóa khóa học');
+      void appAlert(err.message || 'Đã xảy ra lỗi khi xóa khóa học');
     }
   };
 
   if (!user || (user.role !== 'instructor' && user.role !== 'admin')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-full flex items-center justify-center bg-slate-50">
         <div className="text-center space-y-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md">
           <span className="material-symbols-outlined text-5xl text-slate-300">lock</span>
           <h1 className="text-xl font-bold text-slate-800">Không có quyền truy cập</h1>
           <p className="text-slate-500 text-sm">
             Khu vực này dành cho giảng viên. Liên hệ admin để được cấp quyền instructor.
           </p>
-          <Link href="/dashboard" className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors">
+          <Link href="/dashboard" className="inline-block px-4 py-2 bg-sky-500 text-white rounded-lg text-sm font-semibold hover:bg-sky-600 transition-colors">
             Về Dashboard
           </Link>
         </div>
@@ -101,20 +114,20 @@ export default function InstructorStudioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-full bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-              <span className="material-symbols-outlined text-indigo-600 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              <span className="material-symbols-outlined text-sky-600 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
               Instructor Studio
             </h1>
             <p className="text-slate-500 text-sm mt-1">Quản lý khóa học của bạn</p>
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all shadow-sm"
           >
             <span className="material-symbols-outlined text-lg">add</span>
             Tạo khóa học mới
@@ -143,7 +156,7 @@ export default function InstructorStudioPage() {
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
                     placeholder="Ví dụ: Lập trình Web với React"
                   />
                 </div>
@@ -152,7 +165,7 @@ export default function InstructorStudioPage() {
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 resize-none"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800 resize-none"
                     placeholder="Mô tả ngắn gọn về khóa học..."
                     rows={3}
                   />
@@ -161,13 +174,48 @@ export default function InstructorStudioPage() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Chế độ hiển thị</label>
                   <select
                     value={visibility}
-                    onChange={(e) => setVisibility(e.target.value as 'public' | 'private')}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                    onChange={(e) => setVisibility(e.target.value as 'public' | 'private' | 'sale')}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
                   >
-                    <option value="public">Công khai — ai cũng có thể tìm thấy</option>
+                    <option value="public">Công khai miễn phí — ai cũng truy cập được</option>
+                    <option value="sale">Công khai có phí — yêu cầu thanh toán</option>
                     <option value="private">Riêng tư — chỉ qua lời mời</option>
                   </select>
                 </div>
+
+                {/* Ô nhập giá — hiện khi chọn "Có phí" hoặc public (để tùy chọn) */}
+                {(visibility === 'sale' || visibility === 'public') && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Giá khóa học
+                      {visibility === 'sale' && <span className="text-red-500"> *</span>}
+                      <span className="text-slate-400 font-normal ml-1">(VNĐ)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="w-full px-4 py-2.5 pr-16 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
+                        placeholder={visibility === 'sale' ? 'Ví dụ: 299000' : '0 = miễn phí'}
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">VNĐ</span>
+                    </div>
+                    {visibility === 'public' && price && parseFloat(price) > 0 && (
+                      <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">info</span>
+                        Khóa học sẽ được đặt thành <strong>Có phí</strong> do có nhập giá
+                      </p>
+                    )}
+                    {price && parseFloat(price) > 0 && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        ≈ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(price))}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
@@ -180,7 +228,7 @@ export default function InstructorStudioPage() {
                 <button
                   onClick={handleCreate}
                   disabled={!title.trim() || isSubmitting}
-                  className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all disabled:opacity-50"
+                  className="px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? 'Đang tạo...' : 'Tạo khóa học'}
                 </button>
@@ -192,7 +240,7 @@ export default function InstructorStudioPage() {
         {/* Course list */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
           </div>
         ) : courses.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300 space-y-4">
@@ -201,7 +249,7 @@ export default function InstructorStudioPage() {
             <p className="text-slate-500 text-sm">Bắt đầu tạo khóa học đầu tiên của bạn ngay!</p>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all"
             >
               <span className="material-symbols-outlined text-lg">add</span>
               Tạo khóa học
@@ -210,12 +258,12 @@ export default function InstructorStudioPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <div key={course?.id} className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 transition-all">
+              <div key={course?.id} className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-sky-200 transition-all">
                 <Link
                   href={`/instructor/studio/${course?.id}`}
                   className="block h-full"
                 >
-                  <div className="h-36 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative">
+                  <div className="h-36 bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center relative">
                     {course?.thumbnailUrl ? (
                       <img src={course?.thumbnailUrl} alt={course?.title} className="w-full h-full object-cover" />
                     ) : (
@@ -226,27 +274,38 @@ export default function InstructorStudioPage() {
                     <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                       course.visibility === 'public'
                         ? 'bg-green-100 text-green-700'
-                        : 'bg-amber-100 text-amber-700'
+                        : course.visibility === 'sale'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-amber-100 text-amber-700'
                     }`}>
-                      {course?.visibility === 'public' ? 'Công khai' : 'Riêng tư'}
+                      {course.visibility === 'public' ? 'Miễn phí'
+                        : course.visibility === 'sale' ? 'Có phí'
+                        : 'Riêng tư'}
                     </span>
                   </div>
                   <div className="p-5">
-                    <h3 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                    <h3 className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors line-clamp-2">
                       {course?.title}
                     </h3>
                     <p className="text-slate-500 text-sm mt-1 line-clamp-2">
                       {course?.description || 'Chưa có mô tả'}
                     </p>
-                    <div className="flex items-center gap-4 mt-4 text-xs text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">list</span>
-                        {course?._count.sections} phần
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">group</span>
-                        {course?._count.members} học viên
-                      </span>
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center gap-4 text-xs text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">list</span>
+                          {course?._count.sections} phần
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">group</span>
+                          {course?._count.members} học viên
+                        </span>
+                      </div>
+                      {Number(course?.price) > 0 && (
+                        <span className="text-xs font-bold text-blue-600">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(course.price))}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>

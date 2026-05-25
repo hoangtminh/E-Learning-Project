@@ -54,3 +54,17 @@ export const getAssignmentDetail = async (id: string): Promise<Assignment> => {
   }
   return res.data;
 };
+
+export interface UnfinishedStats {
+  unfinishedTasks: number;
+  unfinishedQuizzes: number;
+  totalUnfinished: number;
+}
+
+export const getUnfinishedStats = async (): Promise<UnfinishedStats> => {
+  const res = await apiGet<UnfinishedStats>('/user-stats/unfinished-assignments');
+  if (!res.success || !res.data) {
+    throw new Error(res.error || 'Failed to fetch unfinished stats');
+  }
+  return res.data;
+};

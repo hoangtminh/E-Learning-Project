@@ -7,7 +7,6 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   login as apiLogin,
   register as apiRegister,
@@ -22,76 +21,121 @@ export interface User {
   userId: string;
   id?: string;
   email: string;
-  fullname: string | null;
-  fullName?: string | null;
-  name?: string;
-  imageUrl: string | null | undefined;
-  avatar?: string;
+  fullName: string | null;
+  avatarUrl: string | null;
   role?: string;
-  // Add other user properties here based on your backend response
 }
+
+type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
+type RegisterData = LoginCredentials & {
+  fullName: string;
+};
+
+type AuthUserLike = Partial<User> & {
+  fullname?: string | null;
+  imageUrl?: string | null;
+  avatar?: string | null;
+};
+
+type JwtPayload = {
+  sub?: string;
+  email?: string;
+  fullName?: string | null;
+};
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: any) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   getUser: () => Promise<void>;
+  updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const decodeJwtPayload = (token: string): JwtPayload | null => {
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) return null;
+
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return null;
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
-  const setMappedUser = (userVal: any) => {
+  const setMappedUser = (userVal: AuthUserLike | null) => {
     if (userVal) {
       setUser({
         ...userVal,
-        userId: userVal.id || userVal.userId,
-        fullname: userVal.fullName || userVal.fullname || null,
+        userId: userVal.id || userVal.userId || "",
+        email: userVal.email || "",
         fullName: userVal.fullName || userVal.fullname || null,
+        avatarUrl: userVal.avatarUrl || userVal.imageUrl || userVal.avatar || null,
       });
     } else {
       setUser(null);
     }
   };
 
+  const updateUser = (data: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...data } : prev));
+  };
+
   const logout = () => {
     removeTokenCookie();
     setAuthToken(null);
     setMappedUser(null);
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   const getUser = async () => {
     const token = getTokenCookie();
-    if (token) {
-      setAuthToken(token);
-      try {
-        const res = await apiGetUser();
-        if (res.success && res.data) {
-          setMappedUser(res.data);
-        } else {
-          // Token is stale or invalid on the server side
-          removeTokenCookie();
-          setAuthToken(null);
-          setMappedUser(null);
-          router.push('/login');
-        }
-      } catch (err) {
-        console.error('Failed to authenticate token with server:', err);
+    if (!token) {
+      setMappedUser(null);
+      return;
+    }
+
+    setAuthToken(token);
+
+    const tokenPayload = decodeJwtPayload(token);
+    if (!user && tokenPayload?.sub && tokenPayload?.email) {
+      setMappedUser({
+        id: tokenPayload.sub,
+        email: tokenPayload.email,
+        fullName: tokenPayload.fullName || null,
+      });
+    }
+
+    try {
+      const res = await apiGetUser();
+      if (res.success && res.data) {
+        setMappedUser(res.data);
+        return;
+      }
+
+      if (res.status === 401 || res.status === 403) {
         removeTokenCookie();
         setAuthToken(null);
         setMappedUser(null);
-        router.push('/login');
+        window.location.href = "/login";
+        return;
       }
-    } else {
-      setMappedUser(null);
+
+      console.warn("Could not refresh current user; keeping existing session.", res.error);
+    } catch (err) {
+      console.error("Failed to refresh current user; keeping existing session:", err);
     }
   };
 
@@ -103,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (credentials: any) => {
+  const login = async (credentials: LoginCredentials) => {
     const result = await apiLogin(credentials);
     if (result.success && result.data) {
       setTokenCookie(result.data.accessToken);
@@ -114,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (data: any) => {
+  const register = async (data: RegisterData) => {
     const result = await apiRegister(data);
     if (result.success && result.data) {
       setTokenCookie(result.data.accessToken);
@@ -135,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         getUser,
+        updateUser,
       }}
     >
       {children}

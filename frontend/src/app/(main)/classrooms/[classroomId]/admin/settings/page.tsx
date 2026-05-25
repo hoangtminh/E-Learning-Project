@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useClassrooms } from '@/contexts/ClassroomContext';
 import { toast } from 'sonner';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 export default function AdminSettingsPage() {
   const params = useParams();
@@ -37,9 +38,13 @@ export default function AdminSettingsPage() {
 
   const handleDelete = async () => {
     if (
-      !confirm(
-        'Bạn có chắc chắn muốn XÓA VĨNH VIỄN lớp học này không? Hành động này không thể hoàn tác!',
-      )
+      !(await appConfirm({
+        title: 'Xóa vĩnh viễn lớp học?',
+        description:
+          'Bạn có chắc chắn muốn XÓA VĨNH VIỄN lớp học này không? Hành động này không thể hoàn tác!',
+        confirmLabel: 'Xóa vĩnh viễn',
+        variant: 'destructive',
+      }))
     )
       return;
     try {

@@ -20,6 +20,7 @@ import {
   Download,
 } from 'lucide-react';
 import Link from 'next/link';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 interface PostItemProps {
   post: ClassroomPost;
@@ -41,7 +42,7 @@ export default function PostItem({ post }: PostItemProps) {
     post?.updatedAt &&
     post?.createdAt &&
     new Date(post.updatedAt).getTime() >
-      new Date(post.createdAt).getTime() + 1000;
+    new Date(post.createdAt).getTime() + 1000;
 
   const isSystemPost = post?.content?.startsWith('[SYSTEM_');
 
@@ -70,7 +71,7 @@ export default function PostItem({ post }: PostItemProps) {
 
   const handleDelete = async () => {
     if (!classroom?.id) return;
-    if (!confirm('Bạn có chắc muốn xóa thông báo này?')) return;
+    if (!(await appConfirm({ title: 'Xóa thông báo?', description: 'Bạn có chắc muốn xóa thông báo này?', confirmLabel: 'Xóa', variant: 'destructive' }))) return;
     setIsDeleting(true);
     try {
       await deletePost(classroom.id, post.id);
@@ -126,9 +127,9 @@ export default function PostItem({ post }: PostItemProps) {
               <p className='text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider'>
                 {post?.createdAt
                   ? new Date(post.createdAt).toLocaleString('vi-VN', {
-                      dateStyle: 'short',
-                      timeStyle: 'short',
-                    })
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })
                   : ''}
               </p>
               {isEdited && (

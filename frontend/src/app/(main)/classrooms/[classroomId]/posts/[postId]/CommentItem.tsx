@@ -5,6 +5,7 @@ import { ClassroomPostComment } from '@/api/classroom';
 import { MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { usePosts } from '@/contexts/PostContext';
 import { toast } from 'sonner';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
 
 interface CommentItemProps {
   comment: ClassroomPostComment;
@@ -39,7 +40,7 @@ export const CommentItem = memo(function CommentItem({
   };
 
   const handleDelete = async () => {
-    if (!confirm('Xóa bình luận này?')) return;
+    if (!(await appConfirm({ title: 'Xóa bình luận?', description: 'Bạn có chắc chắn muốn xóa bình luận này?', confirmLabel: 'Xóa', variant: 'destructive' }))) return;
     try {
       await deleteComment(classroomId, postId, comment.id);
       toast.success('Đã xóa bình luận!');
@@ -94,11 +95,10 @@ export const CommentItem = memo(function CommentItem({
           </div>
         ) : (
           <div
-            className={`p-2.5 rounded-2xl text-xs shadow-sm leading-relaxed ${
-              isCommentAuthor
+            className={`p-2.5 rounded-2xl text-xs shadow-sm leading-relaxed ${isCommentAuthor
                 ? 'bg-sky-600 text-white rounded-tr-none'
                 : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
-            }`}
+              }`}
           >
             {comment.content}
           </div>

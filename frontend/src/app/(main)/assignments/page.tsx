@@ -115,7 +115,7 @@ export default function AssignmentsPage() {
                       Chưa nộp
                     </span>
                   )}
-                  
+
                   {item.deadline ? (
                     <span className={`font-medium w-24 text-right ${isOverdue ? 'text-red-500' : 'text-orange-500'}`}>
                       {formatTimeLeft(item.deadline)}
@@ -151,19 +151,19 @@ export default function AssignmentsPage() {
         {/* Tabs Bar */}
         <div className='sticky top-0 z-40 bg-white/80 backdrop-blur-md px-6 border-b border-slate-200 flex justify-start'>
           <TabsList className='bg-transparent justify-start h-auto p-0 rounded-none flex gap-8'>
-            <TabsTrigger 
-              value='upcoming' 
+            <TabsTrigger
+              value='upcoming'
               className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-medium text-slate-500 data-[state=active]:text-sky-600 hover:text-sky-600 data-[state=active]:font-semibold transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-sky-600 after:opacity-0 data-[state=active]:after:opacity-100'
             >
               Bài tập sắp tới
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value='pastdue'
               className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-medium text-slate-500 data-[state=active]:text-sky-600 hover:text-sky-600 data-[state=active]:font-semibold transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-sky-600 after:opacity-0 data-[state=active]:after:opacity-100'
             >
               Quá hạn
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value='completed'
               className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-medium text-slate-500 data-[state=active]:text-sky-600 hover:text-sky-600 data-[state=active]:font-semibold transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-sky-600 after:opacity-0 data-[state=active]:after:opacity-100'
             >
@@ -178,9 +178,9 @@ export default function AssignmentsPage() {
             {upcoming.length > 0 ? (
               <AssignmentList items={upcoming} />
             ) : (
-              <EmptyState 
-                message='Không có bài tập nào sắp tới.' 
-                subMessage='Hãy truy cập vào từng lớp học để kiểm tra thêm.' 
+              <EmptyState
+                message='Không có bài tập nào sắp tới.'
+                subMessage='Hãy truy cập vào từng lớp học để kiểm tra thêm.'
               />
             )}
           </TabsContent>
@@ -189,9 +189,9 @@ export default function AssignmentsPage() {
             {pastDue.length > 0 ? (
               <AssignmentList items={pastDue} />
             ) : (
-              <EmptyState 
-                message='Không có bài tập nào quá hạn.' 
-                subMessage='Tuyệt vời! Bạn đã hoàn thành đúng hạn tất cả các bài tập.' 
+              <EmptyState
+                message='Không có bài tập nào quá hạn.'
+                subMessage='Tuyệt vời! Bạn đã hoàn thành đúng hạn tất cả các bài tập.'
               />
             )}
           </TabsContent>
@@ -200,9 +200,9 @@ export default function AssignmentsPage() {
             {completed.length > 0 ? (
               <AssignmentList items={completed} />
             ) : (
-              <EmptyState 
-                message='Chưa có bài tập nào được nộp.' 
-                subMessage='Khi bạn nộp bài tập, chúng sẽ xuất hiện ở đây.' 
+              <EmptyState
+                message='Chưa có bài tập nào được nộp.'
+                subMessage='Khi bạn nộp bài tập, chúng sẽ xuất hiện ở đây.'
               />
             )}
           </TabsContent>

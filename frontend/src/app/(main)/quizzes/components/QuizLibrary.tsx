@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, BookOpen, Library, Globe, Loader2 } from 'lucide-react';
+import { Plus, Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuizCard } from './QuizCard';
-import { CreateQuizModal } from './CreateQuizModal';
 import { QuizSettingsModal } from './QuizSettingsModal';
 import { useQuiz } from '@/contexts/QuizContext';
 import { Quiz } from '@/api/quizzes';
-
 import { useRouter } from 'next/navigation';
 
 export function QuizLibrary() {
@@ -63,124 +59,109 @@ export function QuizLibrary() {
       q.title.toLowerCase().includes(search.toLowerCase()) ||
       q.description?.toLowerCase().includes(search.toLowerCase()),
   );
-  console.log('filteredQuizzes', filteredQuizzes);
 
   return (
-    <div className='flex flex-col p-6 max-w-7xl mx-auto space-y-8 relative z-10'>
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-6'>
-        <div className='space-y-1'>
-          <h1 className='text-3xl font-bold tracking-tight text-slate-900'>
-            Thư viện Quiz
-          </h1>
-          <p className='text-slate-500 text-lg'>
+    <div className='space-y-10 pb-12 transition-all p-6 md:p-12'>
+      {/* Header section - 100% identical to Courses Catalog */}
+      <div className='flex min-h-[92px] flex-col justify-between gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center'>
+        <div className='min-w-0'>
+          <h1 className='text-3xl font-black text-slate-900'>Thư viện Quiz</h1>
+          <p className='text-slate-500 mt-1'>
             Quản lý, chỉnh sửa và tham gia các bài kiểm tra của bạn.
           </p>
         </div>
-        <Button
-          className='w-full md:w-auto h-12 px-6 rounded-xl bg-primary hover:bg-primary-dim shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95'
+        <button
           onClick={() => router.push('/quizzes/new')}
+          className='inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border-0 bg-sky-50 px-4 text-sm font-semibold text-sky-600 shadow-xs transition-colors hover:bg-sky-100'
         >
-          <Plus className='mr-2 size-5' /> Tạo Quiz mới
-        </Button>
+          Tạo Quiz mới
+          <Plus className='size-4' />
+        </button>
       </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className='w-full block gap-2'
-      >
-        <div className='flex items-center justify-between'>
-          <TabsList className='grid w-full grid-cols-3 max-w-md bg-transparent h-11 p-1'>
-            <TabsTrigger
-              value='my-quizzes'
-              className='gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all'
-            >
-              <Library className='size-4' /> Của tôi
-            </TabsTrigger>
-            <TabsTrigger
-              value='joined'
-              className='gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all'
-            >
-              <BookOpen className='size-4' /> Đã tham gia
-            </TabsTrigger>
-            <TabsTrigger
-              value='public'
-              className='gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all'
-            >
-              <Globe className='size-4' /> Công khai
-            </TabsTrigger>
-          </TabsList>
-
-          <div className='w-full md:max-w-xs relative ml-auto'>
-            <Search className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400' />
-            <Input
-              placeholder='Tìm kiếm quiz...'
-              className='pl-10 h-11 border-none bg-slate-100/50 focus-visible:ring-2 focus-visible:ring-primary/20 rounded-xl transition-all'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      {/* Search and Filters row - 100% identical to Courses Catalog */}
+      <div className='flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center bg-white p-4 rounded-2xl border border-slate-200'>
+        <div className='relative flex-1 max-w-md'>
+          <Input
+            className='w-full bg-slate-50 pl-10 pr-4 py-2 rounded-lg text-sm border-slate-200 focus:bg-white transition-colors'
+            placeholder='Tìm kiếm bài trắc nghiệm...'
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Search className='absolute left-3 top-2.5 size-4 text-slate-400' />
         </div>
 
-        {['my-quizzes', 'joined', 'public'].map((tab) => (
-          <TabsContent
-            key={tab}
-            value={tab}
-            className='mt-0 outline-none focus-visible:ring-0 animate-in fade-in slide-in-from-bottom-4 duration-500'
-          >
-            {loading ? (
-              <div className='flex flex-col items-center justify-center py-24 space-y-4'>
-                <Loader2 className='size-10 animate-spin text-primary' />
-                <p className='text-slate-400 animate-pulse'>
-                  Đang tải dữ liệu...
-                </p>
-              </div>
-            ) : (
-              <div className='flex flex-col gap-6'>
-                {filteredQuizzes?.map((quiz) => (
-                  <QuizCard
-                    key={quiz.id}
-                    quiz={quiz}
-                    isOwner={tab === 'my-quizzes'}
-                    onEdit={handleEdit}
-                    onSettings={handleSettings}
-                    onShare={handleSettings}
-                    onTake={(q) =>
-                      (window.location.href = `/quizzes/${q.id}/take`)
-                    }
-                  />
-                ))}
-                {filteredQuizzes?.length === 0 && (
-                  <div className='py-32 text-center glass-panel border-dashed rounded-[2rem] flex flex-col items-center justify-center'>
-                    <div className='size-20 bg-slate-100/50 rounded-full flex items-center justify-center mb-6 shadow-inner'>
-                      <Search className='size-10 text-slate-300' />
-                    </div>
-                    <h3 className='text-xl font-semibold text-slate-900 mb-2'>
-                      Không tìm thấy kết quả
-                    </h3>
-                    <p className='text-slate-500 max-w-xs'>
-                      {tab === 'my-quizzes'
-                        ? 'Bạn chưa tạo bài quiz nào. Hãy bắt đầu bằng cách tạo một quiz mới!'
-                        : tab === 'joined'
-                          ? 'Bạn chưa tham gia bài quiz nào.'
-                          : 'Hiện không có bài quiz công khai nào phù hợp.'}
-                    </p>
-                    {tab === 'my-quizzes' && (
-                      <Button
-                        variant='outline'
-                        className='mt-6 rounded-xl'
-                        onClick={() => router.push('/quizzes/new')}
-                      >
-                        <Plus className='mr-2 size-4' /> Tạo ngay
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+        <div className='flex items-center gap-2'>
+          <span className='text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5'>
+            <Filter className='size-3.5' /> Lọc
+          </span>
+          <div className='flex gap-1 bg-slate-100 p-1 rounded-lg text-xs'>
+            {[
+              { value: 'my-quizzes', label: 'Của tôi' },
+              { value: 'joined', label: 'Đã tham gia' },
+              { value: 'public', label: 'Công khai' },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setActiveTab(item.value)}
+                className={`px-3 py-1.5 rounded-md font-medium transition-all ${activeTab === item.value
+                    ? 'bg-white text-slate-800 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                  }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content display based on loading and results */}
+      {loading ? (
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className='h-72 bg-slate-100 animate-pulse rounded-2xl border border-slate-200'
+            />
+          ))}
+        </div>
+      ) : filteredQuizzes?.length === 0 ? (
+        <div className='text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200'>
+          <Search className='size-10 text-slate-300 mx-auto mb-3' />
+          <p className='text-slate-500 font-medium'>
+            {activeTab === 'my-quizzes'
+              ? 'Bạn chưa tạo bài trắc nghiệm nào.'
+              : activeTab === 'joined'
+                ? 'Bạn chưa tham gia bài trắc nghiệm nào.'
+                : 'Không tìm thấy bài trắc nghiệm nào phù hợp.'}
+          </p>
+          {activeTab === 'my-quizzes' && (
+            <button
+              className='mt-4 px-4 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-bold hover:bg-sky-700 transition-all active:scale-95 inline-flex items-center gap-1 mx-auto'
+              onClick={() => router.push('/quizzes/new')}
+            >
+              <Plus className='size-3.5' /> Tạo ngay
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+          {filteredQuizzes?.map((quiz) => (
+            <QuizCard
+              key={quiz.id}
+              quiz={quiz}
+              isOwner={activeTab === 'my-quizzes'}
+              onEdit={handleEdit}
+              onSettings={handleSettings}
+              onShare={handleSettings}
+              onTake={(q) =>
+                (window.location.href = `/quizzes/${q.id}/take`)
+              }
+            />
+          ))}
+        </div>
+      )}
 
       <QuizSettingsModal
         open={isSettingsModalOpen}
