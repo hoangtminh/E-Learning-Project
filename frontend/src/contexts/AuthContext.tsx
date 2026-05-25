@@ -7,7 +7,6 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   login as apiLogin,
   register as apiRegister,
@@ -75,7 +74,6 @@ const decodeJwtPayload = (token: string): JwtPayload | null => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   const setMappedUser = (userVal: AuthUserLike | null) => {
     if (userVal) {
@@ -99,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     removeTokenCookie();
     setAuthToken(null);
     setMappedUser(null);
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   const getUser = async () => {
@@ -131,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         removeTokenCookie();
         setAuthToken(null);
         setMappedUser(null);
-        router.push("/login");
+        window.location.href = "/login";
         return;
       }
 

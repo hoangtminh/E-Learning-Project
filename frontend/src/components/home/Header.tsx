@@ -75,7 +75,7 @@ export function Header() {
               </div>
               <Button
                 className='bg-sky-500 text-white hover:bg-sky-500/90 rounded-lg shadow-lg shadow-sky-500/20 font-semibold'
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push(user?.role === 'admin' ? '/administrator' : '/dashboard')}
               >
                 Dashboard
               </Button>

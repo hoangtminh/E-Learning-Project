@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/main/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
+import { AdminForbidden } from '@/components/ui/AdminForbidden';
 
 export default function InstructorGroupLayout({
   children,
@@ -19,7 +22,11 @@ export default function InstructorGroupLayout({
     );
   }
 
-  if (!user || (user.role !== 'instructor' && user.role !== 'admin')) {
+  if (user?.role === 'admin') {
+    return <AdminForbidden />;
+  }
+
+  if (!user || user.role !== 'instructor') {
     return (
       <div className='flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 p-6'>
         <div className='bg-white max-w-md rounded-2xl p-8 text-center shadow-sm border border-slate-200'>

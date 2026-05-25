@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +37,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       await register({ fullName, email, password });
-      router.push('/');
+      window.location.href = '/';
     } catch (err) {
       setError(
         err instanceof Error

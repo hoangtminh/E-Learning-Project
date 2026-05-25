@@ -19,6 +19,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { QuizzesModule } from './modules/quizzes/quizzes.module';
 import { CallsModule } from './modules/calls/calls.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -39,6 +40,7 @@ import { ConfigModule } from '@nestjs/config';
     QuizzesModule,
     CallsModule,
     PaymentModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
