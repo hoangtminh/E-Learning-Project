@@ -114,8 +114,22 @@ model User {
   notifications         Notification[]         @relation("UserNotification")
   triggeredNotifications Notification[]       @relation("NotificationCreator")
   transactions  Transaction[]
+  logs          SystemLog[]
 
   @@map("users")
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  action    String
+  details   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("system_logs")
 }
 
 model Classroom {
