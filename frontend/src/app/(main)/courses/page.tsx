@@ -166,11 +166,10 @@ export default function CoursesCatalogPage() {
               <button
                 key={item.value}
                 onClick={() => setFilterType(item.value as CatalogFilter)}
-                className={`px-3 py-1.5 rounded-md font-medium transition-all ${
-                  filterType === item.value
+                className={`px-3 py-1.5 rounded-md font-medium transition-all ${filterType === item.value
                     ? 'bg-white text-slate-800 shadow-xs'
                     : 'text-slate-500 hover:text-slate-800'
-                }`}
+                  }`}
               >
                 {item.label}
               </button>
@@ -248,11 +247,10 @@ export default function CoursesCatalogPage() {
                   <Button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`font-bold w-10 h-10 rounded-lg transition-all ${
-                      currentPage === pageNum
+                    className={`font-bold w-10 h-10 rounded-lg transition-all ${currentPage === pageNum
                         ? 'bg-sky-600 text-white'
                         : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </Button>

@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { EnrolledCourse, getMyEnrolledCourses } from '@/api/enrollment';
 import { getMyTeachingCourses, InstructorCourse } from '@/api/instructor';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCourses } from '@/contexts/CourseContext';
+import { appConfirm } from '@/components/ui/app-dialog-provider';
+import { toast } from 'sonner';
 
 type CourseCardData = {
   id: string;
@@ -22,14 +25,37 @@ function CourseCard({
   badge,
   href,
   actionLabel,
+  onLeave,
 }: {
   course: CourseCardData;
   badge: string;
   href: string;
   actionLabel: string;
+  onLeave?: (id: string) => void;
 }) {
   return (
-    <div className='bg-white border border-slate-200 rounded-2xl overflow-hidden group flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300'>
+    <div className='bg-white border border-slate-200 rounded-2xl overflow-hidden group flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative'>
+      {/* Leave Course button */}
+      {onLeave && (
+        <div className='absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity'>
+          <button
+            type='button'
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onLeave(course.id);
+            }}
+            className='bg-red-500/90 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-lg flex items-center justify-center transition-colors shadow-md text-xs font-bold gap-1 cursor-pointer border-0'
+            title='Rời khóa học'
+          >
+            <span className='material-symbols-outlined text-xs font-bold'>
+              logout
+            </span>
+            Rời khóa
+          </button>
+        </div>
+      )}
+
       <Link
         href={href}
         className='relative h-40 overflow-hidden bg-slate-100 block'
@@ -98,60 +124,72 @@ function CourseCard({
 
 export default function MyCoursesPage() {
   const { user } = useAuth();
+  const { unenrollCourse } = useCourses();
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [teachingCourses, setTeachingCourses] = useState<InstructorCourse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const canManageCourses = user?.role === 'instructor' || user?.role === 'admin';
 
-  useEffect(() => {
-    let mounted = true;
+  const fetchCourses = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-    const fetchCourses = async () => {
-      setIsLoading(true);
-      setError(null);
+    try {
+      const enrolledRes = await getMyEnrolledCourses();
 
-      try {
-        const enrolledRes = await getMyEnrolledCourses();
-        if (!mounted) return;
-
-        if (enrolledRes.success && enrolledRes.data) {
-          setEnrolledCourses(enrolledRes.data);
-        } else {
-          setError(enrolledRes.error || 'Không thể tải khóa học đã tham gia.');
-          return;
-        }
-
-        if (canManageCourses) {
-          const teachingRes = await getMyTeachingCourses();
-          if (!mounted) return;
-
-          if (teachingRes.success && teachingRes.data) {
-            setTeachingCourses(teachingRes.data);
-          } else {
-            setError(teachingRes.error || 'Không thể tải khóa học của tôi.');
-          }
-        } else {
-          setTeachingCourses([]);
-        }
-      } catch (err) {
-        if (!mounted) return;
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Không thể tải danh sách khóa học.',
-        );
-      } finally {
-        if (mounted) setIsLoading(false);
+      if (enrolledRes.success && enrolledRes.data) {
+        setEnrolledCourses(enrolledRes.data);
+      } else {
+        setError(enrolledRes.error || 'Không thể tải khóa học đã tham gia.');
+        return;
       }
-    };
 
-    fetchCourses();
+      if (canManageCourses) {
+        const teachingRes = await getMyTeachingCourses();
 
-    return () => {
-      mounted = false;
-    };
+        if (teachingRes.success && teachingRes.data) {
+          setTeachingCourses(teachingRes.data);
+        } else {
+          setError(teachingRes.error || 'Không thể tải khóa học của tôi.');
+        }
+      } else {
+        setTeachingCourses([]);
+      }
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Không thể tải danh sách khóa học.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }, [canManageCourses]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
+  const handleLeaveCourse = async (courseId: string) => {
+    const confirmed = await appConfirm({
+      title: 'Rời khóa học?',
+      description: 'Bạn có chắc chắn muốn rời khỏi khóa học này? Mọi tiến độ học tập có thể bị mất.',
+      confirmLabel: 'Rời khóa',
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
+      try {
+        await unenrollCourse(courseId);
+        toast.success('Đã rời khỏi khóa học thành công');
+        fetchCourses(); // Refresh list
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Không thể rời khóa học';
+        toast.error(message);
+      }
+    }
+  };
 
   return (
     <div className='space-y-10 pb-12 transition-all p-6 md:p-12'>
@@ -222,6 +260,7 @@ export default function MyCoursesPage() {
                     badge='Đang học'
                     href={`/courses/${course.id}`}
                     actionLabel='Vào học'
+                    onLeave={handleLeaveCourse}
                   />
                 ))}
               </div>

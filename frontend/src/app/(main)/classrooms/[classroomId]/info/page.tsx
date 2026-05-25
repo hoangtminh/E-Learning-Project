@@ -111,8 +111,8 @@ export default function ClassroomInfoPage() {
                   <p className='text-sm text-slate-700 font-semibold'>
                     {classroom?.createdAt
                       ? new Date(classroom.createdAt).toLocaleDateString(
-                          'vi-VN',
-                        )
+                        'vi-VN',
+                      )
                       : 'N/A'}
                   </p>
                 </div>

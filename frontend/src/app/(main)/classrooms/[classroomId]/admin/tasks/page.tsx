@@ -413,11 +413,10 @@ function SubmissionsPanel({
             return (
               <div
                 key={sub.id}
-                className={`p-4 rounded-xl border transition-colors ${
-                  isGraded
+                className={`p-4 rounded-xl border transition-colors ${isGraded
                     ? 'bg-green-50/50 border-green-200'
                     : 'bg-white border-slate-200 hover:border-indigo-200'
-                }`}
+                  }`}
               >
                 <div className='flex gap-3 items-start'>
                   <Avatar
@@ -646,11 +645,10 @@ export default function AdminTasksPage() {
                             </span>
                             {task.deadline && (
                               <span
-                                className={`flex items-center gap-1 px-2 py-0.5 rounded border ${
-                                  isPast
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded border ${isPast
                                     ? 'bg-slate-50 text-slate-400 border-slate-100 line-through'
                                     : 'bg-amber-50/50 text-amber-600 border-amber-100/60'
-                                }`}
+                                  }`}
                               >
                                 <span className='material-symbols-outlined text-[13px]'>
                                   schedule
@@ -661,7 +659,7 @@ export default function AdminTasksPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Action buttons */}
                       <div className='flex items-center gap-2.5 self-end sm:self-center shrink-0'>
                         <button

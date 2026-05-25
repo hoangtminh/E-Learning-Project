@@ -42,7 +42,7 @@ export default function PostItem({ post }: PostItemProps) {
     post?.updatedAt &&
     post?.createdAt &&
     new Date(post.updatedAt).getTime() >
-      new Date(post.createdAt).getTime() + 1000;
+    new Date(post.createdAt).getTime() + 1000;
 
   const isSystemPost = post?.content?.startsWith('[SYSTEM_');
 
@@ -127,9 +127,9 @@ export default function PostItem({ post }: PostItemProps) {
               <p className='text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider'>
                 {post?.createdAt
                   ? new Date(post.createdAt).toLocaleString('vi-VN', {
-                      dateStyle: 'short',
-                      timeStyle: 'short',
-                    })
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })
                   : ''}
               </p>
               {isEdited && (

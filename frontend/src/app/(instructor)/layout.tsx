@@ -14,7 +14,7 @@ export default function InstructorGroupLayout({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -30,7 +30,7 @@ export default function InstructorGroupLayout({
           </p>
           <Link
             href='/dashboard'
-            className='text-indigo-600 mt-4 inline-block text-sm font-medium hover:underline'
+            className='text-sky-600 mt-4 inline-block text-sm font-medium hover:underline'
           >
             Về dashboard
           </Link>

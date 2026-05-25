@@ -105,7 +105,7 @@ export default function InstructorStudioPage() {
           <p className="text-slate-500 text-sm">
             Khu vực này dành cho giảng viên. Liên hệ admin để được cấp quyền instructor.
           </p>
-          <Link href="/dashboard" className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors">
+          <Link href="/dashboard" className="inline-block px-4 py-2 bg-sky-500 text-white rounded-lg text-sm font-semibold hover:bg-sky-600 transition-colors">
             Về Dashboard
           </Link>
         </div>
@@ -120,14 +120,14 @@ export default function InstructorStudioPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-              <span className="material-symbols-outlined text-indigo-600 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              <span className="material-symbols-outlined text-sky-600 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
               Instructor Studio
             </h1>
             <p className="text-slate-500 text-sm mt-1">Quản lý khóa học của bạn</p>
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all shadow-sm"
           >
             <span className="material-symbols-outlined text-lg">add</span>
             Tạo khóa học mới
@@ -156,7 +156,7 @@ export default function InstructorStudioPage() {
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
                     placeholder="Ví dụ: Lập trình Web với React"
                   />
                 </div>
@@ -165,7 +165,7 @@ export default function InstructorStudioPage() {
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 resize-none"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800 resize-none"
                     placeholder="Mô tả ngắn gọn về khóa học..."
                     rows={3}
                   />
@@ -175,7 +175,7 @@ export default function InstructorStudioPage() {
                   <select
                     value={visibility}
                     onChange={(e) => setVisibility(e.target.value as 'public' | 'private' | 'sale')}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
                   >
                     <option value="public">Công khai miễn phí — ai cũng truy cập được</option>
                     <option value="sale">Công khai có phí — yêu cầu thanh toán</option>
@@ -198,7 +198,7 @@ export default function InstructorStudioPage() {
                         step="1000"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        className="w-full px-4 py-2.5 pr-16 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                        className="w-full px-4 py-2.5 pr-16 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
                         placeholder={visibility === 'sale' ? 'Ví dụ: 299000' : '0 = miễn phí'}
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">VNĐ</span>
@@ -228,7 +228,7 @@ export default function InstructorStudioPage() {
                 <button
                   onClick={handleCreate}
                   disabled={!title.trim() || isSubmitting}
-                  className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all disabled:opacity-50"
+                  className="px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? 'Đang tạo...' : 'Tạo khóa học'}
                 </button>
@@ -240,7 +240,7 @@ export default function InstructorStudioPage() {
         {/* Course list */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
           </div>
         ) : courses.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300 space-y-4">
@@ -249,7 +249,7 @@ export default function InstructorStudioPage() {
             <p className="text-slate-500 text-sm">Bắt đầu tạo khóa học đầu tiên của bạn ngay!</p>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all"
             >
               <span className="material-symbols-outlined text-lg">add</span>
               Tạo khóa học
@@ -258,12 +258,12 @@ export default function InstructorStudioPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <div key={course?.id} className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 transition-all">
+              <div key={course?.id} className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-sky-200 transition-all">
                 <Link
                   href={`/instructor/studio/${course?.id}`}
                   className="block h-full"
                 >
-                  <div className="h-36 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative">
+                  <div className="h-36 bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center relative">
                     {course?.thumbnailUrl ? (
                       <img src={course?.thumbnailUrl} alt={course?.title} className="w-full h-full object-cover" />
                     ) : (
@@ -284,7 +284,7 @@ export default function InstructorStudioPage() {
                     </span>
                   </div>
                   <div className="p-5">
-                    <h3 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                    <h3 className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors line-clamp-2">
                       {course?.title}
                     </h3>
                     <p className="text-slate-500 text-sm mt-1 line-clamp-2">

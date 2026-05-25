@@ -95,11 +95,10 @@ export const CommentItem = memo(function CommentItem({
           </div>
         ) : (
           <div
-            className={`p-2.5 rounded-2xl text-xs shadow-sm leading-relaxed ${
-              isCommentAuthor
+            className={`p-2.5 rounded-2xl text-xs shadow-sm leading-relaxed ${isCommentAuthor
                 ? 'bg-sky-600 text-white rounded-tr-none'
                 : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
-            }`}
+              }`}
           >
             {comment.content}
           </div>

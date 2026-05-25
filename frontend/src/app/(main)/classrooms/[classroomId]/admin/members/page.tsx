@@ -181,11 +181,10 @@ export default function AdminMembersPage() {
             </div>
             <button
               onClick={handleCopyCode}
-              className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${
-                copied
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-              }`}
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${copied
+                ? 'bg-green-100 text-green-700'
+                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                }`}
             >
               <span className='material-symbols-outlined text-[18px]'>
                 {copied ? 'check' : 'content_copy'}

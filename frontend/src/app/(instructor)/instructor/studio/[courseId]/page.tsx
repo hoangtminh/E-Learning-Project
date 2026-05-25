@@ -211,7 +211,7 @@ export default function CourseEditorPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-full">
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -232,7 +232,7 @@ export default function CourseEditorPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/instructor/studio"
-              className="flex items-center gap-1 text-slate-500 hover:text-indigo-600 transition-colors text-sm"
+              className="flex items-center gap-1 text-slate-500 hover:text-sky-600 transition-colors text-sm"
             >
               <span className="material-symbols-outlined text-lg">arrow_back</span>
               Studio
@@ -242,7 +242,7 @@ export default function CourseEditorPage() {
           </div>
           <Link
             href={`/courses/${courseId}`}
-            className="text-sm text-indigo-600 hover:underline font-medium"
+            className="text-sm text-sky-600 hover:underline font-medium"
           >
             Xem trang khóa học →
           </Link>
@@ -254,19 +254,19 @@ export default function CourseEditorPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-slate-700 flex items-center gap-2">
-              <span className="material-symbols-outlined text-indigo-500">info</span>
+              <span className="material-symbols-outlined text-sky-500">info</span>
               Thông tin khóa học
             </h2>
             {!editingTitle ? (
               <button
                 onClick={() => setEditingTitle(true)}
-                className="text-sm text-indigo-600 hover:underline font-medium"
+                className="text-sm text-sky-600 hover:underline font-medium"
               >
                 Chỉnh sửa
               </button>
             ) : (
               <div className="flex gap-2">
-                <button onClick={handleUpdateCourse} className="text-sm px-3 py-1 bg-indigo-600 text-white rounded-lg font-medium">
+                <button onClick={handleUpdateCourse} className="text-sm px-3 py-1 bg-sky-500 text-white rounded-lg font-medium">
                   Lưu
                 </button>
                 <button onClick={() => setEditingTitle(false)} className="text-sm text-slate-500 hover:text-slate-700">
@@ -282,7 +282,7 @@ export default function CourseEditorPage() {
                 <input
                   value={titleInput}
                   onChange={(e) => setTitleInput(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
               <div className="bg-white">
@@ -301,7 +301,7 @@ export default function CourseEditorPage() {
                   <select
                     value={visibilityInput}
                     onChange={(e) => setVisibilityInput(e.target.value as 'public' | 'private' | 'sale')}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="public">Công khai miễn phí</option>
                     <option value="sale">Công khai có phí</option>
@@ -320,7 +320,7 @@ export default function CourseEditorPage() {
                         step="1000"
                         value={priceInput}
                         onChange={(e) => setPriceInput(e.target.value)}
-                        className="w-full px-3 py-2 pr-14 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 pr-14 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder={visibilityInput === 'sale' ? '299000' : '0 = miễn phí'}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none">VNĐ</span>
@@ -366,7 +366,7 @@ export default function CourseEditorPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 flex items-center justify-between">
             <h2 className="font-bold text-slate-700 flex items-center gap-2">
-              <span className="material-symbols-outlined text-indigo-500">playlist_add</span>
+              <span className="material-symbols-outlined text-sky-500">playlist_add</span>
               Nội dung khóa học ({sections.length} phần)
             </h2>
           </div>
@@ -381,7 +381,7 @@ export default function CourseEditorPage() {
                       chevron_right
                     </span>
                   </button>
-                  <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
+                  <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 text-xs font-bold flex items-center justify-center shrink-0">
                     {sIdx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -403,7 +403,7 @@ export default function CourseEditorPage() {
                     {section.lessons.map((lesson) => {
                       const t = typeLabels[lesson.type] || typeLabels.text;
                       return (
-                        <div key={lesson.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors bg-white">
+                        <div key={lesson.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-sky-200 transition-colors bg-white">
                           <span className={`material-symbols-outlined text-lg ${t.color}`}>{t.icon}</span>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-slate-700 truncate">{lesson.title}</p>
@@ -425,11 +425,11 @@ export default function CourseEditorPage() {
 
                     {/* Add lesson form */}
                     {addingLessonTo === section.id ? (
-                      <div className="p-4 border border-indigo-200 rounded-xl bg-indigo-50/30 space-y-3">
+                      <div className="p-4 border border-sky-200 rounded-xl bg-sky-50/30 space-y-3">
                         <input
                           value={newLessonTitle}
                           onChange={(e) => setNewLessonTitle(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                           placeholder="Tên bài học..."
                           autoFocus
                         />
@@ -437,7 +437,7 @@ export default function CourseEditorPage() {
                           <select
                             value={newLessonType}
                             onChange={(e) => { setNewLessonType(e.target.value); setNewLessonUrl(''); setNewLessonBody(''); }}
-                            className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 shrink-0"
+                            className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 shrink-0"
                           >
                             <option value="video">Video</option>
                             <option value="text">Văn bản</option>
@@ -459,7 +459,7 @@ export default function CourseEditorPage() {
                                 <input
                                   value={newLessonUrl}
                                   onChange={(e) => setNewLessonUrl(e.target.value)}
-                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                                   placeholder="Dán URL video (YouTube, Vimeo...)"
                                 />
                               ) : (
@@ -473,7 +473,7 @@ export default function CourseEditorPage() {
                                         void appAlert('Đã giả lập upload file: ' + e.target.files[0].name);
                                       }
                                     }}
-                                    className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                    className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
                                   />
                                 </div>
                               )}
@@ -494,7 +494,7 @@ export default function CourseEditorPage() {
                                 <textarea
                                   value={newLessonBody}
                                   onChange={(e) => setNewLessonBody(e.target.value)}
-                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
                                   placeholder="Nhập nội dung văn bản bài học..."
                                   rows={4}
                                 />
@@ -509,7 +509,7 @@ export default function CourseEditorPage() {
                                         void appAlert('Đã giả lập upload và đọc file: ' + e.target.files[0].name);
                                       }
                                     }}
-                                    className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                    className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
                                   />
                                 </div>
                               )}
@@ -526,7 +526,7 @@ export default function CourseEditorPage() {
                                 <select
                                   value={newLessonUrl}
                                   onChange={(e) => setNewLessonUrl(e.target.value)}
-                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                                 >
                                   <option value="">-- Chọn bài Quiz --</option>
                                   {availableQuizzes.map(q => (
@@ -541,7 +541,7 @@ export default function CourseEditorPage() {
                           <button
                             onClick={() => handleAddLesson(section.id)}
                             disabled={!newLessonTitle.trim()}
-                            className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                            className="px-4 py-1.5 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 disabled:opacity-50"
                           >
                             Thêm bài
                           </button>
@@ -556,7 +556,7 @@ export default function CourseEditorPage() {
                     ) : (
                       <button
                         onClick={() => setAddingLessonTo(section.id)}
-                        className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium px-3 py-2 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700 font-medium px-3 py-2 hover:bg-sky-50 rounded-lg transition-colors"
                       >
                         <span className="material-symbols-outlined text-base">add</span>
                         Thêm bài học
@@ -574,14 +574,14 @@ export default function CourseEditorPage() {
               <input
                 value={newSectionTitle}
                 onChange={(e) => setNewSectionTitle(e.target.value)}
-                className="flex-1 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="flex-1 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 placeholder="Tên phần mới..."
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSection()}
               />
               <button
                 onClick={handleAddSection}
                 disabled={!newSectionTitle.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-xl text-sm font-semibold hover:bg-sky-600 disabled:opacity-50 transition-all"
               >
                 <span className="material-symbols-outlined text-base">add</span>
                 Thêm phần

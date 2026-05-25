@@ -18,6 +18,7 @@ interface CourseHeroProps {
       name: string;
       avatarUrl: string;
     };
+    enrolled?: boolean;
   };
   onBuy?: () => void;
   price?: number;
@@ -136,7 +137,7 @@ export function CourseHero({ course, onBuy, price }: CourseHeroProps) {
             </div>
           </div>
 
-          {onBuy && (
+          {onBuy && !course.enrolled && (
             <div className="flex items-center gap-6">
               {price !== undefined && (
                 <div className="text-right">

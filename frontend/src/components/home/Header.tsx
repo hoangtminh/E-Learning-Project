@@ -36,11 +36,10 @@ export function Header() {
 
   return (
     <motion.nav
-      className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-        isScrolled
+      className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled
           ? 'bg-white/80 backdrop-blur-xl border-b border-sky-100 shadow-sm'
           : 'bg-sky-100 backdrop-blur-none border-b border-transparent'
-      }`}
+        }`}
     >
       <div
         className={`flex items-center justify-between px-6 py-3 w-full max-w-7xl mx-auto transition-all duration-500`}

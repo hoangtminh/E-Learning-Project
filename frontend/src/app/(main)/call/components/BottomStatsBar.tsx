@@ -97,19 +97,18 @@ export default function BottomStatsBar() {
         <button
           onClick={isSharingScreen ? stopScreenShare : startScreenShare}
           disabled={screenSharerId !== null && !isSharingScreen}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${
-            isSharingScreen
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${isSharingScreen
               ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 font-bold border border-amber-500/40'
               : screenSharerId !== null
-              ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-40'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-          }`}
+                ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-40'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
           title={
             isSharingScreen
               ? 'Dừng chia sẻ màn hình'
               : screenSharerId !== null
-              ? 'Người khác đang chia sẻ màn hình'
-              : 'Chia sẻ màn hình'
+                ? 'Người khác đang chia sẻ màn hình'
+                : 'Chia sẻ màn hình'
           }
         >
           <span className='material-symbols-outlined text-[18px]'>
