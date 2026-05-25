@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { callsApi, Call, CallType, CallStatus } from '@/api/calls';
+
+type SearchedUser = {
+  id: string;
+  email: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  role: string;
+};
 import {
   Search,
   PhoneCall,
@@ -38,7 +46,7 @@ export default function CallPage() {
 
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchedUsers, setSearchedUsers] = useState<any[]>([]);
+  const [searchedUsers, setSearchedUsers] = useState<SearchedUser[]>([]);
   const [searching, setSearching] = useState(false);
 
   // Creation State
@@ -91,7 +99,7 @@ export default function CallPage() {
         if (res.success && res.data) {
           setSearchedUsers(res.data);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Failed to search users', err);
       } finally {
         setSearching(false);
@@ -105,7 +113,7 @@ export default function CallPage() {
     router.push(`/call/${callId}`);
   };
 
-  const handleCreateDirectCall = async (targetUser: any) => {
+  const handleCreateDirectCall = async (targetUser: SearchedUser) => {
     setCreating(true);
     setError(null);
     try {
@@ -121,8 +129,8 @@ export default function CallPage() {
       } else {
         setError(res.error || 'Tạo cuộc gọi trực tiếp thất bại!');
       }
-    } catch (err: any) {
-      setError(err.message || 'Lỗi hệ thống khi bắt đầu cuộc gọi.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Lỗi hệ thống khi bắt đầu cuộc gọi.');
     } finally {
       setCreating(false);
     }
@@ -144,24 +152,24 @@ export default function CallPage() {
       } else {
         setError(res.error || 'Tạo cuộc họp thất bại!');
       }
-    } catch (err: any) {
-      setError(err.message || 'Lỗi hệ thống khi khởi tạo cuộc họp.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Lỗi hệ thống khi khởi tạo cuộc họp.');
     } finally {
       setCreating(false);
     }
   };
 
   return (
-    <main className='flex flex-1 h-full overflow-y-auto bg-background text-on-surface p-6'>
-      <div className='max-w-6xl mx-auto w-full flex flex-col gap-6'>
+    <main className='flex min-h-full flex-1 overflow-y-auto bg-slate-50 p-4 text-slate-900 sm:p-6'>
+      <div className='mx-auto flex w-full max-w-7xl flex-col gap-5'>
         {/* Header Block */}
-        <div className='relative overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 rounded-3xl border border-outline/10 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4'>
+        <div className='flex flex-col items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center'>
           <div className='space-y-1.5 z-10'>
-            <h1 className='text-3xl font-extrabold text-primary flex items-center gap-3 tracking-tight'>
+            <h1 className='text-2xl font-bold text-slate-900 flex items-center gap-3 tracking-tight'>
               <Video className='size-9 text-primary animate-pulse shrink-0' />
               Cuộc họp & Cuộc gọi
             </h1>
-            <p className='text-on-surface-variant text-sm max-w-2xl'>
+            <p className='text-sm text-slate-600 max-w-3xl'>
               Khởi tạo cuộc họp tức thì (Private / Public), tìm kiếm kết nối
               video 1:1, và quản lý lịch sử cuộc gọi. Các tính năng cuộc họp lớp
               hoặc nhóm được tạo trực tiếp ngay trong lớp học hoặc kênh chat
@@ -173,7 +181,7 @@ export default function CallPage() {
             size='icon'
             onClick={loadCallsData}
             disabled={loading}
-            className='rounded-2xl bg-surface hover:bg-primary/10 hover:text-primary transition-all shadow-sm z-10'
+            className='rounded-lg bg-surface hover:bg-primary/10 hover:text-primary transition-all shadow-sm z-10'
             title='Làm mới dữ liệu'
           >
             <RefreshCw className={`size-5 ${loading ? 'animate-spin' : ''}`} />
@@ -181,7 +189,7 @@ export default function CallPage() {
         </div>
 
         {error && (
-          <div className='bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200'>
+          <div className='bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3.5 rounded-lg text-sm font-medium flex items-center gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200'>
             <AlertCircle className='size-5 shrink-0' />
             <span>{error}</span>
           </div>
@@ -192,7 +200,7 @@ export default function CallPage() {
           {/* LEFT: Search User & Custom call creations */}
           <div className='lg:col-span-5 space-y-6'>
             {/* Instant Custom Call Creator Card */}
-            <Card className='rounded-3xl border-outline-variant bg-surface-container-lowest shadow-sm'>
+            <Card className='rounded-xl border-outline-variant bg-surface-container-lowest shadow-sm'>
               <CardHeader className='pb-4 border-b border-outline-variant'>
                 <CardTitle className='text-lg font-bold flex items-center gap-2'>
                   <Video className='size-5 text-primary' />
@@ -225,7 +233,7 @@ export default function CallPage() {
                     <button
                       type='button'
                       onClick={() => setNewCallType(CallType.PRIVATE)}
-                      className={`p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
+                      className={`p-3 rounded-lg border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
                         newCallType === CallType.PRIVATE
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-outline-variant bg-surface hover:bg-surface-variant/10 text-on-surface-variant'
@@ -239,7 +247,7 @@ export default function CallPage() {
                     <button
                       type='button'
                       onClick={() => setNewCallType(CallType.PUBLIC)}
-                      className={`p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
+                      className={`p-3 rounded-lg border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
                         newCallType === CallType.PUBLIC
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-outline-variant bg-surface hover:bg-surface-variant/10 text-on-surface-variant'
@@ -263,7 +271,7 @@ export default function CallPage() {
               </CardContent>
             </Card>
 
-            <Card className='rounded-3xl border-outline-variant bg-surface-container-lowest shadow-sm'>
+            <Card className='rounded-xl border-outline-variant bg-surface-container-lowest shadow-sm'>
               <CardHeader className='pb-4 border-b border-outline-variant'>
                 <CardTitle className='text-lg font-bold flex items-center gap-2'>
                   <PhoneCall className='size-5 text-primary' />
@@ -282,11 +290,11 @@ export default function CallPage() {
                     placeholder='Tìm tên hoặc email...'
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className='pl-9 rounded-2xl bg-surface border-outline-variant focus-visible:ring-primary/20 h-11'
+                    className='pl-9 rounded-lg bg-surface border-outline-variant focus-visible:ring-primary/20 h-11'
                   />
                 </div>
 
-                <ScrollArea className='h-[350px] pr-2'>
+                <ScrollArea className='h-[260px] pr-2'>
                   {searching ? (
                     <div className='flex flex-col items-center justify-center py-16 gap-3'>
                       <div className='w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin'></div>
@@ -320,7 +328,7 @@ export default function CallPage() {
                       {searchedUsers.map((user) => (
                         <div
                           key={user.id}
-                          className='flex items-center justify-between p-3 rounded-2xl border border-outline/10 bg-surface/50 hover:bg-primary/5 hover:border-primary/20 transition-all group'
+                          className='flex items-center justify-between p-3 rounded-lg border border-outline/10 bg-surface/50 hover:bg-primary/5 hover:border-primary/20 transition-all group'
                         >
                           <div className='flex items-center gap-3 min-w-0'>
                             <Avatar className='size-10 border border-outline-variant shrink-0'>
@@ -363,7 +371,7 @@ export default function CallPage() {
           {/* RIGHT: Ongoing & History list */}
           <div className='lg:col-span-7 space-y-6'>
             {/* Ongoing Calls Card */}
-            <Card className='rounded-3xl border-outline-variant bg-surface-container-lowest shadow-sm'>
+            <Card className='rounded-xl border-outline-variant bg-surface-container-lowest shadow-sm'>
               <CardHeader className='pb-4 border-b border-outline-variant flex flex-row items-center justify-between'>
                 <div>
                   <CardTitle className='text-lg font-bold flex items-center gap-2'>
@@ -388,7 +396,7 @@ export default function CallPage() {
                     {ongoingCalls.map((call) => (
                       <div
                         key={call.id}
-                        className='flex flex-col md:flex-row md:items-center justify-between p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all gap-4'
+                        className='flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all gap-4'
                       >
                         <div className='space-y-1'>
                           <div className='flex items-center gap-2 flex-wrap'>
@@ -435,7 +443,7 @@ export default function CallPage() {
             </Card>
 
             {/* History Calls Card */}
-            <Card className='rounded-3xl border-outline-variant bg-surface-container-lowest shadow-sm'>
+            <Card className='rounded-xl border-outline-variant bg-surface-container-lowest shadow-sm'>
               <CardHeader className='pb-4 border-b border-outline-variant'>
                 <CardTitle className='text-lg font-bold flex items-center gap-2'>
                   <History className='size-5 text-primary' />
@@ -454,12 +462,12 @@ export default function CallPage() {
                     </p>
                   </div>
                 ) : (
-                  <ScrollArea className='h-[300px] pr-2'>
+                  <ScrollArea className='h-[260px] pr-2'>
                     <div className='space-y-3'>
                       {historyCalls.map((call) => (
                         <div
                           key={call.id}
-                          className='flex items-center justify-between p-4 rounded-2xl border border-outline/10 bg-surface/30 hover:bg-surface-variant/10 transition-all gap-4'
+                          className='flex items-center justify-between p-4 rounded-lg border border-outline/10 bg-surface/30 hover:bg-surface-variant/10 transition-all gap-4'
                         >
                           <div className='space-y-1.5 min-w-0'>
                             <h3 className='font-bold text-on-surface text-sm truncate'>

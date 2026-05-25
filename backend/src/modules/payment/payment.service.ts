@@ -96,85 +96,146 @@ export class PaymentService {
   }
 
   async vnpayReturnIpn(query: any) {
-    const vnp_SecureHash = query['vnp_SecureHash'];
-    delete query['vnp_SecureHash'];
-    delete query['vnp_SecureHashType'];
+    const result = await this.processVnpayConfirmation(query);
+    return { RspCode: result.rspCode, Message: result.message };
+  }
 
-    const sortedParams = this.sortObject(query);
-    const secretKey = this.configService.get<string>('VNP_HASH_SECRET') || '';
-    const signData = querystring.stringify(sortedParams, { encode: false });
-    const hmac = crypto.createHmac('sha512', secretKey);
-    const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
+  async confirmVnpayReturn(userId: string, query: any) {
+    const result = await this.processVnpayConfirmation(query, userId);
 
-    if (vnp_SecureHash !== signed) {
-      return { RspCode: '97', Message: 'Invalid signature' };
+    if (!result.transaction || !["00", "02"].includes(result.rspCode)) {
+      throw new BadRequestException(result.message);
     }
 
-    const orderId = query['vnp_TxnRef'];
-    const rspCode = query['vnp_ResponseCode'];
-    const amount = Number(query['vnp_Amount']) / 100;
+    return this.getTransactionByTxnRef(userId, result.transaction.vnpTxnRef);
+  }
+
+  private async processVnpayConfirmation(rawQuery: any, userId?: string) {
+    const query = { ...rawQuery };
+
+    if (!this.isValidVnpaySignature(query)) {
+      return { rspCode: "97", message: "Invalid signature" };
+    }
+
+    const orderId = query["vnp_TxnRef"];
+    const rspCode = query["vnp_ResponseCode"];
+    const amount = Number(query["vnp_Amount"]) / 100;
 
     const transaction = await this.prisma.transaction.findUnique({
       where: { vnpTxnRef: orderId }
     });
 
-    if (!transaction) {
-      return { RspCode: '01', Message: 'Order not found' };
+    if (!transaction || (userId && transaction.userId !== userId)) {
+      return { rspCode: "01", message: "Order not found" };
     }
 
-    if (Number(transaction.amount) !== amount) {
-      return { RspCode: '04', Message: 'Invalid amount' };
+    if (!Number.isFinite(amount) || Number(transaction.amount) !== amount) {
+      return { rspCode: "04", message: "Invalid amount", transaction };
     }
 
-    if (transaction.status !== 'pending') {
-      return { RspCode: '02', Message: 'Order already confirmed' };
+    const isSuccessfulPayment =
+      rspCode === "00" &&
+      (!query["vnp_TransactionStatus"] || query["vnp_TransactionStatus"] === "00");
+
+    if (transaction.status !== "pending") {
+      if (transaction.status === "success" && isSuccessfulPayment) {
+        await this.ensureCourseMembership(transaction.userId, transaction.courseId);
+      }
+
+      return { rspCode: "02", message: "Order already confirmed", transaction };
     }
 
-    if (rspCode === '00') {
+    if (isSuccessfulPayment) {
       try {
         await this.prisma.$transaction(async (tx) => {
           await tx.transaction.update({
             where: { id: transaction.id },
-            data: { 
-              status: 'success',
-              vnpBankCode: query['vnp_BankCode'],
-              vnpBankTranNo: query['vnp_BankTranNo'],
-              vnpCardType: query['vnp_CardType'],
-              vnpPayDate: query['vnp_PayDate'],
-              vnpOrderInfo: query['vnp_OrderInfo'],
-              vnpTransactionNo: query['vnp_TransactionNo'],
-              vnpResponseCode: rspCode,
-            }
+            data: this.buildTransactionUpdateData(query, "success")
           });
 
-          await tx.courseMember.create({
-            data: {
+          await tx.courseMember.upsert({
+            where: {
+              courseId_userId: {
+                courseId: transaction.courseId,
+                userId: transaction.userId
+              }
+            },
+            update: { userId: transaction.userId },
+            create: {
               userId: transaction.userId,
-              courseId: transaction.courseId,
+              courseId: transaction.courseId
             }
           });
         });
-        return { RspCode: '00', Message: 'Confirm Success' };
+
+        return { rspCode: "00", message: "Confirm Success", transaction };
       } catch (error) {
-        return { RspCode: '99', Message: 'Server error' };
+        console.error("VNPay confirmation error:", error);
+        return { rspCode: "99", message: "Server error", transaction };
       }
-    } else {
-      await this.prisma.transaction.update({
-        where: { id: transaction.id },
-        data: { 
-          status: 'failed',
-          vnpBankCode: query['vnp_BankCode'],
-          vnpBankTranNo: query['vnp_BankTranNo'],
-          vnpCardType: query['vnp_CardType'],
-          vnpPayDate: query['vnp_PayDate'],
-          vnpOrderInfo: query['vnp_OrderInfo'],
-          vnpTransactionNo: query['vnp_TransactionNo'],
-          vnpResponseCode: rspCode, 
-        }
-      });
-      return { RspCode: '00', Message: 'Confirm Success' };
     }
+
+    await this.prisma.transaction.update({
+      where: { id: transaction.id },
+      data: this.buildTransactionUpdateData(query, "failed")
+    });
+
+    return { rspCode: "00", message: "Confirm Success", transaction };
   }
+
+  private isValidVnpaySignature(query: Record<string, any>) {
+    const vnpSecureHash = query["vnp_SecureHash"];
+    delete query["vnp_SecureHash"];
+    delete query["vnp_SecureHashType"];
+
+    const sortedParams = this.sortObject(query);
+    const secretKey = this.configService.get<string>("VNP_HASH_SECRET") || "";
+    const signData = querystring.stringify(sortedParams, { encode: false });
+    const hmac = crypto.createHmac("sha512", secretKey);
+    const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+
+    return vnpSecureHash === signed;
+  }
+
+  private buildTransactionUpdateData(query: any, status: "success" | "failed") {
+    return {
+      status,
+      vnpBankCode: query["vnp_BankCode"],
+      vnpBankTranNo: query["vnp_BankTranNo"],
+      vnpCardType: query["vnp_CardType"],
+      vnpPayDate: query["vnp_PayDate"],
+      vnpOrderInfo: query["vnp_OrderInfo"],
+      vnpTransactionNo: query["vnp_TransactionNo"],
+      vnpResponseCode: query["vnp_ResponseCode"]
+    };
+  }
+
+  private async ensureCourseMembership(userId: string, courseId: string) {
+    await this.prisma.courseMember.upsert({
+      where: { courseId_userId: { courseId, userId } },
+      update: { userId },
+      create: { courseId, userId }
+    });
+  }
+
+  async getTransactionByTxnRef(userId: string, txnRef: string) {
+    const transaction = await this.prisma.transaction.findFirst({
+      where: {
+        vnpTxnRef: txnRef,
+        userId: userId
+      },
+      include: {
+        course: true
+      }
+    });
+
+    if (!transaction) {
+      throw new NotFoundException('Không tìm thấy thông tin giao dịch');
+    }
+
+    return transaction;
+  }
+
 
   private sortObject(obj: Record<string, any>): Record<string, any> {
     const sorted: Record<string, any> = {};

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useCallContext } from '../../../../contexts/CallContext';
 import ChatPanel from '../components/ChatPanel';
 import ParticipantsPanel from '../components/ParticipantsPanel';
@@ -9,7 +9,6 @@ import BottomStatsBar from '../components/BottomStatsBar';
 
 export default function CallRoom() {
   const params = useParams();
-  const router = useRouter();
   const roomId = params.id as string;
 
   const {
@@ -126,7 +125,7 @@ export default function CallRoom() {
   // 1. Waiting room state for private calls
   if (isJoined && isWaitingForApproval) {
     return (
-      <main className='flex flex-1 h-full items-center justify-center bg-background text-on-surface p-6'>
+      <main className='flex min-h-full flex-1 items-center justify-center bg-slate-950 p-4 text-slate-100 sm:p-6'>
         <div className='glass-panel-elevated p-8 rounded-3xl max-w-md w-full flex flex-col items-center justify-center text-center gap-6 shadow-xl border border-outline/10 bg-surface/50 backdrop-blur-md'>
           <div className='relative flex items-center justify-center w-20 h-20 bg-amber-500/10 rounded-full border border-amber-500/20'>
             <span className='material-symbols-outlined text-4xl text-amber-500 animate-pulse'>
@@ -170,7 +169,7 @@ export default function CallRoom() {
   // 2. Pre-join screen ("Ready to Join?")
   if (!isJoined) {
     return (
-      <main className='flex flex-1 h-full items-center justify-center bg-background text-on-surface p-6'>
+      <main className='flex min-h-full flex-1 items-center justify-center bg-slate-950 p-4 text-slate-100 sm:p-6'>
         <div className='glass-panel-elevated p-8 rounded-3xl max-w-2xl w-full flex flex-col gap-8 shadow-xl'>
           <div className='text-center'>
             <h1 className='text-2xl font-bold text-primary mb-2'>
@@ -210,7 +209,7 @@ export default function CallRoom() {
             <video
               ref={(el) => {
                 if (localVideoRef) {
-                  (localVideoRef as any).current = el;
+                  (localVideoRef as { current: HTMLVideoElement | null }).current = el;
                 }
                 if (el && localStream) {
                   el.srcObject = localStream;
@@ -265,32 +264,32 @@ export default function CallRoom() {
   }
 
   return (
-    <main className='flex flex-1 h-full overflow-hidden bg-background text-on-surface relative'>
+    <main className='relative flex h-full min-h-0 flex-1 overflow-hidden bg-slate-950 text-slate-100'>
       {/* 3. Floating approval request banner for the Host */}
       {isHost && waitingList.length > 0 && (
-        <div className='absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-surface border border-outline/20 dark:border-outline/40 backdrop-blur-md rounded-2xl shadow-2xl p-4 max-w-sm w-full flex flex-col gap-3 animate-in fade-in slide-in-from-top-4 duration-300 max-h-[60vh] overflow-hidden'>
-          <div className='flex items-center gap-3 border-b border-outline/10 pb-3'>
-            <div className='w-10 h-10 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full flex items-center justify-center shrink-0'>
+        <div className='absolute left-3 right-3 top-3 z-50 mx-auto flex max-h-[min(420px,70vh)] max-w-xl flex-col gap-3 overflow-hidden rounded-xl border border-amber-300/20 bg-slate-900/95 p-4 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300'>
+          <div className='flex items-center gap-3 border-b border-white/10 pb-3'>
+            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-400/10 text-amber-300'>
               <span className='material-symbols-outlined text-xl animate-pulse'>
                 person_add
               </span>
             </div>
             <div className='flex-1 min-w-0'>
-              <h4 className='font-bold text-sm text-on-surface truncate'>
+              <h4 className='truncate text-sm font-bold text-white'>
                 Yêu cầu tham gia lớp học
               </h4>
-              <p className='text-xs text-on-surface-variant truncate'>
+              <p className='truncate text-xs text-slate-400'>
                 Đang có {waitingList.length} người chờ duyệt
               </p>
             </div>
           </div>
-          
-          <div className='flex flex-col gap-2 overflow-y-auto pr-1 custom-scrollbar'>
+
+          <div className='custom-scrollbar flex flex-col gap-2 overflow-y-auto pr-1'>
             {waitingList.map((user) => (
-              <div key={user.socketId} className='flex items-center justify-between bg-surface-variant/20 p-2 rounded-lg border border-outline/5'>
+              <div key={user.socketId} className='flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-2'>
                 <div className='flex-1 min-w-0'>
-                  <p className='text-sm font-semibold text-on-surface truncate'>{user.name}</p>
-                  <p className='text-xs text-on-surface-variant truncate'>{user.email}</p>
+                  <p className='truncate text-sm font-semibold text-white'>{user.name}</p>
+                  <p className='truncate text-xs text-slate-400'>{user.email}</p>
                 </div>
                 <div className='flex gap-1.5 ml-2 shrink-0'>
                   <button
@@ -312,10 +311,10 @@ export default function CallRoom() {
             ))}
           </div>
 
-          <div className='flex gap-2.5 justify-end border-t border-outline/10 pt-3 mt-1'>
+          <div className='mt-1 flex justify-end gap-2.5 border-t border-white/10 pt-3'>
             <button
               onClick={rejectAllJoin}
-              className='px-4 py-1.5 rounded-lg text-xs font-semibold border border-outline/20 hover:bg-surface-variant/30 text-on-surface transition-all'
+              className='rounded-lg border border-white/15 px-4 py-1.5 text-xs font-semibold text-slate-200 transition-all hover:bg-white/10'
             >
               Từ chối tất cả
             </button>
@@ -330,18 +329,18 @@ export default function CallRoom() {
       )}
 
       {/* Main interface layout */}
-      <section className='flex-1 p-4 overflow-hidden flex flex-col'>
-        <div className='grid grid-cols-12 gap-4 h-full'>
+      <section className='flex h-full min-h-0 flex-1 flex-col overflow-hidden p-2 sm:p-3 lg:p-4'>
+        <div className='grid h-full min-h-0 grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(300px,42vh)] gap-3 xl:grid-cols-[minmax(0,1fr)_360px] xl:grid-rows-1'>
           {/* Main Video Area */}
-          <div className='col-span-12 lg:col-span-8 flex flex-col gap-4 h-full overflow-hidden'>
-            <div className='w-full flex-1 min-h-0 glass-panel rounded-2xl overflow-hidden relative shadow-sm border border-outline-variant/30 bg-black'>
+          <div className='flex min-h-0 flex-col gap-3 overflow-hidden'>
+            <div className='relative min-h-[220px] w-full flex-1 overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl'>
               {screenSharerId ? (
                 <>
                   {sharedScreenError && (
                     <div className='absolute inset-0 z-10 flex flex-col items-center justify-center bg-error/90 text-white p-4 text-center gap-2'>
                       <span className='material-symbols-outlined text-2xl'>error</span>
                       <span className='text-sm font-semibold'>{sharedScreenError}</span>
-                      <button 
+                      <button
                         onClick={() => {
                           if (sharedScreenVideoRef.current) {
                             const activeStream = isSharingScreen ? screenStream : remotePeers[screenSharerId]?.screenStream;
@@ -359,7 +358,7 @@ export default function CallRoom() {
                   <video
                     ref={(el) => {
                       if (sharedScreenVideoRef) {
-                        (sharedScreenVideoRef as any).current = el;
+                        (sharedScreenVideoRef as { current: HTMLVideoElement | null }).current = el;
                       }
                       if (el && screenSharerId) {
                         const activeStream = isSharingScreen ? screenStream : remotePeers[screenSharerId]?.screenStream;
@@ -374,7 +373,7 @@ export default function CallRoom() {
                     onError={() => setSharedScreenError('Lỗi luồng chia sẻ màn hình')}
                     className='w-full h-full object-contain'
                   />
-                  <div className='absolute top-4 left-4 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-sm shadow-sm'>
+                  <div className='absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-lg bg-black/55 px-3 py-1.5 text-sm text-white shadow-sm backdrop-blur-md'>
                     <span className='material-symbols-outlined text-[16px] text-amber-300 animate-pulse'>
                       screen_share
                     </span>
@@ -401,7 +400,7 @@ export default function CallRoom() {
                   <video
                     ref={(el) => {
                       if (localVideoRef) {
-                        (localVideoRef as any).current = el;
+                        (localVideoRef as { current: HTMLVideoElement | null }).current = el;
                       }
                       if (el && localStream) {
                         if (el.srcObject !== localStream) {
@@ -416,8 +415,8 @@ export default function CallRoom() {
                     onError={() => setLocalVideoError('Lỗi hiển thị camera')}
                     className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${isCamOn ? 'opacity-100' : 'opacity-0'}`}
                   />
- 
-                  <div className='absolute top-4 left-4 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-sm shadow-sm'>
+
+                  <div className='absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-lg bg-black/55 px-3 py-1.5 text-sm text-white shadow-sm backdrop-blur-md'>
                     <span className='material-symbols-outlined text-[16px] text-sky-300'>
                       person
                     </span>
@@ -440,11 +439,11 @@ export default function CallRoom() {
           </div>
 
           {/* Right Sidebar (Tabs) */}
-          <div className='col-span-12 lg:col-span-4 flex flex-col glass-panel rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden bg-surface h-full'>
-            <div className='flex border-b border-outline-variant/30 bg-surface-container-low'>
+          <aside className='flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-2xl'>
+            <div className='flex shrink-0 border-b border-white/10 bg-slate-950/70'>
               <button
                 onClick={() => setActiveTab('participants')}
-                className={`flex-1 py-3 text-xs font-semibold transition-colors flex items-center justify-center gap-2 border-b-2 ${activeTab === 'participants' ? 'border-primary text-primary bg-surface' : 'border-transparent text-on-surface-variant hover:bg-surface/50'}`}
+                className={`flex flex-1 items-center justify-center gap-2 border-b-2 py-3 text-xs font-semibold transition-colors ${activeTab === 'participants' ? 'border-sky-400 bg-slate-900 text-sky-300' : 'border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
               >
                 <span className='material-symbols-outlined text-[18px]'>
                   group
@@ -453,7 +452,7 @@ export default function CallRoom() {
               </button>
               <button
                 onClick={() => setActiveTab('chat')}
-                className={`flex-1 py-3 text-xs font-semibold transition-colors flex items-center justify-center gap-2 border-b-2 ${activeTab === 'chat' ? 'border-primary text-primary bg-surface' : 'border-transparent text-on-surface-variant hover:bg-surface/50'}`}
+                className={`flex flex-1 items-center justify-center gap-2 border-b-2 py-3 text-xs font-semibold transition-colors ${activeTab === 'chat' ? 'border-sky-400 bg-slate-900 text-sky-300' : 'border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
               >
                 <span className='material-symbols-outlined text-[18px]'>
                   forum
@@ -462,14 +461,14 @@ export default function CallRoom() {
               </button>
             </div>
 
-            <div className='flex-1 overflow-hidden'>
+            <div className='min-h-0 flex-1 overflow-hidden'>
               {activeTab === 'participants' ? (
                 <ParticipantsPanel />
               ) : (
                 <ChatPanel />
               )}
             </div>
-          </div>
+          </aside>
         </div>
       </section>
     </main>

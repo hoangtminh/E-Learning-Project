@@ -8,32 +8,17 @@ interface RemoteVideoProps {
   id: string;
   stream?: MediaStream;
   name: string;
-  email?: string;
   isCamOn: boolean;
   isMicOn: boolean;
   isHost: boolean;
   onKick: (socketId: string) => void;
 }
 
-function getInitials(name: string, email?: string) {
-  if (name && name !== 'Người dùng' && name.trim() !== '') {
-    const parts = name.trim().split(' ');
-    if (parts.length > 1) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name.trim().substring(0, 2).toUpperCase();
-  }
-  if (email) {
-    return email.substring(0, 2).toUpperCase();
-  }
-  return 'U';
-}
 
 function RemoteVideo({
   id,
   stream,
   name,
-  email,
   isCamOn,
   isMicOn,
   isHost,
@@ -43,7 +28,7 @@ function RemoteVideo({
   const [playError, setPlayError] = useState<string | null>(null);
 
   useEffect(() => {
-    setPlayError(null);
+    queueMicrotask(() => setPlayError(null));
     let timeoutId: NodeJS.Timeout;
 
     if (videoRef.current && stream && isCamOn) {
@@ -64,7 +49,7 @@ function RemoteVideo({
   }, [stream, isCamOn]);
 
   return (
-    <div className='relative rounded-2xl overflow-hidden bg-surface-container-high shadow-sm aspect-video border border-outline-variant/30 flex items-center justify-center group'>
+    <div className='group relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-slate-950 shadow-sm'>
       {isCamOn && stream && stream.getVideoTracks().length > 0 ? (
         <>
           {playError && (
@@ -87,13 +72,13 @@ function RemoteVideo({
           />
         </>
       ) : (
-        <div className='flex flex-col items-center justify-center w-full h-full bg-surface-container-highest text-on-surface-variant/40'>
+        <div className='flex h-full w-full flex-col items-center justify-center bg-slate-800 text-slate-500'>
           <span className='material-symbols-outlined text-xl opacity-60'>
             videocam_off
           </span>
         </div>
       )}
-      <div className='absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-white flex items-center gap-1'>
+      <div className='absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded bg-black/70 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm'>
         <span>{name}</span>
         {!isMicOn && (
           <span className='material-symbols-outlined text-[10px] text-red-400'>
@@ -136,7 +121,7 @@ function LocalVideoInSidebar({
   const [playError, setPlayError] = useState<string | null>(null);
 
   useEffect(() => {
-    setPlayError(null);
+    queueMicrotask(() => setPlayError(null));
     let timeoutId: NodeJS.Timeout;
 
     if (videoRef.current && stream && isCamOn) {
@@ -157,7 +142,7 @@ function LocalVideoInSidebar({
   }, [stream, isCamOn]);
 
   return (
-    <div className='relative rounded-2xl overflow-hidden bg-black aspect-video border border-outline-variant/30 flex items-center justify-center shadow-sm'>
+    <div className='relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black shadow-sm'>
       {isCamOn && stream && stream.getVideoTracks().length > 0 ? (
         <>
           {playError && (
@@ -179,13 +164,13 @@ function LocalVideoInSidebar({
           />
         </>
       ) : (
-        <div className='flex flex-col items-center justify-center w-full h-full bg-surface-container-highest text-on-surface-variant/40'>
+        <div className='flex h-full w-full flex-col items-center justify-center bg-slate-800 text-slate-500'>
           <span className='material-symbols-outlined text-xl opacity-60'>
             videocam_off
           </span>
         </div>
       )}
-      <div className='absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-white font-medium'>
+      <div className='absolute bottom-2 left-2 max-w-[calc(100%-1rem)] truncate rounded bg-black/70 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm'>
         {name}
       </div>
     </div>
@@ -204,15 +189,18 @@ export default function ParticipantsPanel() {
   const peersList = Object.entries(remotePeers);
 
   return (
-    <div className='flex flex-col h-full p-3 overflow-y-auto'>
-      <h3 className='font-bold text-on-surface mb-3 flex items-center gap-1.5 text-sm'>
-        <span className='material-symbols-outlined text-primary text-[18px]'>
+    <div className='flex h-full min-h-0 flex-col overflow-hidden bg-slate-900'>
+      <div className='flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3'>
+        <h3 className='flex items-center gap-1.5 text-sm font-bold text-white'>
+        <span className='material-symbols-outlined text-sky-300 text-[18px]'>
           group
         </span>
         Người tham gia ({peersList.length + 1})
-      </h3>
+        </h3>
+        <span className='rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-400'>Live</span>
+      </div>
 
-      <div className='grid grid-cols-2 gap-2'>
+      <div className='grid min-h-0 grid-cols-2 gap-2 overflow-y-auto p-3'>
         {/* Render our own camera if screen is being shared by anyone */}
         {screenSharerId && (
           <LocalVideoInSidebar
@@ -229,7 +217,6 @@ export default function ParticipantsPanel() {
               id={id}
               stream={peer.stream}
               name={peer.name}
-              email={peer.email}
               isCamOn={!!peer.isCamOn}
               isMicOn={peer.isMicOn !== false}
               isHost={isHost}
@@ -238,7 +225,7 @@ export default function ParticipantsPanel() {
           );
         })}
         {peersList.length === 0 && !screenSharerId && (
-          <div className='col-span-2 text-center text-xs text-on-surface-variant py-6 border border-dashed border-outline-variant/50 rounded-lg'>
+          <div className='col-span-2 rounded-lg border border-dashed border-white/15 py-8 text-center text-xs text-slate-500'>
             Đang chờ người khác tham gia...
           </div>
         )}
