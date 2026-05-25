@@ -30,7 +30,7 @@ export default function ClassroomCoursesPage() {
             </span>
             Khóa học liên kết
           </h2>
-          <p className='text-slate-500 mt-1'>
+          <p className='text-slate-500 text-sm mt-1'>
             Các khóa học chính thức được gắn kèm với lớp học này.
           </p>
         </div>

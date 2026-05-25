@@ -486,71 +486,76 @@ export default function ClassroomTasksPage() {
     );
   }
 
-  if (tasks.length === 0) {
-    return (
-      <div className='text-center py-20 text-slate-400 space-y-4'>
+  return (
+    <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full'>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4'>
         <div>
-          <span className='material-symbols-outlined text-5xl block mb-3 opacity-30'>
-            assignment
-          </span>
-          <p className='font-medium text-sm'>Chưa có bài tập nào</p>
+          <h2 className='text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
+            <span className='material-symbols-outlined text-purple-600' style={{ fontVariationSettings: "'FILL' 1" }}>
+              assignment
+            </span>
+            Bài tập về nhà
+          </h2>
+          <p className='text-slate-500 text-sm mt-1'>
+            Theo dõi tiến độ hoàn thành và điểm số các bài tập của bạn.
+          </p>
         </div>
         {isOwnerOrAdmin && (
           <Link
             href={`/classrooms/${classroomId}/admin/tasks`}
-            className='inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm'
+            className='flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition-colors border border-indigo-200 shadow-sm shrink-0'
           >
-            <span className='material-symbols-outlined text-[18px]'>
+            <span className='material-symbols-outlined text-[16px]'>
               admin_panel_settings
             </span>
-            Tạo bài tập mới (Admin)
+            Quản lý bài tập (Admin)
           </Link>
         )}
       </div>
-    );
-  }
 
-  return (
-    <div className='max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6'>
-      {/* Summary bar */}
-      <div className='flex items-center justify-between mb-4 px-1'>
-        <div className='flex items-center gap-3'>
-          <h1 className='text-base font-bold text-slate-700'>
-            Bài tập ({total})
-          </h1>
-          {isOwnerOrAdmin && (
-            <Link
-              href={`/classrooms/${classroomId}/admin/tasks`}
-              className='flex items-center gap-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition-colors'
-            >
-              <span className='material-symbols-outlined text-[15px]'>
-                admin_panel_settings
-              </span>
-              Quản lý (Admin)
-            </Link>
-          )}
+      <div className='max-w-3xl'>
+        {/* Summary info and progress bar */}
+        <div className='flex items-center justify-between mb-3 px-1'>
+          <h3 className='text-sm font-bold text-slate-700'>
+            Danh sách bài tập ({total})
+          </h3>
+          <div className='flex items-center gap-2 text-xs text-slate-500 font-semibold'>
+            <span className='w-2 h-2 rounded-full bg-sky-400 inline-block animate-pulse' />
+            <span>
+              {submitted}/{total} đã nộp
+            </span>
+          </div>
         </div>
-        <div className='flex items-center gap-2 text-xs text-slate-500'>
-          <span className='w-2 h-2 rounded-full bg-sky-400 inline-block' />
-          <span>
-            {submitted}/{total} đã nộp
-          </span>
+
+        {/* Progress Bar */}
+        <div className='h-1.5 w-full bg-slate-100 rounded-full mb-6 overflow-hidden border border-slate-200/20'>
+          <div
+            className='h-full bg-sky-500 rounded-full transition-all duration-500'
+            style={{ width: total ? `${(submitted / total) * 100}%` : '0%' }}
+          />
         </div>
-      </div>
 
-      {/* Progress */}
-      <div className='h-1 w-full bg-slate-100 rounded-full mb-5 overflow-hidden'>
-        <div
-          className='h-full bg-sky-500 rounded-full transition-all duration-500'
-          style={{ width: total ? `${(submitted / total) * 100}%` : '0%' }}
-        />
-      </div>
-
-      {/* Task list */}
-      <div className='bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100'>
-        {tasks.map((task) => (
-          <TaskRow key={task.id} task={task} classroomId={classroomId} />
-        ))}
+        {/* Task list or Empty state */}
+        {total === 0 ? (
+          <div className='text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 px-4'>
+            <span className='material-symbols-outlined text-5xl text-slate-300 block mb-2'>
+              assignment
+            </span>
+            <p className='text-slate-500 font-bold text-sm'>
+              Không có bài tập nào.
+            </p>
+            <p className='text-xs text-slate-400 font-medium'>
+              Hiện chưa có bài tập nào được giao trong lớp học này.
+            </p>
+          </div>
+        ) : (
+          <div className='bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100'>
+            {tasks.map((task) => (
+              <TaskRow key={task.id} task={task} classroomId={classroomId} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

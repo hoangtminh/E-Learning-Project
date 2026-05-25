@@ -86,6 +86,12 @@ export const removeMember = (classroomId: string, userId: string) =>
 export const addMemberByEmail = (classroomId: string, email: string) =>
   apiPost<ClassroomMember>(`/classrooms/${classroomId}/members/email`, { email });
 
+export const addMembers = (classroomId: string, userIds: string[]) =>
+  apiPost<{ added: number; skipped: number; total: number }>(
+    `/classrooms/${classroomId}/members`,
+    { userIds }
+  );
+
 export const joinByCode = (code: string) =>
   apiPost('/classrooms/join-by-code', { code });
 

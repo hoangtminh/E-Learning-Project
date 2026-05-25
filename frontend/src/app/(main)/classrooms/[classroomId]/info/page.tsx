@@ -34,20 +34,10 @@ export default function ClassroomInfoPage() {
     members,
     loadingMembers,
     fetchMembers,
-    removeMember,
-    addMemberByEmail,
-    updateMemberRole,
   } = useClassrooms();
   const { user } = useAuth();
 
   const [search, setSearch] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
-  const [addingError, setAddingError] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const [kickTarget, setKickTarget] = useState<any>(null);
-  const [isKicking, setIsKicking] = useState(false);
-  const [kickError, setKickError] = useState('');
 
   useEffect(() => {
     if (classroomId) {
@@ -58,33 +48,29 @@ export default function ClassroomInfoPage() {
   const currentUserId = user?.userId || user?.id;
   const currentMember = members?.find((m) => m?.userId === currentUserId);
   const currentUserRole = currentMember?.role;
-  const isOwnerOrAdmin =
-    currentUserRole === 'owner' || currentUserRole === 'admin';
 
   const filteredMembers = (members ?? []).filter((m) => {
     const name = m?.user?.fullName ?? m?.user?.email ?? '';
     return name.toLowerCase().includes(search.toLowerCase());
   });
 
-  const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailInput.trim()) return;
-    setIsAdding(true);
-    setAddingError('');
-    try {
-      await addMemberByEmail(classroomId, emailInput.trim());
-      setShowAddModal(false);
-      setEmailInput('');
-      toast.success('Đã thêm thành viên thành công!');
-    } catch (err: any) {
-      setAddingError(err.message || 'Có lỗi xảy ra khi thêm thành viên');
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
   return (
     <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full'>
+      {/* Page Header */}
+      <div className='flex justify-between items-center mb-6'>
+        <div>
+          <h2 className='text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
+            <span className='material-symbols-outlined text-indigo-600' style={{ fontVariationSettings: "'FILL' 1" }}>
+              info
+            </span>
+            Thông tin lớp học
+          </h2>
+          <p className='text-slate-500 text-sm mt-1'>
+            Xem chi tiết thông tin chung và danh sách thành viên trong lớp.
+          </p>
+        </div>
+      </div>
+
       <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start'>
         {/* Left Column */}
         <div className='lg:col-span-8 space-y-6 sm:space-y-8'>
@@ -181,18 +167,6 @@ export default function ClassroomInfoPage() {
                     className='pl-9 rounded-md text-sm max-w-xs'
                   />
                 </div>
-                {/* Add Member Button component */}
-                {isOwnerOrAdmin && (
-                  <Button
-                    onClick={() => setShowAddModal(true)}
-                    className='flex items-center gap-1.5 rounded-md text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-sm'
-                  >
-                    <span className='material-symbols-outlined text-[18px]'>
-                      person_add
-                    </span>
-                    Thêm thành viên
-                  </Button>
-                )}
               </div>
             </div>
 
@@ -209,10 +183,6 @@ export default function ClassroomInfoPage() {
                   const roleStyle =
                     ROLE_LABELS[m?.role || 'member'] ?? ROLE_LABELS.member;
                   const isCurrentUser = m?.userId === currentUserId;
-                  const canManage =
-                    isOwnerOrAdmin &&
-                    !isCurrentUser &&
-                    (currentUserRole === 'owner' || m?.role !== 'admin');
 
                   return (
                     <div
@@ -232,62 +202,26 @@ export default function ClassroomInfoPage() {
                           </div>
                         )}
                         <div className='flex-1 min-w-0'>
-                          <h4 className='font-bold text-slate-800 truncate text-sm flex items-center gap-1.5'>
+                          <h4 className='font-semibold text-slate-800 truncate text-sm flex items-center gap-1.5'>
                             {m?.user?.fullName ?? m?.user?.email}
                             {isCurrentUser && (
-                              <span className='text-[8px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-extrabold'>
+                              <span className='text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-semibold'>
                                 (Bạn)
                               </span>
                             )}
                           </h4>
-                          <p className='text-xs text-slate-400 truncate mt-0.5'>
+                          <p className='text-xs text-slate-500 truncate mt-1'>
                             {m?.user?.email}
                           </p>
-                          <span
-                            className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold ${roleStyle.color}`}
-                          >
-                            {roleStyle.label}
-                          </span>
+                          <div className='mt-2'>
+                            <span
+                              className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${roleStyle.color}`}
+                            >
+                              {roleStyle.label}
+                            </span>
+                          </div>
                         </div>
                       </div>
-
-                      {canManage && (
-                        <div className='flex items-center gap-2 shrink-0'>
-                          {currentUserRole === 'owner' && m.role !== 'owner' && (
-                            <select
-                              value={m.role}
-                              onChange={async (e) => {
-                                const nextRole = e.target.value as 'admin' | 'member';
-                                try {
-                                  await updateMemberRole(
-                                    classroomId,
-                                    m.userId,
-                                    nextRole,
-                                  );
-                                  toast.success('Cập nhật vai trò thành công!');
-                                } catch (e: any) {
-                                  toast.error(e.message || 'Lỗi cập nhật vai trò');
-                                }
-                              }}
-                              className='text-xs font-semibold bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer'
-                            >
-                              <option value='member'>Thành viên</option>
-                              <option value='admin'>Quản trị viên</option>
-                            </select>
-                          )}
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            className='w-8 h-8 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50'
-                            title='Xóa khỏi lớp'
-                            onClick={() => setKickTarget(m)}
-                          >
-                            <span className='material-symbols-outlined text-[18px]'>
-                              person_remove
-                            </span>
-                          </Button>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -320,183 +254,6 @@ export default function ClassroomInfoPage() {
           </div>
         </div>
       </div>
-
-      {/* Add Member Dialog/Modal */}
-      {showAddModal && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in'>
-          <div className='bg-white rounded-md shadow-xl border border-slate-200 max-w-md w-full mx-4 p-6 animate-scale-up'>
-            <div className='flex items-center justify-between border-b border-slate-100 pb-3 mb-4'>
-              <h3 className='text-base font-extrabold text-slate-800 flex items-center gap-2'>
-                <span className='material-symbols-outlined text-sky-600'>
-                  person_add
-                </span>
-                Thêm thành viên bằng Email
-              </h3>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() => setShowAddModal(false)}
-                className='w-7 h-7 p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors'
-              >
-                <span className='material-symbols-outlined text-sm font-bold'>
-                  close
-                </span>
-              </Button>
-            </div>
-
-            <form onSubmit={handleAddMember} className='space-y-4'>
-              <div className='space-y-1.5'>
-                <label className='text-xs font-bold text-slate-500 uppercase tracking-wide'>
-                  Địa chỉ Email
-                </label>
-                <Input
-                  type='email'
-                  required
-                  placeholder='e.g., user@example.com'
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  className='rounded-md text-sm'
-                />
-              </div>
-
-              {addingError && (
-                <div className='p-3 bg-red-50 border border-red-100 rounded-md text-xs text-red-600 font-bold'>
-                  {addingError}
-                </div>
-              )}
-
-              <div className='flex justify-end gap-2.5 pt-3 border-t border-slate-100'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => setShowAddModal(false)}
-                  className='rounded-md text-xs font-bold'
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type='submit'
-                  disabled={isAdding}
-                  className='bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-md text-xs shadow-sm flex items-center gap-1.5'
-                >
-                  {isAdding ? (
-                    <span className='material-symbols-outlined animate-spin text-[16px]'>
-                      progress_activity
-                    </span>
-                  ) : (
-                    <span className='material-symbols-outlined text-[16px] font-bold'>
-                      add
-                    </span>
-                  )}
-                  Thêm thành viên
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Kick Member Confirmation Dialog */}
-      {kickTarget && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in'>
-          <div className='bg-white rounded-md shadow-xl border border-slate-200 max-w-md w-full mx-4 p-6 animate-scale-up'>
-            <div className='flex items-center gap-3 text-red-600 border-b border-slate-100 pb-3 mb-4'>
-              <span className='material-symbols-outlined text-2xl'>
-                warning
-              </span>
-              <h3 className='text-base font-extrabold text-slate-800'>
-                Xóa{' '}
-                {kickTarget.role === 'admin' ? 'Quản trị viên' : 'Thành viên'}
-              </h3>
-            </div>
-
-            <div className='space-y-3 mb-6'>
-              <p className='text-sm text-slate-600 leading-relaxed font-semibold'>
-                Bạn có chắc chắn muốn xóa{' '}
-                <strong>
-                  {kickTarget.user?.fullName || kickTarget.user?.email}
-                </strong>{' '}
-                ra khỏi lớp học không?
-              </p>
-              <p className='text-xs text-red-500 bg-red-50 border border-red-100 rounded-md p-2.5 font-bold leading-normal'>
-                Hành động này không thể hoàn tác. Người dùng sẽ mất toàn bộ
-                quyền truy cập và các dữ liệu liên quan.
-              </p>
-            </div>
-
-            {kickError && (
-              <div className='p-3 mb-4 bg-red-50 border border-red-100 rounded-md text-xs text-red-600 font-bold animate-pulse'>
-                {kickError}
-              </div>
-            )}
-
-            <div className='flex justify-end gap-2.5 pt-3 border-t border-slate-100'>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => {
-                  setKickTarget(null);
-                  setKickError('');
-                }}
-                className='rounded-md text-xs font-bold'
-              >
-                Hủy
-              </Button>
-              <Button
-                type='button'
-                variant='destructive'
-                onClick={async () => {
-                  if (kickTarget.userId === currentUserId) {
-                    setKickError(
-                      'Bạn không thể tự xóa chính mình khỏi lớp học.',
-                    );
-                    return;
-                  }
-                  const roleWeights: Record<string, number> = {
-                    owner: 3,
-                    admin: 2,
-                    member: 1,
-                  };
-                  const myWeight = roleWeights[currentUserRole ?? ''] ?? 0;
-                  const targetWeight = roleWeights[kickTarget.role] ?? 0;
-
-                  if (targetWeight >= myWeight) {
-                    setKickError(
-                      'Bạn không thể xóa người có quyền cao hơn hoặc bằng bạn.',
-                    );
-                    return;
-                  }
-
-                  setIsKicking(true);
-                  setKickError('');
-                  try {
-                    await removeMember(classroomId, kickTarget.userId);
-                    setKickTarget(null);
-                    toast.success('Đã xóa thành viên khỏi lớp!');
-                  } catch (err: any) {
-                    setKickError(err.message || 'Xóa thành viên thất bại');
-                  } finally {
-                    setIsKicking(false);
-                  }
-                }}
-                disabled={isKicking}
-                className='bg-red-600 hover:bg-red-700 text-white font-bold rounded-md text-xs shadow-sm flex items-center gap-1.5'
-              >
-                {isKicking ? (
-                  <span className='material-symbols-outlined animate-spin text-[16px]'>
-                    progress_activity
-                  </span>
-                ) : (
-                  <span className='material-symbols-outlined text-[16px] font-bold'>
-                    delete
-                  </span>
-                )}
-                Xóa ngay
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

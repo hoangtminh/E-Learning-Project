@@ -36,6 +36,8 @@ export default function CourseEditorPage() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [descInput, setDescInput] = useState('');
+  const [visibilityInput, setVisibilityInput] = useState<'public' | 'private' | 'sale'>('public');
+  const [priceInput, setPriceInput] = useState('');
   const [newSectionTitle, setNewSectionTitle] = useState('');
   const [addingLessonTo, setAddingLessonTo] = useState<string | null>(null);
   const [newLessonTitle, setNewLessonTitle] = useState('');
@@ -63,6 +65,8 @@ export default function CourseEditorPage() {
         setCourse(courseRes.data);
         setTitleInput(courseRes.data.title);
         setDescInput(courseRes.data.description || '');
+        setVisibilityInput((courseRes.data.visibility as 'public' | 'private' | 'sale') || 'public');
+        setPriceInput(courseRes.data.price > 0 ? String(courseRes.data.price) : '');
       }
       if (sectionsRes.success && sectionsRes.data) {
         setSections(sectionsRes.data);
@@ -82,11 +86,24 @@ export default function CourseEditorPage() {
   const handleUpdateCourse = async () => {
     if (!titleInput.trim()) return;
     try {
-      await updateCourse(courseId, {
+      const parsedPrice = parseFloat(priceInput.replace(/,/g, ''));
+      const finalPrice = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 0;
+
+      // Nếu nhập giá > 0 và visibility = public → tự đổi sang sale
+      const finalVisibility =
+        finalPrice > 0 && visibilityInput === 'public' ? 'sale' : visibilityInput;
+
+      const res = await updateCourse(courseId, {
         title: titleInput.trim(),
         description: descInput.trim() || undefined,
+        visibility: finalVisibility,
+        price: finalPrice > 0 ? finalPrice : 0,
       });
-      setCourse((prev) => prev ? { ...prev, title: titleInput.trim(), description: descInput.trim() } : prev);
+      if (res.success && res.data) {
+        setCourse(res.data);
+        setVisibilityInput(finalVisibility);
+        setPriceInput(finalPrice > 0 ? String(finalPrice) : '');
+      }
       setEditingTitle(false);
     } catch (err) {
       console.error(err);
@@ -260,12 +277,16 @@ export default function CourseEditorPage() {
           </div>
           {editingTitle ? (
             <div className="space-y-3">
-              <input
-                value={titleInput}
-                onChange={(e) => setTitleInput(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Tên khóa học</label>
+                <input
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
               <div className="bg-white">
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Mô tả</label>
                 <ReactQuill 
                   theme="snow" 
                   value={descInput} 
@@ -274,15 +295,68 @@ export default function CourseEditorPage() {
                   className="rounded-xl border border-slate-300 overflow-hidden"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Chế độ hiển thị</label>
+                  <select
+                    value={visibilityInput}
+                    onChange={(e) => setVisibilityInput(e.target.value as 'public' | 'private' | 'sale')}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="public">Công khai miễn phí</option>
+                    <option value="sale">Công khai có phí</option>
+                    <option value="private">Riêng tư</option>
+                  </select>
+                </div>
+                {(visibilityInput === 'sale' || visibilityInput === 'public') && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">
+                      Giá (VNĐ){visibilityInput === 'sale' && <span className="text-red-400"> *</span>}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={priceInput}
+                        onChange={(e) => setPriceInput(e.target.value)}
+                        className="w-full px-3 py-2 pr-14 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder={visibilityInput === 'sale' ? '299000' : '0 = miễn phí'}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none">VNĐ</span>
+                    </div>
+                    {priceInput && parseFloat(priceInput) > 0 && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(priceInput))}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div>
               <h3 className="text-lg font-semibold text-slate-800">{course.title}</h3>
               <div className="text-slate-500 text-sm mt-1 prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1" dangerouslySetInnerHTML={{ __html: course.description || 'Chưa có mô tả' }} />
-              <div className="flex gap-4 mt-3 text-xs text-slate-400">
-                <span>{course.visibility === 'public' ? '🌐 Công khai' : '🔒 Riêng tư'}</span>
-                <span>{course._count?.sections ?? 0} phần học</span>
-                <span>{course._count?.members ?? 0} học viên</span>
+              <div className="flex flex-wrap gap-3 mt-3">
+                <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                  course.visibility === 'public'
+                    ? 'bg-green-100 text-green-700'
+                    : course.visibility === 'sale'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {course.visibility === 'public' ? '🌐 Công khai miễn phí'
+                    : course.visibility === 'sale' ? '💰 Có phí'
+                    : '🔒 Riêng tư'}
+                </span>
+                {Number(course.price) > 0 && (
+                  <span className="inline-flex items-center text-xs font-bold text-blue-600">
+                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(course.price))}
+                  </span>
+                )}
+                <span className="text-xs text-slate-400">{course._count?.sections ?? 0} phần học</span>
+                <span className="text-xs text-slate-400">{course._count?.members ?? 0} học viên</span>
               </div>
             </div>
           )}

@@ -17,7 +17,8 @@ export default function InstructorStudioPage() {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'private' | 'sale'>('public');
+  const [price, setPrice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchCourses = async () => {
@@ -40,6 +41,14 @@ export default function InstructorStudioPage() {
 
   const handleCreate = async () => {
     if (!title.trim()) return;
+
+    const parsedPrice = parseFloat(price.replace(/,/g, ''));
+    const finalPrice = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 0;
+
+    // Nếu nhập giá > 0 mà chọn public → tự đổi sang sale
+    const finalVisibility =
+      finalPrice > 0 && visibility === 'public' ? 'sale' : visibility;
+
     setIsSubmitting(true);
     try {
       const slug = title
@@ -52,13 +61,16 @@ export default function InstructorStudioPage() {
         title: title.trim(),
         slug,
         description: description.trim() || undefined,
-        visibility,
+        visibility: finalVisibility,
+        price: finalPrice > 0 ? finalPrice : undefined,
       });
 
       if (res.success) {
         setShowForm(false);
         setTitle('');
         setDescription('');
+        setPrice('');
+        setVisibility('public');
         await fetchCourses();
       } else {
         void appAlert(res.error || 'Tạo khóa học thất bại');
@@ -162,13 +174,48 @@ export default function InstructorStudioPage() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Chế độ hiển thị</label>
                   <select
                     value={visibility}
-                    onChange={(e) => setVisibility(e.target.value as 'public' | 'private')}
+                    onChange={(e) => setVisibility(e.target.value as 'public' | 'private' | 'sale')}
                     className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
                   >
-                    <option value="public">Công khai — ai cũng có thể tìm thấy</option>
+                    <option value="public">Công khai miễn phí — ai cũng truy cập được</option>
+                    <option value="sale">Công khai có phí — yêu cầu thanh toán</option>
                     <option value="private">Riêng tư — chỉ qua lời mời</option>
                   </select>
                 </div>
+
+                {/* Ô nhập giá — hiện khi chọn "Có phí" hoặc public (để tùy chọn) */}
+                {(visibility === 'sale' || visibility === 'public') && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Giá khóa học
+                      {visibility === 'sale' && <span className="text-red-500"> *</span>}
+                      <span className="text-slate-400 font-normal ml-1">(VNĐ)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="w-full px-4 py-2.5 pr-16 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                        placeholder={visibility === 'sale' ? 'Ví dụ: 299000' : '0 = miễn phí'}
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">VNĐ</span>
+                    </div>
+                    {visibility === 'public' && price && parseFloat(price) > 0 && (
+                      <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">info</span>
+                        Khóa học sẽ được đặt thành <strong>Có phí</strong> do có nhập giá
+                      </p>
+                    )}
+                    {price && parseFloat(price) > 0 && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        ≈ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(price))}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
@@ -227,9 +274,13 @@ export default function InstructorStudioPage() {
                     <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                       course.visibility === 'public'
                         ? 'bg-green-100 text-green-700'
-                        : 'bg-amber-100 text-amber-700'
+                        : course.visibility === 'sale'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-amber-100 text-amber-700'
                     }`}>
-                      {course?.visibility === 'public' ? 'Công khai' : 'Riêng tư'}
+                      {course.visibility === 'public' ? 'Miễn phí'
+                        : course.visibility === 'sale' ? 'Có phí'
+                        : 'Riêng tư'}
                     </span>
                   </div>
                   <div className="p-5">
@@ -239,15 +290,22 @@ export default function InstructorStudioPage() {
                     <p className="text-slate-500 text-sm mt-1 line-clamp-2">
                       {course?.description || 'Chưa có mô tả'}
                     </p>
-                    <div className="flex items-center gap-4 mt-4 text-xs text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">list</span>
-                        {course?._count.sections} phần
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">group</span>
-                        {course?._count.members} học viên
-                      </span>
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center gap-4 text-xs text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">list</span>
+                          {course?._count.sections} phần
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">group</span>
+                          {course?._count.members} học viên
+                        </span>
+                      </div>
+                      {Number(course?.price) > 0 && (
+                        <span className="text-xs font-bold text-blue-600">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(course.price))}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>

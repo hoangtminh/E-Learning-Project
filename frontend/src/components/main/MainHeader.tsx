@@ -61,15 +61,37 @@ export function MainHeader() {
         const isId = seg.length >= 20 || /^[0-9a-f-]{24,}/i.test(seg);
         if (!isId) continue;
         const parent = segments[i - 1];
+        const grandparent = segments[i - 2];
         let endpoint = '';
         if (parent === 'classrooms') endpoint = `/classrooms/${seg}`;
         else if (parent === 'courses') endpoint = `/courses/${seg}`;
+        // learning/[courseId] → fetch course title
+        else if (parent === 'learning') endpoint = `/courses/${seg}`;
         if (endpoint) {
           try {
             const res = await apiGet<any>(endpoint);
             if (res.success && res.data?.title) {
               newLabels[seg] = res.data.title;
               changed = true;
+              // If this is a lesson (grandparent = 'learning'), fetch lesson name too
+              if (grandparent === 'learning' && res.data?.sections) {
+                // Already handled by course fetch - lesson id is current seg's NEXT segment
+              }
+            }
+          } catch { /* ignore */ }
+        }
+        // learning/[courseId]/[lessonId] → fetch lesson title from course sections
+        if (grandparent === 'learning' && !newLabels[seg]) {
+          const courseId = segments[i - 1];
+          try {
+            const res = await apiGet<any>(`/courses/${courseId}`);
+            if (res.success && res.data?.sections) {
+              const allLessons = res.data.sections.flatMap((s: any) => s.lessons || []);
+              const lesson = allLessons.find((l: any) => l.id === seg);
+              if (lesson?.title) {
+                newLabels[seg] = lesson.title;
+                changed = true;
+              }
             }
           } catch { /* ignore */ }
         }
@@ -80,8 +102,15 @@ export function MainHeader() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // Một số segment không có trang index, redirect về trang khác
+  const SEGMENT_HREF_OVERRIDES: Record<string, string> = {
+    learning: '/my-courses',
+    instructor: '/instructor/studio',
+  };
+
   const breadcrumbs = segments.map((seg, i) => {
-    const href = '/' + segments.slice(0, i + 1).join('/');
+    const defaultHref = '/' + segments.slice(0, i + 1).join('/');
+    const href = SEGMENT_HREF_OVERRIDES[seg] ?? defaultHref;
     const isId = seg.length >= 20;
     let label = SEGMENT_LABELS[seg] || seg.replace(/-/g, ' ');
     if (dynamicLabels[seg]) label = dynamicLabels[seg];

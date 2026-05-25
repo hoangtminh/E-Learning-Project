@@ -106,14 +106,18 @@ export default function ClassroomFilesPage() {
   };
 
   return (
-    <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full flex-1'>
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4'>
+    <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full'>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4'>
         <div>
-          <h2 className='text-xl font-bold text-slate-800'>
+          <h2 className='text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
+            <span className='material-symbols-outlined text-emerald-600' style={{ fontVariationSettings: "'FILL' 1" }}>
+              folder_shared
+            </span>
             Tài nguyên lớp học
           </h2>
-          <p className='text-slate-500 text-xs mt-0.5'>
-            {files.length} tài liệu trong lớp {classroom?.title}
+          <p className='text-slate-500 text-sm mt-1'>
+            Xem và tải về các tài liệu học tập được chia sẻ trong lớp học này.
           </p>
         </div>
       </div>

@@ -101,6 +101,22 @@ export class PaymentService {
   }
 
   async confirmVnpayReturn(userId: string, query: any) {
+    const orderId = query["vnp_TxnRef"];
+
+    // Nếu IPN đã xử lý trước, trả về transaction trực tiếp mà không cần validate lại chữ ký
+    if (orderId) {
+      const existingTx = await this.prisma.transaction.findUnique({
+        where: { vnpTxnRef: orderId },
+        include: { course: true }
+      });
+
+      if (existingTx && existingTx.userId === userId && existingTx.status === 'success') {
+        // Đảm bảo membership tồn tại (idempotent)
+        await this.ensureCourseMembership(existingTx.userId, existingTx.courseId);
+        return existingTx;
+      }
+    }
+
     const result = await this.processVnpayConfirmation(query, userId);
 
     if (!result.transaction || !["00", "02"].includes(result.rspCode)) {
@@ -129,7 +145,9 @@ export class PaymentService {
       return { rspCode: "01", message: "Order not found" };
     }
 
-    if (!Number.isFinite(amount) || Number(transaction.amount) !== amount) {
+    // transaction.amount là Prisma Decimal object, cần dùng toString() rồi mới parse
+    const transactionAmount = parseFloat(transaction.amount.toString());
+    if (!Number.isFinite(amount) || Math.abs(transactionAmount - amount) > 0.01) {
       return { rspCode: "04", message: "Invalid amount", transaction };
     }
 
@@ -184,12 +202,15 @@ export class PaymentService {
   }
 
   private isValidVnpaySignature(query: Record<string, any>) {
-    const vnpSecureHash = query["vnp_SecureHash"];
-    delete query["vnp_SecureHash"];
-    delete query["vnp_SecureHashType"];
+    // Tạo bản sao độc lập để tránh mutate object gốc
+    const params = { ...query };
+    const vnpSecureHash = params["vnp_SecureHash"];
+    delete params["vnp_SecureHash"];
+    delete params["vnp_SecureHashType"];
 
-    const sortedParams = this.sortObject(query);
+    const sortedParams = this.sortObject(params);
     const secretKey = this.configService.get<string>("VNP_HASH_SECRET") || "";
+    // encode: false vì sortObject đã encode giá trị bằng encodeURIComponent rồi
     const signData = querystring.stringify(sortedParams, { encode: false });
     const hmac = crypto.createHmac("sha512", secretKey);
     const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
@@ -239,6 +260,8 @@ export class PaymentService {
 
   private sortObject(obj: Record<string, any>): Record<string, any> {
     const sorted: Record<string, any> = {};
+    // Chuẩn VNPay: encode giá trị bằng encodeURIComponent, thay space = '+'
+    // Sau đó qs.stringify với encode: false để tránh double-encode
     const keys = Object.keys(obj).sort((a, b) => a.toString().localeCompare(b.toString()));
     for (const key of keys) {
       sorted[key] = encodeURIComponent(String(obj[key])).replace(/%20/g, '+');

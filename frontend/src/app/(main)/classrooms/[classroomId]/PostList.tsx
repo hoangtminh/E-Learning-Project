@@ -19,10 +19,13 @@ export default function PostList() {
     }
   }, [classroom, fetchPosts]);
 
+  const prevPostsLengthRef = useRef(posts.length);
+
   useEffect(() => {
-    if (posts.length > 0) {
+    if (posts.length > prevPostsLengthRef.current && prevPostsLengthRef.current > 0) {
       endOfListRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
+    prevPostsLengthRef.current = posts.length;
   }, [posts]);
 
   // Sort ascending so newest is at the bottom (chat-style feed flow)

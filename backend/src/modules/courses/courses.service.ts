@@ -34,7 +34,7 @@ export class CoursesService {
 
     const [courses, total] = await Promise.all([
       this.prisma.course.findMany({
-        where: { visibility: 'public' },
+        where: { visibility: { in: ['public', 'sale'] } },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -47,7 +47,7 @@ export class CoursesService {
           },
         },
       }),
-      this.prisma.course.count({ where: { visibility: 'public' } }),
+      this.prisma.course.count({ where: { visibility: { in: ['public', 'sale'] } } }),
     ]);
 
     return {

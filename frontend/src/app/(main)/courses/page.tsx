@@ -98,9 +98,11 @@ export default function CoursesCatalogPage() {
     setCurrentPage(1);
   }, [searchQuery, filterType]);
 
-  const publicCourses = courses.filter((course) => course.visibility === 'public');
+  const visibleCourses = courses.filter(
+    (course) => course.visibility === 'public' || course.visibility === 'sale'
+  );
 
-  const filteredCourses = publicCourses.filter((course) => {
+  const filteredCourses = visibleCourses.filter((course) => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       const matchTitle = course.title.toLowerCase().includes(query);
@@ -124,8 +126,8 @@ export default function CoursesCatalogPage() {
 
   return (
     <div className='space-y-10 pb-12 transition-all p-6 md:p-12'>
-      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5 border-b border-slate-200 pb-6'>
-        <div>
+      <div className='flex min-h-[92px] flex-col justify-between gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center'>
+        <div className='min-w-0'>
           <h1 className='text-3xl font-black text-slate-900'>Khóa học</h1>
           <p className='text-slate-500 mt-1'>
             Khám phá khóa học công khai và bắt đầu lộ trình học phù hợp.
@@ -133,7 +135,7 @@ export default function CoursesCatalogPage() {
         </div>
         <Link
           href='/my-courses'
-          className='px-4 py-2 bg-sky-50 text-sky-600 font-semibold rounded-lg hover:bg-sky-100 transition-colors inline-flex items-center gap-1.5 text-sm shadow-xs border-0'
+          className='inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border-0 bg-sky-50 px-4 text-sm font-semibold text-sky-600 shadow-xs transition-colors hover:bg-sky-100'
         >
           Khóa học của tôi
           <ArrowRight className='size-4' />

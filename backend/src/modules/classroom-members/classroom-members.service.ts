@@ -195,14 +195,16 @@ export class ClassroomMembersService {
       throw new NotFoundException('Pending request not found');
     }
 
-    const [_, newMember] = await this.prisma.$transaction([
-      this.prisma.classroomJoinRequest.delete({
-        where: { classroomId_userId: { classroomId, userId: targetUserId } },
-      }),
-      this.prisma.classroomMember.create({
-        data: { classroomId, userId: targetUserId, role: 'member' },
-      }),
-    ]);
+    await this.prisma.classroomJoinRequest.delete({
+      where: { classroomId_userId: { classroomId, userId: targetUserId } },
+    });
+
+    const newMember = await this.prisma.classroomMember.create({
+      data: { classroomId, userId: targetUserId, role: 'member' },
+      include: {
+        user: { select: { id: true, fullName: true, avatarUrl: true, email: true } },
+      },
+    });
 
     return newMember;
   }
@@ -436,6 +438,9 @@ export class ClassroomMembersService {
     return this.prisma.classroomMember.update({
       where: { classroomId_userId: { classroomId, userId: targetUserId } },
       data: { role: newRole },
+      include: {
+        user: { select: { id: true, fullName: true, avatarUrl: true, email: true } },
+      },
     });
   }
 

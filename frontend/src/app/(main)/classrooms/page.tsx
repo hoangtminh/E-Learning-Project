@@ -291,16 +291,16 @@ export default function ClassroomsPage() {
   return (
     <div className='space-y-10 pb-12 transition-all p-6 md:p-12'>
       {/* Title section */}
-      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5 border-b border-slate-200 pb-6'>
-        <div>
+      <div className='flex min-h-[92px] flex-col justify-between gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center'>
+        <div className='min-w-0'>
           <h1 className='text-3xl font-black text-slate-900'>Lớp học của tôi</h1>
           <p className='text-slate-500 mt-1'>
             Quản lý các lớp học của bạn và tham gia các lớp học mới để học tập cùng thảo luận.
           </p>
         </div>
-        <div className='flex flex-wrap items-center gap-3'>
+        <div className='flex shrink-0 items-center gap-3'>
           <button
-            className='px-4 py-2 bg-sky-50 text-sky-600 font-semibold rounded-lg hover:bg-sky-100 transition-colors inline-flex items-center gap-1.5 text-sm shadow-xs border-0 cursor-pointer'
+            className='inline-flex h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-sky-50 px-4 text-sm font-semibold text-sky-600 shadow-xs transition-colors hover:bg-sky-100'
             onClick={openJoinModal}
           >
             <span className='material-symbols-outlined text-sm'>login</span>
