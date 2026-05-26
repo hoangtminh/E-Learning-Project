@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/main/AppShell';
 import { AdminForbidden } from '@/components/ui/AdminForbidden';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LearningGroupLayout({
   children,
