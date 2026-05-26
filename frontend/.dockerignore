@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.gitignore
+.env*
+*.md
+Dockerfile
+.dockerignore
+coverage
+.eslintrc*
+eslint.config.*
+.prettierrc
+lint_out.txt
