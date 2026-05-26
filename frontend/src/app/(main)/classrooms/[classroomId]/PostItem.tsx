@@ -18,6 +18,7 @@ import {
   FileText,
   FolderOpen,
   Download,
+  ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
 import { appConfirm } from '@/components/ui/app-dialog-provider';
@@ -219,6 +220,11 @@ export default function PostItem({ post }: PostItemProps) {
                 <FolderOpen size={18} className='text-emerald-500 sm:w-[22px] sm:h-[22px]' />
               </div>
             )}
+            {systemType === '[SYSTEM_QUIZ]' && (
+              <div className='w-9 h-9 sm:w-11 sm:h-11 rounded-md bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 shrink-0 shadow-sm'>
+                <ClipboardList size={18} className='text-amber-500 sm:w-[22px] sm:h-[22px]' />
+              </div>
+            )}
             <div>
               <p className='text-[12px] sm:text-sm text-slate-700 font-semibold leading-relaxed'>
                 <span className='font-extrabold text-slate-800'>
@@ -239,6 +245,14 @@ export default function PostItem({ post }: PostItemProps) {
                     đã tải lên một tài nguyên tài liệu:{' '}
                     <span className='text-emerald-600 font-extrabold block mt-0.5'>
                       {systemParam2 || 'Tài liệu'}
+                    </span>
+                  </>
+                )}
+                {systemType === '[SYSTEM_QUIZ]' && (
+                  <>
+                    đã giao một bài kiểm tra (quiz) mới:{' '}
+                    <span className='text-amber-600 font-extrabold block mt-0.5'>
+                      {systemParam2 || 'Bài kiểm tra'}
                     </span>
                   </>
                 )}
@@ -290,6 +304,21 @@ export default function PostItem({ post }: PostItemProps) {
                 <Download size={13} />
                 Tải tài liệu
               </Button>
+            )}
+            {systemType === '[SYSTEM_QUIZ]' && (
+              <Link
+                href={`/quizzes/${systemParam1}/take`}
+                className='w-full sm:w-auto'
+              >
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='w-full sm:w-auto text-amber-600 hover:text-amber-700 border-amber-200 hover:bg-amber-50 font-extrabold rounded-md flex items-center justify-center gap-1.5 shadow-sm text-xs bg-white px-3.5 py-1.5 transition-all h-8 sm:h-9'
+                >
+                  <ClipboardList size={13} />
+                  Làm bài thi
+                </Button>
+              </Link>
             )}
           </div>
         </div>
