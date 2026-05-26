@@ -14,6 +14,7 @@ import { SendMessageDto } from './dto/send-message.dto';
 import { UseFilters, UsePipes, ValidationPipe, Inject, forwardRef } from '@nestjs/common';
 
 @WebSocketGateway({
+  path: '/api/socket.io',
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,

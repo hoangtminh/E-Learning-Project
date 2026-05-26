@@ -8,6 +8,7 @@ const getSocketBaseUrl = () => {
 const SOCKET_BASE_URL = getSocketBaseUrl();
 
 const socketOptions = {
+  path: '/api/socket.io',
   autoConnect: false,
   withCredentials: true,
 };

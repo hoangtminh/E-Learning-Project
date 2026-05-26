@@ -7,6 +7,7 @@ import {
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
+  path: '/api/socket.io',
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,

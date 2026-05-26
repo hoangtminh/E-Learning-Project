@@ -349,6 +349,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     const socketUrl = apiUrl.replace(/\/+$/, '').replace(/\/api$/, '');
     socketRef.current = io(`${socketUrl}/webrtc`, {
+      path: '/api/socket.io',
       auth: { userId: currentUserId },
     });
 
