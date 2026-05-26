@@ -13,9 +13,9 @@ import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { UseFilters, UsePipes, ValidationPipe, Inject, forwardRef } from '@nestjs/common';
 
-@WebSocketGateway(3001, {
+@WebSocketGateway({
   cors: {
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
   namespace: '/chat',

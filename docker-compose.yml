@@ -1,22 +1,23 @@
 # ============================================================
-# docker-compose.yml  –  E-Learning Project
-# For local testing. In Coolify, each service is deployed
-# separately using its own Dockerfile.
+# docker-compose.yml — E-Learning Project
+# For Coolify deployment: uses "coolify" external network
+# For local testing: run `docker network create coolify` first
 # ============================================================
 
 services:
-  # ─── Backend (NestJS) ─────────────────────────────────────
+
+  # ─── Backend (NestJS + Prisma) ────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: elearning_backend
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"   # internal only — Traefik routes via coolify network
     environment:
       NODE_ENV: production
-      PORT: 8080
+      PORT: "8080"
       DATABASE_URL: ${DATABASE_URL}
       FRONTEND_URL: ${FRONTEND_URL}
       JWT_SECRET: ${JWT_SECRET}
@@ -31,29 +32,36 @@ services:
       VNP_URL: ${VNP_URL}
       VNP_API_URL: ${VNP_API_URL}
       VNP_RETURN_URL: ${VNP_RETURN_URL}
+    labels:
+      - "coolify.fqdn=${SERVICE_FQDN_BACKEND}"
     networks:
-      - elearning_net
+      - coolify
 
-  # ─── Frontend (Next.js) ───────────────────────────────────
+  # ─── Frontend (Next.js standalone) ───────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # NEXT_PUBLIC_* vars must be provided at build time
+        # NEXT_PUBLIC_* are inlined at build time — must be set here
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: elearning_frontend
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"   # internal only — Traefik routes via coolify network
     environment:
       NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      FRONTEND_URL: ${FRONTEND_URL}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     depends_on:
       - backend
+    labels:
+      - "coolify.fqdn=${SERVICE_FQDN_FRONTEND}"
     networks:
-      - elearning_net
+      - coolify
 
 networks:
-  elearning_net:
-    driver: bridge
+  coolify:
+    external: true   # Coolify's shared network — Traefik routes on this

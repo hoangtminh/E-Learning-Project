@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AppShell } from '@/components/main/AppShell';
 import { ChatProvider } from '@/contexts/ChatContext';
 import { CourseProvider } from '@/contexts/CourseContext';
+import { QuizProvider } from '@/contexts/QuizContext';
 import { AdminForbidden } from '@/components/ui/AdminForbidden';
 
 export default function MainLayout({
@@ -22,8 +23,11 @@ export default function MainLayout({
   return (
     <ChatProvider>
       <CourseProvider>
-        <AppShell>{children}</AppShell>
+        <QuizProvider>
+          <AppShell>{children}</AppShell>
+        </QuizProvider>
       </CourseProvider>
     </ChatProvider>
   );
 }
+

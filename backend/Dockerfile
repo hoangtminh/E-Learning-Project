@@ -1,44 +1,66 @@
-# ─────────────────────────────────────────────
-# Stage 1: Build
-# ─────────────────────────────────────────────
-FROM node:22-alpine AS builder
+# ─────────────────────────────────────────────────────────────
+# Stage 1 — Builder (Debian, required for Prisma glibc binary)
+# ─────────────────────────────────────────────────────────────
+FROM node:22-bookworm-slim AS builder
+
+# openssl is required by the Prisma query engine on Debian slim images
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssl && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy package manifests and install ALL deps (including devDeps needed for build)
+# --ignore-scripts skips postinstall ("prisma generate")
+# because prisma/schema.prisma is not copied yet at this point
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
-# Copy source code
-COPY . .
+# Copy only what's needed for compilation (specific COPYs = better cache invalidation)
+COPY tsconfig.json tsconfig.build.json nest-cli.json ./
+COPY src ./src
+COPY prisma ./prisma
 
-# Generate Prisma client, then compile TypeScript
-RUN npx prisma generate
-RUN npm run build
+# Run all build steps atomically — prevents caching a broken intermediate state
+RUN npx prisma generate && \
+    NODE_OPTIONS="--max-old-space-size=1024" npm run build && \
+    test -f dist/src/main.js || { echo "ERROR: dist/src/main.js missing after nest build"; exit 1; }
 
-# ─────────────────────────────────────────────
-# Stage 2: Production image
-# ─────────────────────────────────────────────
-FROM node:22-alpine AS runner
+# Prune devDependencies in-place inside builder.
+# This avoids a second npm install (with network call) in the runner stage.
+RUN npm prune --production --ignore-scripts
+
+# ─────────────────────────────────────────────────────────────
+# Stage 2 — Production runner (no network calls needed)
+# ─────────────────────────────────────────────────────────────
+FROM node:22-bookworm-slim AS runner
+
+# Same openssl needed at runtime by the Prisma client
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssl && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package manifests and install ONLY production deps
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+# Copy pruned node_modules from builder (devDeps already removed, no download needed)
+COPY --from=builder /app/node_modules  ./node_modules
 
-# Copy compiled output from builder
+# Compiled NestJS output
 COPY --from=builder /app/dist ./dist
 
-# Copy Prisma schema & generated client (needed at runtime)
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Pre-generated Prisma client (re-copy to ensure it survives the prune)
+COPY --from=builder /app/node_modules/.prisma  ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma   ./node_modules/@prisma
+
+# Prisma schema (needed by some Prisma runtime features)
 COPY prisma ./prisma
 
-# Expose the application port
+# package.json needed by some Node.js module resolution at runtime
+COPY package.json ./
+
 EXPOSE 8080
 
-# Run database migrations then start the app
-CMD ["node", "dist/main"]
+# Use absolute path to avoid any working-directory ambiguity
+CMD ["node", "/app/dist/src/main.js"]
+
