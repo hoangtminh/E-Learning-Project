@@ -75,9 +75,9 @@ export class QuizzesService {
           title: data.title,
           description: data.description,
           isPublic: data.isPublic,
-          duration: data.duration && data.duration > 0 ? data.duration : null,
-          startDate: data.startDate ? new Date(data.startDate) : null,
-          endDate: data.endDate ? new Date(data.endDate) : null,
+          duration: data.duration !== undefined ? (data.duration > 0 ? data.duration : null) : undefined,
+          startDate: data.startDate !== undefined ? (data.startDate ? new Date(data.startDate) : null) : undefined,
+          endDate: data.endDate !== undefined ? (data.endDate ? new Date(data.endDate) : null) : undefined,
           questions: data.questions ? {
             create: data.questions.map(q => {
               const options = q.type === 'text' && q.correctText 
@@ -127,9 +127,37 @@ export class QuizzesService {
     if (quiz.creatorId !== userId)
       throw new ForbiddenException('Not authorized');
 
+    const userIdsToInvite = new Set<string>();
+
+    // 1. Add userIds directly passed
     if (data.userIds && data.userIds.length > 0) {
+      data.userIds.forEach(id => userIdsToInvite.add(id));
+    }
+
+    // 2. Look up userIds by emails
+    if (data.emails && data.emails.length > 0) {
+      const users = await this.prisma.user.findMany({
+        where: { email: { in: data.emails } },
+        select: { id: true }
+      });
+      users.forEach(u => userIdsToInvite.add(u.id));
+    }
+
+    // 3. Look up userIds from classroom members
+    if (data.classroomId) {
+      const members = await this.prisma.classroomMember.findMany({
+        where: { classroomId: data.classroomId },
+        select: { userId: true }
+      });
+      members.forEach(m => userIdsToInvite.add(m.userId));
+    }
+
+    // Filter out creator
+    userIdsToInvite.delete(quiz.creatorId);
+
+    if (userIdsToInvite.size > 0) {
       await this.prisma.quizMembership.createMany({
-        data: data.userIds.map((uid) => ({ quizId, userId: uid })),
+        data: Array.from(userIdsToInvite).map((uid) => ({ quizId, userId: uid })),
         skipDuplicates: true,
       });
     }
@@ -166,7 +194,12 @@ export class QuizzesService {
 
   async getCreatedQuizzes(userId: string) {
     return this.prisma.quiz.findMany({
-      where: { creatorId: userId },
+      where: {
+        OR: [
+          { creatorId: userId },
+          { memberships: { some: { userId } } }
+        ]
+      },
       include: {
         creator: { select: { id: true, fullName: true, avatarUrl: true } },
         _count: { select: { questions: true, memberships: true } },

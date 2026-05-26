@@ -17,6 +17,7 @@ import {
   deleteCourse as apiDeleteCourse,
   CourseDetail,
 } from '@/api/courses';
+import { unenrollCourse as apiUnenrollCourseAction } from '@/api/enrollment';
 
 interface CourseContextType {
   courses: CourseListItem[];
@@ -28,6 +29,7 @@ interface CourseContextType {
   createNewCourse: (data: Parameters<typeof apiCreateCourse>[0]) => Promise<CourseDetail | null>;
   updateExistingCourse: (id: string, data: Parameters<typeof apiUpdateCourse>[1]) => Promise<void>;
   removeCourse: (id: string) => Promise<void>;
+  unenrollCourse: (id: string) => Promise<void>;
 }
 
 const CourseContext = createContext<CourseContextType | undefined>(undefined);
@@ -46,6 +48,7 @@ export function CourseProvider({ children }: { children: ReactNode }) {
       if (res.success && res.data) {
         // Backend returns { data: CourseListItem[], meta: {...} }
         const payload = res.data as CourseListResponse;
+        console.log(payload)
         if (payload.data && Array.isArray(payload.data)) {
           setCourses(payload.data);
         } else if (Array.isArray(res.data)) {
@@ -55,9 +58,9 @@ export function CourseProvider({ children }: { children: ReactNode }) {
       } else if (!res.success) {
         setError(res.error || 'Không thể tải danh sách khóa học');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fetch courses error:', err);
-      setError(err.message || 'Đã xảy ra lỗi');
+      setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +76,8 @@ export function CourseProvider({ children }: { children: ReactNode }) {
       } else {
         setError(res.error || 'Failed to fetch course');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -92,8 +95,8 @@ export function CourseProvider({ children }: { children: ReactNode }) {
         setError(res.error || 'Failed to create course');
         return null;
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       return null;
     } finally {
       setIsLoading(false);
@@ -113,8 +116,8 @@ export function CourseProvider({ children }: { children: ReactNode }) {
       } else {
         setError(res.error || 'Failed to update course');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -133,8 +136,26 @@ export function CourseProvider({ children }: { children: ReactNode }) {
       } else {
         setError(res.error || 'Failed to delete course');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const unenrollCourse = async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await apiUnenrollCourseAction(id);
+      if (res.success) {
+        // Just refresh the list
+        await fetchCourses();
+      } else {
+        setError(res.error || 'Failed to unenroll from course');
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -157,6 +178,7 @@ export function CourseProvider({ children }: { children: ReactNode }) {
         createNewCourse,
         updateExistingCourse,
         removeCourse,
+        unenrollCourse,
       }}
     >
       {children}

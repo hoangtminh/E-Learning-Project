@@ -8,6 +8,10 @@ configDotenv();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Trust the reverse proxy chain (Cloudflare Tunnel → Traefik → app)
+  // so Express reads X-Forwarded-For / CF-Connecting-IP correctly.
+  app.getHttpAdapter().getInstance().set('trust proxy', true);
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -27,3 +31,4 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 8080);
 }
 bootstrap();
+

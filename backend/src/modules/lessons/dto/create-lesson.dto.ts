@@ -12,7 +12,9 @@ export enum ContentType {
   file = 'file',
   image = 'image',
   text = 'text',
+  quiz = 'quiz',
 }
+
 
 export class CreateLessonDto {
   @IsString()

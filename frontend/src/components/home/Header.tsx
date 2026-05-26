@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   const linked = [
     {
@@ -17,16 +19,8 @@ export function Header() {
       link: '/',
     },
     {
-      path: 'Pathway',
-      link: '/pathway',
-    },
-    {
       path: 'Resources',
       link: '/resources',
-    },
-    {
-      path: 'Community',
-      link: '/community',
     },
   ];
 
@@ -42,11 +36,10 @@ export function Header() {
 
   return (
     <motion.nav
-      className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-        isScrolled
+      className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled
           ? 'bg-white/80 backdrop-blur-xl border-b border-sky-100 shadow-sm'
           : 'bg-sky-100 backdrop-blur-none border-b border-transparent'
-      }`}
+        }`}
     >
       <div
         className={`flex items-center justify-between px-6 py-3 w-full max-w-7xl mx-auto transition-all duration-500`}
@@ -68,19 +61,49 @@ export function Header() {
           </div>
         </div>
         <div className='flex items-center space-x-4'>
-          <Button
-            variant='ghost'
-            className='text-slate-600 hover:text-sky-500 hover:bg-transparent font-medium'
-            onClick={() => router.push('/login')}
-          >
-            Sign In
-          </Button>
-          <Button
-            className='bg-sky-500 text-white hover:bg-sky-500/90 rounded-lg shadow-lg shadow-sky-500/20 font-semibold'
-            onClick={() => router.push('/register')}
-          >
-            Join for Free
-          </Button>
+          {isLoading ? (
+            <div className='h-9 w-20 bg-slate-100 animate-pulse rounded-lg' />
+          ) : isAuthenticated ? (
+            <>
+              <div className='hidden sm:flex flex-col items-end leading-tight'>
+                <span className='text-sm font-bold text-slate-800 max-w-[150px] truncate'>
+                  {user?.fullName || 'Học viên'}
+                </span>
+                <span className='text-[11px] text-slate-500 max-w-[150px] truncate'>
+                  {user?.email}
+                </span>
+              </div>
+              <Button
+                className='bg-sky-500 text-white hover:bg-sky-500/90 rounded-lg shadow-lg shadow-sky-500/20 font-semibold'
+                onClick={() => router.push(user?.role === 'admin' ? '/administrator' : '/dashboard')}
+              >
+                Dashboard
+              </Button>
+              <Button
+                variant='ghost'
+                className='text-slate-600 hover:text-red-600 hover:bg-red-50 font-semibold'
+                onClick={logout}
+              >
+                Đăng xuất
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant='ghost'
+                className='text-slate-600 hover:text-sky-500 hover:bg-transparent font-medium'
+                onClick={() => router.push('/login')}
+              >
+                Sign in
+              </Button>
+              <Button
+                className='bg-sky-500 text-white hover:bg-sky-500/90 rounded-lg shadow-lg shadow-sky-500/20 font-semibold'
+                onClick={() => router.push('/register')}
+              >
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </motion.nav>

@@ -1,0 +1,26 @@
+node_modules
+dist
+.git
+.gitignore
+.env
+.env.*
+*.md
+Dockerfile
+.dockerignore
+coverage
+.eslintrc*
+eslint.config.*
+.prettierrc
+*.test.ts
+*.spec.ts
+test/
+check_db.js
+seed_course.js
+fix_db.sql
+make-instructor.ts
+test-create-lesson.ts
+# prisma.config.ts is for local dev only.
+# It imports dotenv and reads DATABASE_URL at build time, which breaks
+# "prisma generate" in Docker. Without it, Prisma reads schema.prisma
+# directly and no database URL is needed during generation.
+prisma.config.ts

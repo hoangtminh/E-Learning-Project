@@ -6,8 +6,10 @@ generator client {
 
 datasource db {
   provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
+
 
 // --- ENUMS ---
 
@@ -60,6 +62,14 @@ enum CallStatus {
   @@map("call_status")
 }
 
+enum CallType {
+  channel
+  private
+  public
+
+  @@map("call_type")
+}
+
 enum QuestionType {
   single_choice
   multiple_choice
@@ -78,6 +88,7 @@ model User {
   avatarUrl    String?    @map("avatar_url")
   createdAt    DateTime   @default(now()) @map("created_at")
   role         GlobalRole @default(user)
+  isSuspended  Boolean    @default(false) @map("is_suspended")
 
   // Relations
   ownedClassrooms       Classroom[]            @relation("ClassroomOwner")
@@ -95,13 +106,48 @@ model User {
   notes                 Note[]
   createdCalls          Call[]                 @relation("CallCreator")
 
-  createdQuizzes        Quiz[]                 @relation("QuizCreator")
-  quizMemberships       QuizMembership[]
-  quizSubmissions       QuizSubmission[]
+  createdQuizzes  Quiz[]           @relation("QuizCreator")
+  quizMemberships QuizMembership[]
+  quizSubmissions QuizSubmission[]
 
-  uploadedFiles       ClassroomFile[]
+  uploadedFiles ClassroomFile[]
+  classroomPosts      ClassroomPost[]        @relation("PostAuthor")
+  classroomPostComments ClassroomPostComment[] @relation("PostCommentAuthor")
+  
+  notifications         Notification[]         @relation("UserNotification")
+  triggeredNotifications Notification[]       @relation("NotificationCreator")
+  transactions  Transaction[]
+  logs          SystemLog[]
 
   @@map("users")
+}
+
+enum LogLevel {
+  info
+  warn
+  error
+
+  @@map("log_level")
+}
+
+model SystemLog {
+  id           String    @id @default(cuid())
+  userId       String?   @map("user_id")
+  action       String
+  details      String?   @db.Text
+  level        LogLevel  @default(info)
+  ipAddress    String?   @map("ip_address")
+  userAgent    String?   @map("user_agent") @db.VarChar(500)
+  targetId     String?   @map("target_id")
+  targetType   String?   @map("target_type")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("system_logs")
 }
 
 model Classroom {
@@ -123,6 +169,7 @@ model Classroom {
   notes         Note[]
   calls         Call[]
   files         ClassroomFile[]
+  posts         ClassroomPost[]
 
   @@index([ownerId])
   @@map("classrooms")
@@ -169,13 +216,14 @@ model Course {
   createdAt    DateTime         @default(now()) @map("created_at")
 
   // Relations
-  instructor User                    @relation("CourseInstructor", fields: [instructorId], references: [id])
-  sections   Section[]
-  members    CourseMember[]
-  invites    CourseInvitation[]
-  classrooms ClassroomLinkedCourse[]
-  progresses UserProgress[]
-  notes      Note[]
+  instructor   User                    @relation("CourseInstructor", fields: [instructorId], references: [id])
+  sections     Section[]
+  members      CourseMember[]
+  invites      CourseInvitation[]
+  classrooms   ClassroomLinkedCourse[]
+  progresses   UserProgress[]
+  notes        Note[]
+  transactions Transaction[]
 
   @@index([instructorId])
   @@map("courses")
@@ -274,6 +322,7 @@ model Conversation {
   classroom Classroom?           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   members   ConversationMember[]
   messages  Message[]
+  calls     Call[]
 
   @@index([classroomId])
   @@map("conversations")
@@ -310,14 +359,14 @@ model Message {
 }
 
 model ClassroomTask {
-  id          String    @id @default(cuid())
-  classroomId String    @map("classroom_id")
-  creatorId   String    @map("creator_id")
-  title       String?
-  description String?   @db.Text
+  id             String    @id @default(cuid())
+  classroomId    String    @map("classroom_id")
+  creatorId      String    @map("creator_id")
+  title          String?
+  description    String?   @db.Text
   deadline       DateTime?
-  attachmentKey  String?   @map("attachment_key")  // S3 key for teacher's assignment file
-  attachmentName String?   @map("attachment_name")  // Original filename of teacher's attachment
+  attachmentKey  String?   @map("attachment_key") // S3 key for teacher's assignment file
+  attachmentName String?   @map("attachment_name") // Original filename of teacher's attachment
   createdAt      DateTime  @default(now()) @map("created_at")
 
   classroom   Classroom        @relation(fields: [classroomId], references: [id], onDelete: Cascade)
@@ -350,14 +399,14 @@ model ClassroomFile {
   id          String   @id @default(cuid())
   classroomId String   @map("classroom_id")
   uploaderId  String   @map("uploader_id")
-  name        String   
+  name        String
   s3Key       String   @map("s3_key")
   sizeBytes   Int      @map("size_bytes")
   mimeType    String   @map("mime_type")
   uploadedAt  DateTime @default(now()) @map("uploaded_at")
 
-  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  uploader    User      @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  uploader  User      @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
 
   @@index([classroomId])
   @@index([uploaderId])
@@ -402,21 +451,25 @@ model Note {
 }
 
 model Call {
-  id               String     @id @default(cuid())
-  creatorId        String     @map("creator_id")
-  title            String?    @db.VarChar(255)
-  classroomId      String?    @map("classroom_id")
-  status           CallStatus @default(ongoing)
-  participantCount Int        @default(0) @map("participant_count")
-  createdAt        DateTime   @default(now()) @map("created_at")
-  startedAt        DateTime?  @map("started_at")
-  endedAt          DateTime?  @map("ended_at")
+  id               String       @id @default(cuid())
+  creatorId        String       @map("creator_id")
+  title            String?      @db.VarChar(255)
+  classroomId      String?      @map("classroom_id")
+  conversationId   String?      @map("conversation_id")
+  status           CallStatus   @default(ongoing)
+  type             CallType     @default(public)
+  participantCount Int          @default(0) @map("participant_count")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  startedAt        DateTime?    @map("started_at")
+  endedAt          DateTime?    @map("ended_at")
 
-  creator   User       @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  classroom Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  creator      User          @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  classroom    Classroom?    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([creatorId])
   @@index([classroomId])
+  @@index([conversationId])
   @@map("calls")
 }
 
@@ -442,13 +495,13 @@ model Quiz {
 }
 
 model QuizMembership {
-  id        String   @id @default(cuid())
-  quizId    String   @map("quiz_id")
-  userId    String   @map("user_id")
-  joinedAt  DateTime @default(now()) @map("joined_at")
+  id       String   @id @default(cuid())
+  quizId   String   @map("quiz_id")
+  userId   String   @map("user_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
 
-  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([quizId, userId])
   @@index([userId])
@@ -456,29 +509,29 @@ model QuizMembership {
 }
 
 model Question {
-  id            String         @id @default(cuid())
-  quizId        String         @map("quiz_id")
-  type          QuestionType
-  content       String         @db.Text
-  orderIndex    Int            @default(0) @map("order_index")
-  points        Int            @default(1)
-  
-  quiz          Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  options       QuestionOption[]
-  userAnswers   UserAnswer[]
+  id         String       @id @default(cuid())
+  quizId     String       @map("quiz_id")
+  type       QuestionType
+  content    String       @db.Text
+  orderIndex Int          @default(0) @map("order_index")
+  points     Int          @default(1)
+
+  quiz        Quiz             @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options     QuestionOption[]
+  userAnswers UserAnswer[]
 
   @@index([quizId])
   @@map("questions")
 }
 
 model QuestionOption {
-  id          String   @id @default(cuid())
-  questionId  String   @map("question_id")
-  content     String   @db.Text
-  isCorrect   Boolean  @default(false) @map("is_correct")
-  orderIndex  Int      @default(0) @map("order_index")
+  id         String  @id @default(cuid())
+  questionId String  @map("question_id")
+  content    String  @db.Text
+  isCorrect  Boolean @default(false) @map("is_correct")
+  orderIndex Int     @default(0) @map("order_index")
 
-  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question    Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
   userAnswers UserAnswerOption[]
 
   @@index([questionId])
@@ -489,13 +542,13 @@ model QuizSubmission {
   id          String   @id @default(cuid())
   quizId      String   @map("quiz_id")
   userId      String   @map("user_id")
-  score       Decimal? @db.Decimal(10,2)
+  score       Decimal? @db.Decimal(10, 2)
   timeSpent   Int?     @map("time_spent") // time spent in seconds
   submittedAt DateTime @default(now()) @map("submitted_at")
 
-  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  answers     UserAnswer[]
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers UserAnswer[]
 
   @@index([quizId])
   @@index([userId])
@@ -503,14 +556,14 @@ model QuizSubmission {
 }
 
 model UserAnswer {
-  id            String         @id @default(cuid())
-  submissionId  String         @map("submission_id")
-  questionId    String         @map("question_id")
-  textAnswer    String?        @db.Text @map("text_answer")
-  isCorrect     Boolean?       @map("is_correct")
+  id           String   @id @default(cuid())
+  submissionId String   @map("submission_id")
+  questionId   String   @map("question_id")
+  textAnswer   String?  @map("text_answer") @db.Text
+  isCorrect    Boolean? @map("is_correct")
 
-  submission    QuizSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  submission      QuizSubmission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question        Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
   selectedOptions UserAnswerOption[]
 
   @@index([submissionId])
@@ -519,14 +572,102 @@ model UserAnswer {
 }
 
 model UserAnswerOption {
-  id            String         @id @default(cuid())
-  userAnswerId  String         @map("user_answer_id")
-  optionId      String         @map("option_id")
+  id           String @id @default(cuid())
+  userAnswerId String @map("user_answer_id")
+  optionId     String @map("option_id")
 
-  userAnswer    UserAnswer     @relation(fields: [userAnswerId], references: [id], onDelete: Cascade)
-  option        QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userAnswer UserAnswer     @relation(fields: [userAnswerId], references: [id], onDelete: Cascade)
+  option     QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
   @@index([userAnswerId])
   @@index([optionId])
   @@map("user_answer_options")
+}
+
+model ClassroomPost {
+  id          String   @id @default(cuid())
+  classroomId String   @map("classroom_id")
+  authorId    String   @map("author_id")
+  content     String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  classroom Classroom              @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  author    User                   @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  comments  ClassroomPostComment[]
+
+  @@index([classroomId])
+  @@index([authorId])
+  @@map("classroom_posts")
+}
+
+model ClassroomPostComment {
+  id          String   @id @default(cuid())
+  postId      String   @map("post_id")
+  authorId    String   @map("author_id")
+  content     String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  post        ClassroomPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author      User          @relation("PostCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([authorId])
+  @@map("classroom_post_comments")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  creatorId String?  @map("creator_id")
+  type      String
+  content   String   @db.Text
+  link      String?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User  @relation("UserNotification", fields: [userId], references: [id], onDelete: Cascade)
+  creator User? @relation("NotificationCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([creatorId])
+  @@map("notifications")
+}
+
+
+enum TransactionStatus {
+  pending
+  success
+  failed
+
+  @@map("transaction_status")
+}
+
+model Transaction {
+  id       String            @id @default(cuid())
+  userId   String            @map("user_id")
+  courseId String            @map("course_id")
+  amount   Decimal           @db.Decimal(10, 2)
+  status   TransactionStatus @default(pending)
+
+  // Các thông tin VNPay
+  vnpTxnRef        String  @unique @map("vnp_txn_ref")
+  vnpBankCode      String? @map("vnp_bank_code")
+  vnpBankTranNo    String? @map("vnp_bank_tran_no")
+  vnpCardType      String? @map("vnp_card_type")
+  vnpPayDate       String? @map("vnp_pay_date")
+  vnpOrderInfo     String? @map("vnp_order_info")
+  vnpTransactionNo String? @map("vnp_transaction_no")
+  vnpResponseCode  String? @map("vnp_response_code")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([courseId])
+  @@map("transactions")
 }

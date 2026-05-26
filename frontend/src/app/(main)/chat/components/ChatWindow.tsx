@@ -27,6 +27,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import ChatInput from './ChatInput';
 import { MessageItem } from './MessageItem';
 import { ChatInfo } from './ChatInfo';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import { callsApi, CallStatus, CallType } from '@/api/calls';
+import { toast } from 'sonner';
 
 export const ChatWindow = () => {
   const {
@@ -44,6 +48,82 @@ export const ChatWindow = () => {
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [prevScrollHeight, setPrevScrollHeight] = useState(0);
+  const [isStartingCall, setIsStartingCall] = useState(false);
+  const [callStatuses, setCallStatuses] = useState<Record<string, CallStatus>>({});
+
+
+  const callInvitationIds = useMemo(() => {
+    const ids = new Set<string>();
+    messages.forEach((message) => {
+      const content = message.content || '';
+      if (!content.startsWith('[CALL_INVITATION]:')) return;
+      const [, callId] = content.split(':');
+      if (callId) ids.add(callId);
+    });
+    return Array.from(ids);
+  }, [messages]);
+
+  useEffect(() => {
+    if (callInvitationIds.length === 0) return;
+
+    let cancelled = false;
+
+    const refreshCallStatuses = async () => {
+      const entries = await Promise.all(
+        callInvitationIds.map(async (callId) => {
+          const res = await callsApi.getCall(callId);
+          return res.success && res.data
+            ? ([callId, res.data.status] as const)
+            : null;
+        }),
+      );
+
+      if (cancelled) return;
+      setCallStatuses((prev) => {
+        const next = { ...prev };
+        entries.forEach((entry) => {
+          if (entry) next[entry[0]] = entry[1];
+        });
+        return next;
+      });
+    };
+
+    void refreshCallStatuses();
+    const interval = window.setInterval(refreshCallStatuses, 30000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [callInvitationIds]);
+
+  const handleStartCall = async () => {
+    if (!currentConversation?.id) return;
+    setIsStartingCall(true);
+    try {
+      const res = await callsApi.createCall({
+        title: `Cuộc họp nhóm - ${currentConversation.title || 'Trò chuyện'}`,
+        type: CallType.CHANNEL,
+        conversationId: currentConversation.id,
+      });
+
+      if (res.success && res.data) {
+        toast.success('Khởi động cuộc họp nhóm thành công!');
+        
+        // Auto-send call invitation card message to the chat
+        const inviteContent = `[CALL_INVITATION]:${res.data.id}:${currentConversation.title || 'Cuộc họp nhóm'}`;
+        await sendMessage(inviteContent);
+
+        window.open(`/call/${res.data.id}`, '_blank');
+      } else {
+        toast.error(res.error || 'Khởi tạo cuộc gọi thất bại!');
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi hệ thống khi bắt đầu cuộc gọi.');
+    } finally {
+      setIsStartingCall(false);
+    }
+  };
 
   const handleScroll = useCallback(
     async (e: React.UIEvent<HTMLDivElement>) => {
@@ -112,11 +192,11 @@ export const ChatWindow = () => {
 
   return (
     <div className='flex-1 flex overflow-hidden'>
-      <div className='flex-2 flex flex-col bg-background relative border-r border-outline-variant'>
+      <div className='flex-2 flex flex-col bg-surface-container-low relative border-r border-outline-variant/10'>
         {/* Header */}
-        <div className='h-12 px-6 flex items-center justify-between border-b border-outline-variant bg-surface-container-low/50 backdrop-blur-md z-10'>
+        <div className='h-14 px-6 flex items-center justify-between border-b border-outline-variant/60 bg-white shadow-[0_0_30px_rgba(125,211,252,0.05)] z-10'>
           <div className='flex items-center gap-3'>
-            <Avatar className='h-8 w-8 border border-outline-variant'>
+            <Avatar className='h-8 w-8 border border-outline-variant/20'>
               <AvatarImage
                 src={
                   currentConversation.members.find(
@@ -133,43 +213,57 @@ export const ChatWindow = () => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className='font-semibold text-on-surface'>
+              <div className='font-semibold text-on-surface text-sm'>
                 {currentConversation.title ||
                   currentConversation.members.find(
                     (m) => m.userId !== user?.userId,
                   )?.user.fullName ||
                   'Trò chuyện'}
               </div>
-              <div className='text-xs text-green-500 font-medium'>
+              <div className='text-[10px] text-green-600 font-medium'>
                 Đang hoạt động
               </div>
             </div>
           </div>
-          <div className='flex items-center gap-1'>
+          <div className='flex items-center gap-2'>
             <Button
               variant='ghost'
               size='icon'
-              className='text-on-surface-variant hover:bg-primary/5 rounded-full'
+              onClick={handleStartCall}
+              disabled={isStartingCall}
+              className='text-on-surface-variant bg-surface-container-low/70 hover:bg-surface-container-high rounded-xl h-9 w-9 transition-colors'
             >
-              <Phone size={20} />
+              {isStartingCall ? (
+                <Loader2 className='size-4 animate-spin' />
+              ) : (
+                <Phone size={18} />
+              )}
             </Button>
             <Button
               variant='ghost'
               size='icon'
-              className='text-on-surface-variant hover:bg-primary/5 rounded-full'
+              onClick={handleStartCall}
+              disabled={isStartingCall}
+              className='text-on-surface-variant bg-surface-container-low/70 hover:bg-surface-container-high rounded-xl h-9 w-9 transition-colors'
             >
-              <Video size={20} />
+              {isStartingCall ? (
+                <Loader2 className='size-4 animate-spin' />
+              ) : (
+                <Video size={18} />
+              )}
             </Button>
             <Button
               variant='ghost'
               size='icon'
               onClick={() => setShowInfo(!showInfo)}
               className={cn(
-                'text-on-surface-variant hover:bg-primary/5 rounded-full',
-                showInfo && 'bg-primary/10 text-primary',
+                'rounded-xl h-9 w-9 transition-all',
+                showInfo
+                  ? 'bg-primary text-on-primary hover:bg-primary-dim shadow-xs'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
               )}
             >
-              <MoreHorizontal size={22} />
+              <Info size={18} />
             </Button>
           </div>
         </div>
@@ -201,7 +295,7 @@ export const ChatWindow = () => {
             </div>
           )}
           {!hasMore && !messageLoadingError && messages.length > 0 && (
-            <div className='flex flex-col items-center py-8 opacity-50'>
+            <div className='flex flex-col items-center pt-8'>
               <div className='h-px w-full bg-linear-to-r from-transparent via-outline-variant to-transparent mb-4' />
               <p className='text-[11px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/40 bg-surface px-4 py-1 rounded-full border border-outline-variant/30'>
                 Đã tải hết tin nhắn
@@ -233,6 +327,10 @@ export const ChatWindow = () => {
                 showTimeSeparator = true;
               }
 
+              const callId = msg.content?.startsWith('[CALL_INVITATION]:')
+                ? msg.content.split(':')[1]
+                : undefined;
+
               return (
                 <React.Fragment key={msg.id}>
                   <MessageItem
@@ -247,6 +345,7 @@ export const ChatWindow = () => {
                     status={msg.status}
                     createdAt={msg.createdAt}
                     showTimeSeparator={showTimeSeparator}
+                    callStatus={callId ? callStatuses[callId] : undefined}
                   />
                   {showTimeSeparator && msg.createdAt && (
                     <div className='flex justify-center my-6'>
@@ -267,7 +366,19 @@ export const ChatWindow = () => {
       </div>
 
       {/* Chat Info Sidebar */}
-      {showInfo && <ChatInfo onClose={() => setShowInfo(false)} />}
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 288, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="h-full flex-shrink-0 overflow-hidden"
+          >
+            <ChatInfo onClose={() => setShowInfo(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

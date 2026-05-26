@@ -32,13 +32,13 @@ export default function ChatPanel() {
   };
 
   return (
-    <div className='flex flex-col h-full bg-surface'>
+    <div className='flex h-full min-h-0 flex-col bg-slate-900'>
       <div
         ref={scrollRef}
-        className='flex-1 p-4 overflow-y-auto space-y-4 scrollbar-hide'
+        className='scrollbar-hide min-h-0 flex-1 space-y-4 overflow-y-auto p-4'
       >
         {messages.length === 0 ? (
-          <div className='flex flex-col items-center justify-center h-full opacity-40'>
+          <div className='flex h-full flex-col items-center justify-center text-slate-500'>
             <span className='material-symbols-outlined text-4xl mb-2'>
               chat_bubble
             </span>
@@ -58,13 +58,13 @@ export default function ChatPanel() {
                 )}
               >
                 {!isMe && (
-                  <span className='text-[10px] font-bold text-on-surface-variant/70 mb-1 ml-1'>
+                  <span className='mb-1 ml-1 text-[10px] font-bold text-slate-400'>
                     {msg.senderName}
                   </span>
                 )}
                 <div className='flex items-end gap-1.5'>
                   {isMe && (
-                    <span className='text-[9px] text-on-surface-variant/40 mb-1'>
+                    <span className='mb-1 text-[9px] text-slate-500'>
                       {formatTime(msg.timestamp)}
                     </span>
                   )}
@@ -72,14 +72,14 @@ export default function ChatPanel() {
                     className={cn(
                       'px-3 py-2 rounded-2xl text-[13px] leading-relaxed shadow-sm',
                       isMe
-                        ? 'bg-primary text-white rounded-tr-none'
-                        : 'bg-surface-container-high text-on-surface rounded-tl-none',
+                        ? 'rounded-tr-none bg-sky-600 text-white'
+                        : 'rounded-tl-none bg-slate-800 text-slate-100',
                     )}
                   >
                     {msg.message}
                   </div>
                   {!isMe && (
-                    <span className='text-[9px] text-on-surface-variant/40 mb-1'>
+                    <span className='mb-1 text-[9px] text-slate-500'>
                       {formatTime(msg.timestamp)}
                     </span>
                   )}
@@ -90,10 +90,10 @@ export default function ChatPanel() {
         )}
       </div>
 
-      <div className='p-3 border-t border-outline-variant/20 bg-surface-container-low/30 backdrop-blur-sm'>
+      <div className='shrink-0 border-t border-white/10 bg-slate-950/60 p-3 backdrop-blur-sm'>
         <form onSubmit={handleSend} className='relative group'>
           <input
-            className='w-full bg-surface-container-lowest border border-outline-variant/50 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-[13px] text-on-surface placeholder:text-on-surface-variant/50'
+            className='w-full rounded-xl border border-white/10 bg-slate-800 py-2.5 pl-4 pr-12 text-[13px] text-slate-100 transition-all placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400/20'
             placeholder='Gửi tin nhắn...'
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -102,7 +102,7 @@ export default function ChatPanel() {
           <button
             type='submit'
             disabled={!inputValue.trim()}
-            className='absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:pointer-events-none'
+            className='absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg bg-sky-600 text-white shadow-sm transition-all hover:bg-sky-500 active:scale-95 disabled:pointer-events-none disabled:opacity-30'
           >
             <span className='material-symbols-outlined text-[18px]'>send</span>
           </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { QuizRunner } from "@/components/main/quizzes/QuizRunner";
+import { QuizRunner } from "@/app/(main)/quizzes/components/QuizRunner";
 import { useQuiz } from "@/contexts/QuizContext";
 import { Quiz } from "@/api/quizzes";
 import { Loader2 } from "lucide-react";

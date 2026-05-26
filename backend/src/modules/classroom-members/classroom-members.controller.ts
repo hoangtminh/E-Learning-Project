@@ -8,12 +8,14 @@ import {
   Body,
   Req,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ClassroomMembersService } from './classroom-members.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { PendingMemberDto } from './dto/pending-member.dto';
 import { AddMembersResponseDto } from './dto/add-members-response.dto';
 import { ApproveAllResponseDto } from './dto/approve-all-response.dto';
+import { ClassroomRole } from '@prisma/client';
 
 @Controller('classrooms/:classroomId')
 export class ClassroomMembersController {
@@ -40,6 +42,20 @@ export class ClassroomMembersController {
       this.getUserId(req),
       classroomId,
       addMemberDto.userIds,
+    );
+  }
+
+  @Post('members/email')
+  addMemberByEmail(
+    @Req() req: any,
+    @Param('classroomId') classroomId: string,
+    @Body('email') email: string,
+  ) {
+    if (!email) throw new BadRequestException('Email is required');
+    return this.membersService.addMemberByEmail(
+      this.getUserId(req),
+      classroomId,
+      email,
     );
   }
 
@@ -106,6 +122,26 @@ export class ClassroomMembersController {
       this.getUserId(req),
       classroomId,
       targetUserId,
+    );
+  }
+
+  @Post('leave')
+  leaveClassroom(@Req() req: any, @Param('classroomId') classroomId: string) {
+    return this.membersService.leaveClassroom(this.getUserId(req), classroomId);
+  }
+
+  @Patch('members/:userId/role')
+  updateMemberRole(
+    @Req() req: any,
+    @Param('classroomId') classroomId: string,
+    @Param('userId') targetUserId: string,
+    @Body('role') role: ClassroomRole,
+  ) {
+    return this.membersService.updateMemberRole(
+      this.getUserId(req),
+      classroomId,
+      targetUserId,
+      role,
     );
   }
 }

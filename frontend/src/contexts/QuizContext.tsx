@@ -10,6 +10,7 @@ import {
   createQuiz,
   updateQuiz,
   deleteQuiz,
+  shareQuiz,
   submitQuiz,
   getSubmissionDetails,
   SubmitQuizDto,
@@ -29,6 +30,10 @@ interface QuizContextType {
   handleAddQuiz: (data: any) => Promise<void>;
   handleUpdateQuiz: (id: string, data: any) => Promise<void>;
   handleDeleteQuiz: (id: string) => Promise<void>;
+  handleShareQuiz: (
+    id: string,
+    payload: { userIds?: string[]; emails?: string[]; classroomId?: string },
+  ) => Promise<void>;
   handleSubmitQuiz: (
     id: string,
     data: SubmitQuizDto,
@@ -135,6 +140,21 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleShareQuiz = async (
+    id: string,
+    payload: { userIds?: string[]; emails?: string[]; classroomId?: string },
+  ) => {
+    try {
+      const res = await shareQuiz(id, payload);
+      if (!res.success) {
+        throw new Error(res.error || 'Chia sẻ quiz thất bại');
+      }
+    } catch (error) {
+      console.error('Error sharing quiz:', error);
+      throw error;
+    }
+  };
+
   const handleSubmitQuiz = async (id: string, data: SubmitQuizDto) => {
     try {
       console.log(data, id);
@@ -172,6 +192,7 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
         handleAddQuiz,
         handleUpdateQuiz,
         handleDeleteQuiz,
+        handleShareQuiz,
         handleSubmitQuiz,
       }}
     >

@@ -1,14 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, useEffect } from 'react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowRight, Lock, Mail } from 'lucide-react';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,13 +20,24 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
-      router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Effect to handle redirection after user state is updated
+  const { user } = useAuth();
+  useEffect(() => {
+    if (user && !isSubmitting) {
+      if (user.role === 'admin') {
+        window.location.href = '/administrator';
+      } else {
+        window.location.href = '/';
+      }
+    }
+  }, [user, isSubmitting]);
 
   return (
     <div className='bg-slate-50 text-slate-900 min-h-screen flex flex-col relative font-sans'>

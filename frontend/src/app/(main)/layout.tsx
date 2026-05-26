@@ -1,24 +1,33 @@
-import { MainHeader } from '@/components/main/MainHeader';
-import { MainSidebar } from '@/components/main/MainSidebar';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { AppShell } from '@/components/main/AppShell';
 import { ChatProvider } from '@/contexts/ChatContext';
 import { CourseProvider } from '@/contexts/CourseContext';
+import { QuizProvider } from '@/contexts/QuizContext';
+import { AdminForbidden } from '@/components/ui/AdminForbidden';
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, isLoading } = useAuth();
+
+  if (!isLoading && user?.role === 'admin') {
+    return <AdminForbidden />;
+  }
+
   return (
     <ChatProvider>
       <CourseProvider>
-        <div className='flex h-screen bg-slate-50 font-sans selection:bg-sky-500/20 text-slate-900 overflow-hidden'>
-          <MainSidebar />
-          <div className='flex-1 flex flex-col min-w-0 overflow-hidden'>
-            <MainHeader />
-            <div className='flex-1 overflow-y-auto relative'>{children}</div>
-          </div>
-        </div>
+        <QuizProvider>
+          <AppShell>{children}</AppShell>
+        </QuizProvider>
       </CourseProvider>
     </ChatProvider>
   );
 }
+

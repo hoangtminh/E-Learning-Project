@@ -1,0 +1,67 @@
+# ============================================================
+# docker-compose.yml — E-Learning Project
+# For Coolify deployment: uses "coolify" external network
+# For local testing: run `docker network create coolify` first
+# ============================================================
+
+services:
+
+  # ─── Backend (NestJS + Prisma) ────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: elearning_backend
+    restart: unless-stopped
+    expose:
+      - "8080"   # internal only — Traefik routes via coolify network
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      DATABASE_URL: ${DATABASE_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      # AWS S3
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+      # VNPay
+      VNP_TMN_CODE: ${VNP_TMN_CODE}
+      VNP_HASH_SECRET: ${VNP_HASH_SECRET}
+      VNP_URL: ${VNP_URL}
+      VNP_API_URL: ${VNP_API_URL}
+      VNP_RETURN_URL: ${VNP_RETURN_URL}
+    labels:
+      - "coolify.fqdn=${SERVICE_FQDN_BACKEND}"
+    networks:
+      - coolify
+
+  # ─── Frontend (Next.js standalone) ───────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* are inlined at build time — must be set here
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: elearning_frontend
+    restart: unless-stopped
+    expose:
+      - "3000"   # internal only — Traefik routes via coolify network
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      FRONTEND_URL: ${FRONTEND_URL}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    depends_on:
+      - backend
+    labels:
+      - "coolify.fqdn=${SERVICE_FQDN_FRONTEND}"
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true   # Coolify's shared network — Traefik routes on this

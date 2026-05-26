@@ -16,6 +16,7 @@ export const ChatSidebar = () => {
     currentConversation,
     setCurrentConversationById,
     isLoading,
+    unreadConversations,
   } = useChat();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
@@ -42,8 +43,12 @@ export const ChatSidebar = () => {
   console.log(conversations);
 
   return (
-    <div className='flex-1 h-full border-r border-outline-variant flex flex-col bg-surface-container-low/30'>
-      <div className='flex gap-2 h-12 justify-around items-center px-4 border-b border-outline-variant'>
+    <div className='flex-1 h-full glass-panel border-r border-outline-variant/10 flex flex-col overflow-hidden'>
+      <div className='p-4 border-b border-outline-variant/10 flex flex-col gap-3'>
+        <div className='flex items-center justify-between'>
+          <h3 className='font-semibold text-on-surface text-base'>Cuộc hội thoại</h3>
+          <CreateChatDialog />
+        </div>
         <div className='relative w-full'>
           <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 size-4' />
           <Input
@@ -53,7 +58,6 @@ export const ChatSidebar = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <CreateChatDialog />
       </div>
 
       <ScrollArea className='flex-1 px-1.5'>
@@ -71,6 +75,7 @@ export const ChatSidebar = () => {
                 lastMessage={conv.lastMessage || 'Chưa có tin nhắn'}
                 avatarUrl={getDisplayAvatar(conv)}
                 isActive={currentConversation?.id === conv.id}
+                isUnread={!!unreadConversations[conv.id]}
                 onClick={() => setCurrentConversationById(conv.id)}
               />
             ))}

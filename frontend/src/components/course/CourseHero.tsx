@@ -18,7 +18,10 @@ interface CourseHeroProps {
       name: string;
       avatarUrl: string;
     };
+    enrolled?: boolean;
   };
+  onBuy?: () => void;
+  price?: number;
 }
 
 function StarRating({ rating, size = 'xl' }: { rating: number; size?: string }) {
@@ -41,7 +44,7 @@ function StarRating({ rating, size = 'xl' }: { rating: number; size?: string }) 
   );
 }
 
-export function CourseHero({ course }: CourseHeroProps) {
+export function CourseHero({ course, onBuy, price }: CourseHeroProps) {
   return (
     <section className="relative w-full overflow-hidden" style={{ minHeight: 400 }}>
       {/* Background image */}
@@ -120,17 +123,46 @@ export function CourseHero({ course }: CourseHeroProps) {
           </div>
         </div>
 
-        {/* Instructor */}
-        <div className="flex items-center gap-3">
-          <img
-            src={course.instructor.avatarUrl}
-            alt={course.instructor.name}
-            className="w-10 h-10 rounded-full border-2 border-sky-400/40 object-cover"
-          />
-          <div>
-            <p className="text-xs text-slate-400">Giảng viên</p>
-            <p className="text-white font-semibold text-sm">{course.instructor.name}</p>
+        {/* Instructor & CTA */}
+        <div className="flex flex-wrap items-center justify-between gap-6 mt-2">
+          <div className="flex items-center gap-3">
+            <img
+              src={course.instructor.avatarUrl}
+              alt={course.instructor.name}
+              className="w-10 h-10 rounded-full border-2 border-sky-400/40 object-cover"
+            />
+            <div>
+              <p className="text-xs text-slate-400">Giảng viên</p>
+              <p className="text-white font-semibold text-sm">{course.instructor.name}</p>
+            </div>
           </div>
+
+          {onBuy && !course.enrolled && (
+            <div className="flex items-center gap-6">
+              {price !== undefined && (
+                <div className="text-right">
+                  <p className="text-white text-2xl font-black">
+                    {price === 0 ? 'Miễn phí' : `₫${price.toLocaleString('vi-VN')}`}
+                  </p>
+                  {price > 0 && (
+                    <p className="text-slate-400 text-xs line-through">
+                      ₫{Math.round(price * 1.5).toLocaleString('vi-VN')}
+                    </p>
+                  )}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={onBuy}
+                className="px-8 py-3.5 bg-sky-500 text-white font-black text-base rounded-2xl shadow-xl shadow-sky-500/25 hover:bg-sky-400 transition-all active:scale-95 flex items-center justify-center gap-3"
+              >
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  bolt
+                </span>
+                Đăng ký ngay
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>

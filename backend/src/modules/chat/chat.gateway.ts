@@ -11,14 +11,14 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
-import { UseFilters, UsePipes, ValidationPipe, Inject, forwardRef } from '@nestjs/common';
+import { UsePipes, ValidationPipe, Inject, forwardRef } from '@nestjs/common';
 
-@WebSocketGateway(3001, {
+@WebSocketGateway({
+  path: '/api/socket.io',
   cors: {
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
-  namespace: '/chat',
 })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -59,14 +59,14 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     if (userId) {
       client.join(`chat/${userId}`);
-      console.log(`User ${userId} connected to chat namespace`);
+      console.log(`User ${userId} connected to chat socket`);
     } else {
       client.disconnect();
     }
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`User ${client.data.userId} disconnected from chat.`);
+    console.log(`User ${client.data.userId} disconnected from chat socket.`);
   }
 
   @SubscribeMessage('send_message')

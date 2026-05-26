@@ -3,18 +3,15 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
-  ConnectedSocket,
-  MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway(3001, {
+@WebSocketGateway({
+  path: '/api/socket.io',
   cors: {
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
-  namespace: '/notification',
 })
 export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -24,7 +21,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     const userId = client.handshake.auth?.userId || client.handshake.query?.userId;
     if (userId) {
       client.join(`notification/${userId}`);
-      console.log(`User ${userId} connected to notifications namespace`);
+      console.log(`User ${userId} connected to notifications socket (room joined: notification/${userId})`);
     } else {
       client.disconnect();
     }
@@ -34,8 +31,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     console.log(`Client disconnected from notifications: ${client.id}`);
   }
 
-  // Example: Notify user about something
-  sendNotification(userId: string, data: any) {
+  sendNotificationToUser(userId: string, data: any) {
     this.server.to(`notification/${userId}`).emit('notification:new', data);
   }
 }

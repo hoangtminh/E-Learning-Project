@@ -69,11 +69,18 @@ export class AuthService {
         fullName: true,
         passwordHash: true,
         role: true,
+        isSuspended: true,
       },
     });
 
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    if (user.isSuspended) {
+      throw new UnauthorizedException(
+        'Tài khoản đang bị khóa, vui lòng liên hệ quản trị viên hệ thống',
+      );
     }
 
     const isValidPassword = await bcrypt.compare(
@@ -111,6 +118,26 @@ export class AuthService {
         avatarUrl: true,
         role: true,
       },
+    });
+  }
+
+  async searchUsers(search: string = '', currentUserId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        id: { not: currentUserId },
+        OR: [
+          { fullName: { contains: search } },
+          { email: { contains: search } },
+        ],
+      },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        avatarUrl: true,
+        role: true,
+      },
+      take: 20,
     });
   }
 

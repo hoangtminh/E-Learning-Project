@@ -1,7 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { AppShell } from '@/components/main/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
+import { AdminForbidden } from '@/components/ui/AdminForbidden';
 
 export default function InstructorGroupLayout({
   children,
@@ -13,12 +17,16 @@ export default function InstructorGroupLayout({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
       </div>
     );
   }
 
-  if (!user || (user.role !== 'instructor' && user.role !== 'admin')) {
+  if (user?.role === 'admin') {
+    return <AdminForbidden />;
+  }
+
+  if (!user || user.role !== 'instructor') {
     return (
       <div className='flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 p-6'>
         <div className='bg-white max-w-md rounded-2xl p-8 text-center shadow-sm border border-slate-200'>
@@ -29,7 +37,7 @@ export default function InstructorGroupLayout({
           </p>
           <Link
             href='/dashboard'
-            className='text-indigo-600 mt-4 inline-block text-sm font-medium hover:underline'
+            className='text-sky-600 mt-4 inline-block text-sm font-medium hover:underline'
           >
             Về dashboard
           </Link>
@@ -38,5 +46,5 @@ export default function InstructorGroupLayout({
     );
   }
 
-  return <div className='min-h-screen bg-slate-50'>{children}</div>;
+  return <AppShell>{children}</AppShell>;
 }
