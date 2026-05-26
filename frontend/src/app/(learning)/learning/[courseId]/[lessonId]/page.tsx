@@ -142,7 +142,7 @@ export default function LearningLessonPage() {
                   <span className="material-symbols-outlined text-5xl text-purple-500">quiz</span>
                   <h3 className="text-xl font-bold text-white">Bài kiểm tra</h3>
                   <p className="text-sm text-slate-400 max-w-md mx-auto">Bài học này là một bài kiểm tra trắc nghiệm. Hãy làm bài để đánh giá kiến thức của bạn.</p>
-                  <Link href={`/quizzes/${currentLesson.contentUrl}`} target="_blank" className="inline-block px-6 py-2.5 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                  <Link href={`/quizzes/${currentLesson.contentUrl}/take`} target="_blank" className="inline-block px-6 py-2.5 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
                     Làm bài Quiz ngay
                   </Link>
                 </div>
