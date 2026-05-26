@@ -128,6 +128,7 @@ export default function AssignmentsPage() {
           {items.map((item) => {
             const isSubmitted = item.submissions && item.submissions.length > 0;
             const isOverdue = item.deadline && isPast(new Date(item.deadline)) && !isSubmitted;
+            const grade = isSubmitted ? item.submissions[0]?.grade : undefined;
 
             return (
               <motion.div
@@ -169,7 +170,17 @@ export default function AssignmentsPage() {
                           </span>
                         )}
 
-                        {item.deadline ? (
+                        {isSubmitted ? (
+                          grade != null ? (
+                            <span className='text-xs font-bold text-green-600'>
+                              {grade} điểm
+                            </span>
+                          ) : (
+                            <span className='text-xs text-on-surface-variant/60 font-medium'>
+                              Chưa có điểm
+                            </span>
+                          )
+                        ) : item.deadline ? (
                           <div className={`flex items-center gap-1.5 text-xs font-semibold ${
                             isOverdue ? 'text-error' : 'text-orange-500'
                           }`}>

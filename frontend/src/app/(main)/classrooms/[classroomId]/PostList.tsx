@@ -7,6 +7,7 @@ import PostItem from './PostItem';
 import { PlusCircle, ClipboardList } from 'lucide-react';
 import { CreatePostModal } from './CreatePostModal';
 import { SendQuizModal } from './SendQuizModal';
+import { QuizProvider } from '@/contexts/QuizContext';
 
 export default function PostList() {
   const { classroom } = useClassrooms();
@@ -111,11 +112,13 @@ export default function PostList() {
         onSubmit={handlePostSubmit}
       />
 
-      {/* Send Quiz Modal */}
-      <SendQuizModal
-        isOpen={isQuizModalOpen}
-        onClose={() => setIsQuizModalOpen(false)}
-      />
+      {/* Send Quiz Modal — wrapped in QuizProvider vì useQuiz() cần context này */}
+      <QuizProvider>
+        <SendQuizModal
+          isOpen={isQuizModalOpen}
+          onClose={() => setIsQuizModalOpen(false)}
+        />
+      </QuizProvider>
     </div>
   );
 }
