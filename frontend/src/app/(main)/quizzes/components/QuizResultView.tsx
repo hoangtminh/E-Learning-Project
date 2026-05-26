@@ -86,89 +86,88 @@ export function QuizResultView({ quizId, submissionId }: QuizResultViewProps) {
   );
 
   return (
-    <div className='max-w-4xl mx-auto py-6 sm:py-10 px-4 space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700'>
+    <div className='max-w-3xl mx-auto py-4 sm:py-6 px-3 space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700'>
       {/* Hero Section */}
-      <div className='relative overflow-hidden bg-white rounded-2xl sm:rounded-3xl border shadow-xl sm:shadow-2xl p-6 sm:p-12'>
-        <div className='absolute top-0 right-0 -mt-10 -mr-10 size-48 sm:size-64 bg-primary/5 rounded-full blur-3xl' />
-        <div className='absolute bottom-0 left-0 -mb-10 -ml-10 size-48 sm:size-64 bg-green-50 rounded-full blur-3xl' />
+      <div className='relative overflow-hidden bg-white rounded-lg border shadow-sm p-4 sm:p-8'>
+        <div className='absolute top-0 right-0 -mt-10 -mr-10 size-48 sm:size-64 bg-primary/15 rounded-full blur-3xl' />
+        <div className='absolute bottom-0 left-0 -mb-10 -ml-10 size-48 sm:size-64 bg-green-100 rounded-full blur-3xl' />
 
-        <div className='relative flex flex-col items-center text-center space-y-4 sm:space-y-6'>
+        <div className='relative flex flex-col items-center text-center space-y-3 sm:space-y-4'>
           <div
             className={cn(
-              'size-16 sm:size-24 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg transform rotate-3',
+              'size-12 sm:size-16 rounded-lg flex items-center justify-center shadow-md transform rotate-3',
               correctPercentage >= 50
                 ? 'bg-green-500 text-white'
                 : 'bg-orange-500 text-white',
             )}
           >
-            <CheckCircle2 className='size-8 sm:size-12' />
+            <CheckCircle2 className='size-6 sm:size-8' />
           </div>
 
-          <div className='space-y-2'>
+          <div className='space-y-1.5'>
             <Badge
               variant='outline'
-              className='px-3 sm:px-4 py-0.5 sm:py-1 rounded-full border-primary/20 text-primary font-bold text-[10px] sm:text-xs'
+              className='px-2.5 py-0.5 rounded-full border-primary/30 text-primary font-bold text-[9px] sm:text-xs bg-primary/5'
             >
               HOÀN THÀNH BÀI THI
             </Badge>
-            <h1 className='text-2xl sm:text-4xl font-black tracking-tight leading-tight'>
+            <h1 className='text-xl sm:text-2xl font-black tracking-tight leading-tight text-slate-800'>
               {quiz.title}
             </h1>
           </div>
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 w-full max-w-2xl mt-4 sm:mt-8'>
-            <div className='flex flex-col p-4 sm:p-6 bg-slate-50 rounded-xl sm:rounded-2xl border transition-all hover:shadow-md'>
-              <span className='text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 sm:mb-2'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-lg mt-3 sm:mt-6'>
+            <div className='flex flex-col p-3 bg-slate-100 rounded-lg border border-slate-200 transition-all hover:shadow-sm'>
+              <span className='text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1'>
                 Tổng điểm
               </span>
-              <span className='text-3xl sm:text-5xl font-black text-primary'>
+              <span className='text-2xl sm:text-3xl font-black text-primary'>
                 {result.score}
               </span>
             </div>
 
-            <div className='flex flex-col p-4 sm:p-6 bg-slate-50 rounded-xl sm:rounded-2xl border transition-all hover:shadow-md'>
-              <span className='text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 sm:mb-2'>
+            <div className='flex flex-col p-3 bg-slate-100 rounded-lg border border-slate-200 transition-all hover:shadow-sm'>
+              <span className='text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1'>
                 Số câu đúng
               </span>
-              <span className='text-3xl sm:text-5xl font-black text-blue-600'>
+              <span className='text-2xl sm:text-3xl font-black text-blue-600'>
                 {result.score}/{quiz.questions?.length}
               </span>
             </div>
           </div>
 
-          <div className='flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8 w-full sm:w-auto'>
+          <div className='flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-6 w-full sm:w-auto'>
             <Button
-              size='lg'
-              className='w-full sm:w-auto rounded-xl px-8 py-6 font-bold shadow-xl shadow-primary/20'
+              size='default'
+              className='w-full sm:w-auto rounded-md h-9 px-6 font-bold shadow-md shadow-primary/10'
               onClick={() => router.push('/quizzes')}
             >
-              <Home className='mr-2 size-5' /> Quay về trang chủ
+              <Home className='mr-1.5 size-4' /> Quay về trang chủ
             </Button>
             <Button
-              size='lg'
+              size='default'
               variant='outline'
-              className='w-full sm:w-auto rounded-xl px-8 py-6 font-bold'
+              className='w-full sm:w-auto rounded-md h-9 px-6 font-bold border-slate-300'
               onClick={() => router.push(`/quizzes/${quizId}/take`)}
             >
-              <RotateCcw className='mr-2 size-5' /> Làm lại bài
+              <RotateCcw className='mr-1.5 size-4' /> Làm lại bài
             </Button>
           </div>
         </div>
       </div>
 
       {/* Detailed Results */}
-      <div className='space-y-6'>
-        <div className='flex items-center justify-between px-2'>
-          <h2 className='text-2xl font-bold flex items-center gap-2'>
-            <ChevronRight className='size-6 text-primary' /> Chi tiết từng câu
-            hỏi
+      <div className='space-y-4'>
+        <div className='flex items-center justify-between px-1'>
+          <h2 className='text-lg font-bold flex items-center gap-1.5 text-slate-800'>
+            <ChevronRight className='size-5 text-primary' /> Chi tiết từng câu hỏi
           </h2>
-          <Badge variant='secondary' className='rounded-lg px-3 py-1'>
+          <Badge variant='secondary' className='rounded-md px-2 py-0.5 text-xs'>
             {quiz.questions?.length} câu hỏi
           </Badge>
         </div>
 
-        <div className='grid gap-4'>
+        <div className='grid gap-3'>
           {quiz.questions?.map((q, idx) => {
             const r = result?.answers?.find((res) => res.questionId === q.id);
 
@@ -176,39 +175,39 @@ export function QuizResultView({ quizId, submissionId }: QuizResultViewProps) {
               <Card
                 key={q.id}
                 className={cn(
-                  'group border-2 transition-all hover:shadow-lg overflow-hidden',
+                  'group border transition-all hover:shadow-sm overflow-hidden rounded-lg bg-white',
                   r?.isCorrect
-                    ? 'border-green-100 hover:border-green-200'
-                    : 'border-red-100 hover:border-red-200',
+                    ? 'border-green-200 hover:border-green-300'
+                    : 'border-red-200 hover:border-red-300',
                 )}
               >
                 <div
                   className={cn(
-                    'h-1.5 w-full',
+                    'h-1 w-full',
                     r?.isCorrect ? 'bg-green-500' : 'bg-red-500',
                   )}
                 />
-                <CardContent className='p-6'>
-                  <div className='flex flex-col md:flex-row md:items-center justify-between gap-6'>
-                    <div className='flex gap-3 sm:gap-4'>
+                <CardContent className='p-3.5'>
+                  <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
+                    <div className='flex gap-2.5 sm:gap-3'>
                       <div
                         className={cn(
-                          'size-8 sm:size-10 rounded-lg sm:rounded-xl flex items-center justify-center font-bold shrink-0 transition-transform group-hover:scale-110 text-sm sm:text-base',
+                          'size-7 sm:size-8 rounded-md flex items-center justify-center font-bold shrink-0 transition-transform group-hover:scale-105 text-xs sm:text-sm',
                           r?.isCorrect
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700',
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800',
                         )}
                       >
                         {idx + 1}
                       </div>
                       <div className='space-y-1'>
-                        <p className='font-bold text-base sm:text-lg leading-tight'>
+                        <p className='font-bold text-sm sm:text-base leading-tight text-slate-850'>
                           {q.content}
                         </p>
-                        <div className='flex items-center gap-3 mt-2'>
+                        <div className='flex items-center gap-2 mt-1.5'>
                           <Badge
                             variant='outline'
-                            className='text-[9px] sm:text-[10px] uppercase font-bold tracking-tighter'
+                            className='text-[9px] uppercase font-bold tracking-tighter border-slate-200 text-slate-500'
                           >
                             {q.type === 'text' ? 'Tự luận' : 'Trắc nghiệm'}
                           </Badge>
@@ -216,19 +215,19 @@ export function QuizResultView({ quizId, submissionId }: QuizResultViewProps) {
                       </div>
                     </div>
 
-                    <div className='flex items-center md:flex-col gap-3 sm:gap-4 md:gap-1 md:items-end shrink-0 ml-11 md:ml-0'>
+                    <div className='flex items-center md:flex-col gap-2 md:gap-0.5 md:items-end shrink-0 ml-9 md:ml-0'>
                       <div
                         className={cn(
-                          'flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-bold text-[10px] sm:text-sm',
+                          'flex items-center gap-1 px-2 py-0.5 rounded-full font-bold text-[10px] sm:text-xs',
                           r?.isCorrect
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-red-50 text-red-700',
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800',
                         )}
                       >
                         {r?.isCorrect ? (
-                          <CheckCircle2 className='size-3 sm:size-4' />
+                          <CheckCircle2 className='size-3' />
                         ) : (
-                          <X className='size-3 sm:size-4' />
+                          <X className='size-3' />
                         )}
                         {r?.isCorrect ? 'Đúng' : 'Sai'}
                       </div>
