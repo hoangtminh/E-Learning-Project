@@ -10,15 +10,12 @@ import {
 import { Server, Socket } from 'socket.io';
 import { PrismaService } from '../prisma/prisma.service';
 import { CallsService } from '../modules/calls/calls.service';
-import { UseFilters } from '@nestjs/common';
-
 @WebSocketGateway({
   path: '/api/socket.io',
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
-  namespace: '/webrtc', // Separate namespace for WebRTC
 })
 export class WebrtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

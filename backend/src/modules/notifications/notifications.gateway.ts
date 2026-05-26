@@ -12,7 +12,6 @@ import { Server, Socket } from 'socket.io';
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
-  namespace: '/notification',
 })
 export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -22,7 +21,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     const userId = client.handshake.auth?.userId || client.handshake.query?.userId;
     if (userId) {
       client.join(`notification/${userId}`);
-      console.log(`User ${userId} connected to notifications namespace (room joined: notification/${userId})`);
+      console.log(`User ${userId} connected to notifications socket (room joined: notification/${userId})`);
     } else {
       client.disconnect();
     }

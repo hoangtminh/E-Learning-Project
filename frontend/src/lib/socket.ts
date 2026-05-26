@@ -11,19 +11,18 @@ const socketOptions = {
   path: '/api/socket.io',
   autoConnect: false,
   withCredentials: true,
+  transports: ['polling'],
+  upgrade: false,
 };
 
 // Chat specific socket
-export const chatSocket = io(`${SOCKET_BASE_URL}/chat`, socketOptions);
+export const chatSocket = io(SOCKET_BASE_URL, socketOptions);
 
 // Notification specific socket
-export const notificationSocket = io(
-  `${SOCKET_BASE_URL}/notification`,
-  socketOptions,
-);
+export const notificationSocket = io(SOCKET_BASE_URL, socketOptions);
 
-// WebRTC / Call specific socket (using namespace)
-export const callSocket = io(`${SOCKET_BASE_URL}/webrtc`, socketOptions);
+// WebRTC / call signaling socket
+export const callSocket = io(SOCKET_BASE_URL, socketOptions);
 
 // Legacy reference if needed, defaults to chat
 export const socket = chatSocket;
