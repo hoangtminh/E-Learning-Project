@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { getCourse, CourseDetail } from '@/api/courses';
 import { checkEnrollment } from '@/api/enrollment';
 import { SectionWithLessons, LessonItem } from '@/api/instructor';
+import { getCourseProgress, saveLessonProgress, UserProgress } from '@/api/progress';
+import { useProgress } from '@/hooks/useProgress';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -15,7 +17,7 @@ const ReactPlayer = dynamic(() => import('react-player'), {
       <div className="w-6 h-6 border-2 border-slate-600 border-t-white rounded-full animate-spin" />
     </div>
   ),
-});
+}) as any;
 
 export default function LearningLessonPage() {
   const params = useParams();
@@ -29,9 +31,13 @@ export default function LearningLessonPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'discuss' | 'notes' | 'resources'>('notes');
+  const [progresses, setProgresses] = useState<UserProgress[]>([]);
+  const [hasSeeked, setHasSeeked] = useState(false);
+  const playerRef = useRef<any>(null);
 
   useEffect(() => {
     fetchAll();
+    setHasSeeked(false);
   }, [courseId, lessonId]);
 
   const fetchAll = async () => {
@@ -62,10 +68,94 @@ export default function LearningLessonPage() {
           }
         }
       }
+
+      // Fetch user progresses
+      const progressRes = await getCourseProgress(courseId);
+      if (progressRes.success && progressRes.data) {
+        setProgresses(progressRes.data);
+      }
     } catch (err) {
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const onSave = useCallback(
+    async (p: {
+      courseId: string;
+      lessonId: string;
+      lastWatchedSecond: number;
+      completed?: boolean;
+    }) => {
+      try {
+        const res = await saveLessonProgress(p.courseId, p.lessonId, {
+          lastWatchedSecond: Math.round(p.lastWatchedSecond),
+          isCompleted: p.completed ?? false,
+        });
+        if (res.success && res.data) {
+          const progressData = res.data;
+          setProgresses((prev) => {
+            const existingIdx = prev.findIndex((item) => item.lessonId === p.lessonId);
+            if (existingIdx > -1) {
+              const copy = [...prev];
+              copy[existingIdx] = progressData;
+              return copy;
+            } else {
+              return [...prev, progressData];
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Error saving progress:', err);
+      }
+    },
+    [],
+  );
+
+  const { report } = useProgress(onSave, 8000);
+
+  const toggleLessonCompletion = async (targetLessonId: string, currentCompleted: boolean) => {
+    try {
+      const isCompleted = !currentCompleted;
+      setProgresses((prev) => {
+        const existingIdx = prev.findIndex((p) => p.lessonId === targetLessonId);
+        if (existingIdx > -1) {
+          const copy = [...prev];
+          copy[existingIdx] = { ...copy[existingIdx], isCompleted };
+          return copy;
+        } else {
+          return [
+            ...prev,
+            {
+              id: '',
+              userId: '',
+              courseId,
+              lessonId: targetLessonId,
+              lastWatchedSecond: 0,
+              isCompleted,
+              updatedAt: new Date().toISOString(),
+            },
+          ];
+        }
+      });
+
+      await saveLessonProgress(courseId, targetLessonId, {
+        lastWatchedSecond: 0,
+        isCompleted,
+      });
+    } catch (err) {
+      console.error('Failed to toggle completion:', err);
+    }
+  };
+
+  const handlePlayerReady = () => {
+    if (!hasSeeked && playerRef.current) {
+      const currentProgress = progresses.find((p) => p.lessonId === lessonId);
+      if (currentProgress && currentProgress.lastWatchedSecond > 0) {
+        playerRef.current.seekTo(currentProgress.lastWatchedSecond);
+      }
+      setHasSeeked(true);
     }
   };
 
@@ -91,7 +181,8 @@ export default function LearningLessonPage() {
 
   // Total lessons and completed count
   const totalLessons = allLessons.length;
-  const completedPercent = totalLessons > 0 ? Math.round(((currentIndex + 1) / totalLessons) * 100) : 0;
+  const completedCount = progresses.filter((p) => p.isCompleted).length;
+  const completedPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
   if (isLoading) {
     return (
@@ -130,11 +221,29 @@ export default function LearningLessonPage() {
           <div className="relative aspect-video w-full bg-black shrink-0">
             {currentLesson?.type === 'video' && currentLesson?.contentUrl ? (
               <ReactPlayer
-                src={currentLesson.contentUrl}
+                ref={playerRef}
+                url={currentLesson.contentUrl}
                 width="100%"
                 height="100%"
                 controls
                 style={{ position: 'absolute', top: 0, left: 0 }}
+                onReady={handlePlayerReady}
+                onProgress={(state: any) => {
+                  report({
+                    courseId,
+                    lessonId,
+                    lastWatchedSecond: state.playedSeconds,
+                    completed: state.played >= 0.9,
+                  });
+                }}
+                onEnded={() => {
+                  report({
+                    courseId,
+                    lessonId,
+                    lastWatchedSecond: 0,
+                    completed: true,
+                  });
+                }}
               />
             ) : currentLesson?.type === 'quiz' && currentLesson?.contentUrl ? (
               <div className="absolute inset-0 flex items-center justify-center text-slate-500 bg-[#1a2235]">
@@ -266,20 +375,42 @@ export default function LearningLessonPage() {
                   <div className="pb-2">
                     {(section.lessons || []).map((lesson: any) => {
                       const isActive = lesson.id === lessonId;
+                      const progress = progresses.find((p) => p.lessonId === lesson.id);
+                      const isCompleted = progress?.isCompleted ?? false;
                       return (
-                        <Link
+                        <div
                           key={lesson.id}
-                          href={`/learning/${courseId}/${lesson.id}`}
-                          className={`flex items-center gap-3 px-6 py-2.5 text-sm transition-colors ${isActive
-                              ? 'bg-indigo-500/15 text-indigo-400 border-l-2 border-indigo-500'
-                              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border-l-2 border-transparent'
-                            }`}
+                          className={`flex items-center justify-between px-6 py-2 text-sm transition-colors border-l-2 ${
+                            isActive
+                              ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500'
+                              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border-transparent'
+                          }`}
                         >
-                          <span className="material-symbols-outlined text-base shrink-0" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
-                            {lesson.type === 'video' ? 'play_circle' : lesson.type === 'quiz' ? 'quiz' : 'article'}
-                          </span>
-                          <span className="truncate text-xs">{lesson.title}</span>
-                        </Link>
+                          <Link
+                            href={`/learning/${courseId}/${lesson.id}`}
+                            className="flex items-center gap-3 flex-1 min-w-0"
+                          >
+                            <span className="material-symbols-outlined text-base shrink-0" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                              {lesson.type === 'video' ? 'play_circle' : lesson.type === 'quiz' ? 'quiz' : 'article'}
+                            </span>
+                            <span className="truncate text-xs">{lesson.title}</span>
+                          </Link>
+                          
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleLessonCompletion(lesson.id, isCompleted);
+                            }}
+                            className={`p-1 rounded hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 ml-2 ${
+                              isCompleted ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-base">
+                              {isCompleted ? 'check_circle' : 'radio_button_unchecked'}
+                            </span>
+                          </button>
+                        </div>
                       );
                     })}
                   </div>

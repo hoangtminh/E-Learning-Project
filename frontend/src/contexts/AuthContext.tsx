@@ -36,6 +36,7 @@ type RegisterData = LoginCredentials & {
 };
 
 type AuthUserLike = Partial<User> & {
+  fullName?: string | null;
   fullname?: string | null;
   imageUrl?: string | null;
   avatar?: string | null;
@@ -82,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userId: userVal.id || userVal.userId || "",
         email: userVal.email || "",
         fullName: userVal.fullName || userVal.fullname || null,
-        avatarUrl: userVal.avatarUrl || userVal.imageUrl || userVal.avatar || null,
+        avatarUrl: userVal.avatarUrl || userVal.avatar || userVal.imageUrl || null,
       });
     } else {
       setUser(null);

@@ -16,6 +16,7 @@ import {
   createLesson,
   updateLesson,
   deleteLesson,
+  uploadLessonFile,
 } from '@/api/instructor';
 import { Quiz, getCreatedQuizzes } from '@/api/quizzes';
 import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
@@ -45,6 +46,8 @@ export default function CourseEditorPage() {
   const [newLessonUrl, setNewLessonUrl] = useState('');
   const [newLessonBody, setNewLessonBody] = useState('');
   const [newLessonInputMode, setNewLessonInputMode] = useState<'url' | 'upload'>('url');
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadingFile, setUploadingFile] = useState<boolean>(false);
   
   // Quizzes
   const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([]);
@@ -468,14 +471,40 @@ export default function CourseEditorPage() {
                                   <input
                                     type="file"
                                     accept="video/*"
-                                    onChange={(e) => {
+                                    disabled={uploadingFile}
+                                    onChange={async (e) => {
                                       if (e.target.files && e.target.files.length > 0) {
-                                        setNewLessonUrl('/dummy-video.mp4'); // Simulated upload
-                                        void appAlert('Đã giả lập upload file: ' + e.target.files[0].name);
+                                        const file = e.target.files[0];
+                                        setUploadingFile(true);
+                                        setUploadProgress(0);
+                                        const result = await uploadLessonFile(file, (p) => setUploadProgress(p));
+                                        setUploadingFile(false);
+                                        if (result.success && result.publicUrl) {
+                                          setNewLessonUrl(result.publicUrl);
+                                        } else {
+                                          alert('Upload thất bại: ' + (result.error || 'Lỗi không xác định'));
+                                        }
                                       }
                                     }}
                                     className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
                                   />
+                                  {uploadingFile && (
+                                    <div className="mt-2">
+                                      <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                        <span>Đang upload...</span>
+                                        <span>{uploadProgress}%</span>
+                                      </div>
+                                      <div className="w-full bg-slate-200 rounded-full h-2">
+                                        <div
+                                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                                          style={{ width: `${uploadProgress}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                  {!uploadingFile && newLessonUrl && newLessonInputMode === 'upload' && (
+                                    <p className="mt-1 text-xs text-green-600">✓ Upload thành công!</p>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -504,14 +533,41 @@ export default function CourseEditorPage() {
                                   <input
                                     type="file"
                                     accept=".txt,.pdf,.doc,.docx"
-                                    onChange={(e) => {
+                                    disabled={uploadingFile}
+                                    onChange={async (e) => {
                                       if (e.target.files && e.target.files.length > 0) {
-                                        setNewLessonBody('Nội dung được trích xuất từ file: ' + e.target.files[0].name); // Simulated upload
-                                        void appAlert('Đã giả lập upload và đọc file: ' + e.target.files[0].name);
+                                        const file = e.target.files[0];
+                                        setUploadingFile(true);
+                                        setUploadProgress(0);
+                                        const result = await uploadLessonFile(file, (p) => setUploadProgress(p));
+                                        setUploadingFile(false);
+                                        if (result.success && result.publicUrl) {
+                                          setNewLessonUrl(result.publicUrl);
+                                          setNewLessonBody('File đã upload: ' + file.name);
+                                        } else {
+                                          alert('Upload thất bại: ' + (result.error || 'Lỗi không xác định'));
+                                        }
                                       }
                                     }}
                                     className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
                                   />
+                                  {uploadingFile && (
+                                    <div className="mt-2">
+                                      <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                        <span>Đang upload...</span>
+                                        <span>{uploadProgress}%</span>
+                                      </div>
+                                      <div className="w-full bg-slate-200 rounded-full h-2">
+                                        <div
+                                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                                          style={{ width: `${uploadProgress}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                  {!uploadingFile && newLessonUrl && newLessonInputMode === 'upload' && (
+                                    <p className="mt-1 text-xs text-green-600">✓ Upload thành công!</p>
+                                  )}
                                 </div>
                               )}
                             </div>

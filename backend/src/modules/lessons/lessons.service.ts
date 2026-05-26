@@ -2,10 +2,43 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class LessonsService {
-  constructor(private prisma: PrismaService) {}
+  private s3Client: S3Client;
+  private bucketName: string;
+
+  constructor(private prisma: PrismaService) {
+    this.bucketName = process.env.AWS_S3_BUCKET_NAME || '';
+    this.s3Client = new S3Client({
+      region: process.env.AWS_REGION || 'ap-southeast-1',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      },
+    });
+  }
+
+  async getPresignedUploadUrl(filename: string, mimeType: string) {
+    const fileId = crypto.randomUUID();
+    const s3Key = `lessons/${fileId}-${filename}`;
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: s3Key,
+      ContentType: mimeType,
+    });
+
+    const url = await getSignedUrl(this.s3Client, command, { expiresIn: 900 });
+
+    // The public URL to access the file after upload
+    const publicUrl = `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'ap-southeast-1'}.amazonaws.com/${s3Key}`;
+
+    return { uploadUrl: url, s3Key, publicUrl };
+  }
 
   async create(sectionId: string, dto: CreateLessonDto) {
     // Verify section exists

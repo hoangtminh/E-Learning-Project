@@ -104,5 +104,39 @@ export class CoursesController {
   ) {
     return this.coursesService.unenrollCourse(req.user.userId, courseId);
   }
+
+  @Post(':courseId/lessons/:lessonId/progress')
+  saveLessonProgress(
+    @Req() req: AuthenticatedRequest,
+    @Param('courseId') courseId: string,
+    @Param('lessonId') lessonId: string,
+    @Body('lastWatchedSecond') lastWatchedSecond: number,
+    @Body('isCompleted') isCompleted: boolean,
+  ) {
+    return this.coursesService.saveLessonProgress(
+      req.user.userId,
+      courseId,
+      lessonId,
+      lastWatchedSecond ?? 0,
+      !!isCompleted,
+    );
+  }
+
+  @Get(':courseId/progress')
+  getCourseProgress(
+    @Req() req: AuthenticatedRequest,
+    @Param('courseId') courseId: string,
+  ) {
+    return this.coursesService.getCourseProgress(req.user.userId, courseId);
+  }
+
+  @Get(':courseId/continue')
+  getContinueLearning(
+    @Req() req: AuthenticatedRequest,
+    @Param('courseId') courseId: string,
+  ) {
+    return this.coursesService.getContinueLearning(req.user.userId, courseId);
+  }
 }
+
 
