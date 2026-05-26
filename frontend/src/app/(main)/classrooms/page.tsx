@@ -188,9 +188,15 @@ export default function ClassroomsPage() {
     setCurrentPage(1);
   }, [searchQuery, filterType]);
 
+  const isInstructor = user?.role === 'instructor' || user?.role === 'admin';
+
   // ── Create ──────────────────────────────────────────────────────────────────
 
   const handleCreateOpen = () => {
+    if (!isInstructor) {
+      toast.error('Chỉ giảng viên mới được phép tạo lớp học');
+      return;
+    }
     setNewTitle('');
     setNewDesc('');
     setNewIsPublic(false);
@@ -199,6 +205,10 @@ export default function ClassroomsPage() {
 
   const submitCreate = async () => {
     if (!newTitle.trim()) return;
+    if (!isInstructor) {
+      toast.error('Chỉ giảng viên mới được phép tạo lớp học');
+      return;
+    }
     setIsSubmitting(true);
     try {
       await createClassroom(newTitle, newDesc, newIsPublic);
@@ -286,7 +296,7 @@ export default function ClassroomsPage() {
     startIndex,
     startIndex + ITEMS_PER_PAGE,
   );
-  const showAddCardOnThisPage = currentPage === totalPages || filteredClassrooms.length === 0;
+  const showAddCardOnThisPage = (currentPage === totalPages || filteredClassrooms.length === 0) && isInstructor;
 
   return (
     <div className='space-y-10 pb-12 transition-all p-6 md:p-12'>
