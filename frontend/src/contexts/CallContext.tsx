@@ -354,6 +354,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       withCredentials: true,
       transports: ['polling'],
       upgrade: false,
+      forceNew: true,
     });
 
     socketRef.current.on('connect', () => {
@@ -988,9 +989,37 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   // Host end call
   const endCall = () => {
-    if (socketRef.current && roomId) {
-      socketRef.current.emit('end-call', { roomId });
+    if (!roomId) return;
+
+    const currentRoomId = roomId;
+
+    if (socketRef.current?.connected) {
+      socketRef.current.timeout(5000).emit(
+        'end-call',
+        { roomId: currentRoomId },
+        async (err: Error | null, response?: { success?: boolean }) => {
+          if (!err && response?.success !== false) return;
+
+          try {
+            await callsApi.endCall(currentRoomId);
+          } catch (fallbackErr) {
+            console.error('Failed to end call via REST fallback:', fallbackErr);
+          } finally {
+            exitAndRedirect();
+          }
+        },
+      );
+      return;
     }
+
+    void callsApi
+      .endCall(currentRoomId)
+      .catch((err) => {
+        console.error('Failed to end call via REST fallback:', err);
+      })
+      .finally(() => {
+        exitAndRedirect();
+      });
   };
 
   // Host kick user

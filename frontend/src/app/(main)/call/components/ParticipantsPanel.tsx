@@ -25,11 +25,16 @@ function RemoteVideo({
   onKick,
 }: RemoteVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [playError, setPlayError] = useState<string | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setPlayError(null));
     let timeoutId: NodeJS.Timeout;
+
+    if (audioRef.current) {
+      audioRef.current.srcObject = stream && stream.getAudioTracks().length > 0 ? stream : null;
+    }
 
     if (videoRef.current && stream && isCamOn) {
       if (videoRef.current.srcObject !== stream) {
@@ -50,6 +55,9 @@ function RemoteVideo({
 
   return (
     <div className='group relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-slate-950 shadow-sm'>
+      {stream && stream.getAudioTracks().length > 0 && (
+        <audio ref={audioRef} autoPlay playsInline className='hidden' />
+      )}
       {isCamOn && stream && stream.getVideoTracks().length > 0 ? (
         <>
           {playError && (
@@ -68,6 +76,7 @@ function RemoteVideo({
             playsInline
             onPlaying={() => setPlayError(null)}
             onError={() => setPlayError('Lỗi tải video')}
+            muted
             className='w-full h-full object-cover animate-fade-in'
           />
         </>

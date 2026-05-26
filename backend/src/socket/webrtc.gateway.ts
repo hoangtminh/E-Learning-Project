@@ -408,9 +408,11 @@ export class WebrtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.roomToUsers.delete(roomId);
 
       console.log(`Host ${hostUserId} ended call room ${roomId}`);
+      return { success: true };
     } catch (err) {
       console.error('Error ending call via socket:', err);
       client.emit('error', { message: 'Bạn không có quyền kết thúc cuộc gọi này!' });
+      return { success: false, message: 'Bạn không có quyền kết thúc cuộc gọi này!' };
     }
   }
 

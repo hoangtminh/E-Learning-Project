@@ -13,6 +13,7 @@ const socketOptions = {
   withCredentials: true,
   transports: ['polling'],
   upgrade: false,
+  forceNew: true,
 };
 
 // Chat specific socket
