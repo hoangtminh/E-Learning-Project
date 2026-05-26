@@ -242,4 +242,74 @@ export class CoursesService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async saveLessonProgress(
+    userId: string,
+    courseId: string,
+    lessonId: string,
+    lastWatchedSecond: number,
+    isCompleted: boolean,
+  ) {
+    return this.prisma.userProgress.upsert({
+      where: {
+        userId_lessonId: {
+          userId,
+          lessonId,
+        },
+      },
+      update: {
+        lastWatchedSecond,
+        isCompleted,
+        updatedAt: new Date(),
+      },
+      create: {
+        userId,
+        courseId,
+        lessonId,
+        lastWatchedSecond,
+        isCompleted,
+      },
+    });
+  }
+
+  async getCourseProgress(userId: string, courseId: string) {
+    return this.prisma.userProgress.findMany({
+      where: {
+        userId,
+        courseId,
+      },
+    });
+  }
+
+  async getContinueLearning(userId: string, courseId: string) {
+    const lastProgress = await this.prisma.userProgress.findFirst({
+      where: {
+        userId,
+        courseId,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    if (lastProgress) {
+      return { lessonId: lastProgress.lessonId };
+    }
+
+    // Find the first lesson of the first section in the course
+    const firstSection = await this.prisma.section.findFirst({
+      where: { courseId },
+      orderBy: { orderIndex: 'asc' },
+      include: {
+        lessons: {
+          orderBy: { order: 'asc' },
+          take: 1,
+        },
+      },
+    });
+
+    const firstLesson = firstSection?.lessons?.[0];
+    return { lessonId: firstLesson?.id ?? null };
+  }
 }
+

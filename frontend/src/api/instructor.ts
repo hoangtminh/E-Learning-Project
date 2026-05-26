@@ -67,3 +67,58 @@ export const updateLesson = (
 
 export const deleteLesson = (lessonId: string) =>
   apiDelete(`/lessons/${lessonId}`);
+
+// ── Lesson File Upload (S3) ────────────────────────────────────────────────
+
+export const getLessonUploadUrl = (filename: string, mimeType: string) =>
+  apiPost<{ uploadUrl: string; s3Key: string; publicUrl: string }>(
+    '/lessons/presigned-upload',
+    { filename, mimeType },
+  );
+
+/**
+ * Upload a file directly to S3 using a presigned URL.
+ * Returns the public URL of the uploaded file.
+ */
+export async function uploadLessonFile(
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<{ success: boolean; publicUrl?: string; error?: string }> {
+  try {
+    // Step 1: Get presigned URL from backend
+    const res = await getLessonUploadUrl(file.name, file.type);
+    if (!res.success || !res.data) {
+      return { success: false, error: res.error || 'Không lấy được URL upload' };
+    }
+
+    const { uploadUrl, publicUrl } = res.data;
+
+    // Step 2: Upload file directly to S3 using XMLHttpRequest for progress tracking
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', uploadUrl);
+      xhr.setRequestHeader('Content-Type', file.type);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Upload request failed'));
+      xhr.send(file);
+    });
+
+    return { success: true, publicUrl };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Upload thất bại' };
+  }
+}

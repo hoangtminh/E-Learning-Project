@@ -114,8 +114,8 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
   };
 
   const handleContinueLearning = () => {
-    if (courseId && firstLessonId) {
-      router.push(`/learning/${courseId}/${firstLessonId}`);
+    if (courseId) {
+      router.push(`/learning/${courseId}`);
     }
   };
 
@@ -174,9 +174,8 @@ export function CourseBuyCard({ course, courseId }: CourseBuyCardProps) {
           {enrolled ? (
             <button
               onClick={handleContinueLearning}
-              disabled={!firstLessonId}
               type="button"
-              className="w-full py-4 bg-emerald-600 text-white font-black text-base rounded-2xl shadow-xl hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
+              className="w-full py-4 bg-emerald-600 text-white font-black text-base rounded-2xl shadow-xl hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
             >
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
               Tiếp tục học

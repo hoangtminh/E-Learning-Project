@@ -23,6 +23,7 @@ export interface User {
   id?: string;
   email: string;
   fullname: string | null;
+  fullName?: string | null;
   name?: string;
   imageUrl: string | null | undefined;
   avatar?: string;

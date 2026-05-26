@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
@@ -18,10 +19,20 @@ export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
 
   @Roles('instructor', 'admin')
+  @Post('lessons/presigned-upload')
+  getPresignedUploadUrl(
+    @Body('filename') filename: string,
+    @Body('mimeType') mimeType: string,
+  ) {
+    return this.lessonsService.getPresignedUploadUrl(filename, mimeType);
+  }
+
+  @Roles('instructor', 'admin')
   @Post('sections/:sectionId/lessons')
   create(@Param('sectionId') sectionId: string, @Body() dto: CreateLessonDto) {
     return this.lessonsService.create(sectionId, dto);
   }
+
 
   @Public()
   @Get('sections/:sectionId/lessons')
