@@ -81,10 +81,21 @@ function resolveAction(method: string, path: string): string | null {
 }
 
 function getClientIp(req: Request): string {
+  // 1. Cloudflare Tunnel sets this header with the real visitor IP.
+  //    It cannot be spoofed by the client — Cloudflare controls it.
+  const cfIp = req.headers['cf-connecting-ip'];
+  if (typeof cfIp === 'string' && cfIp) return cfIp.trim();
+
+  // 2. Traefik / generic reverse proxy: take the first (leftmost) IP in the chain.
   const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') return forwarded.split(',')[0].trim();
+  if (typeof forwarded === 'string' && forwarded)
+    return forwarded.split(',')[0].trim();
+
+  // 3. Nginx-style single-IP header.
   const realIp = req.headers['x-real-ip'];
-  if (typeof realIp === 'string') return realIp.trim();
+  if (typeof realIp === 'string' && realIp) return realIp.trim();
+
+  // 4. Direct connection fallback (local dev / no proxy).
   return req.socket?.remoteAddress || 'unknown';
 }
 
