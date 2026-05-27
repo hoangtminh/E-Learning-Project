@@ -52,9 +52,9 @@ export const CreateChatDialog = () => {
         <Button
           variant='ghost'
           size='icon'
-          className='rounded-full hover:bg-primary/10 text-primary'
+          className='bg-primary-container text-on-primary-container hover:bg-primary-container/85 rounded-xl transition-all size-8 shrink-0 flex items-center justify-center border border-primary-container/20 active:scale-95'
         >
-          <Plus size={20} />
+          <Plus size={18} />
         </Button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-[425px] rounded-3xl border-outline-variant bg-surface-container-lowest'>

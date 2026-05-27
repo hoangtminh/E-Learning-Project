@@ -125,8 +125,11 @@ export function deleteQuiz(id: string) {
   return apiDelete(`/quizzes/${id}`);
 }
 
-export function shareQuiz(id: string, email: string) {
-  return apiPost(`/quizzes/${id}/share`, { email });
+export function shareQuiz(
+  id: string,
+  payload: { userIds?: string[]; emails?: string[]; classroomId?: string },
+) {
+  return apiPost(`/quizzes/${id}/share`, payload);
 }
 
 export function submitQuiz(id: string, data: SubmitQuizDto) {

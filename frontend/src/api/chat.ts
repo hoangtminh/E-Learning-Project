@@ -1,9 +1,9 @@
 import { apiGet, apiPost, apiDelete, ApiResponse } from './client';
 
 export enum ConversationType {
-  CLASSROOM_COMMON = 'classroom_common',
-  PRIVATE_DIRECT = 'private_direct',
-  CUSTOM_GROUP = 'custom_group',
+  CLASSROOM_COMMON = 'classroom',
+  PRIVATE_DIRECT = 'direct',
+  CUSTOM_GROUP = 'group',
 }
 
 export interface UserSummary {

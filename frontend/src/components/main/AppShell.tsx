@@ -1,0 +1,27 @@
+'use client';
+
+import { MainHeader } from '@/components/main/MainHeader';
+import { MainSidebar } from '@/components/main/MainSidebar';
+import { cn } from '@/lib/utils';
+
+export function AppShell({
+  children,
+  contentClassName,
+}: {
+  children: React.ReactNode;
+  contentClassName?: string;
+}) {
+  return (
+    <div className='flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900 selection:bg-sky-500/20'>
+      <MainSidebar />
+      <div className='flex min-w-0 flex-1 flex-col overflow-hidden'>
+        <MainHeader />
+        <main
+          className={cn('relative min-h-0 flex-1 overflow-y-auto', contentClassName)}
+        >
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

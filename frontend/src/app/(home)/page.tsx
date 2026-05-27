@@ -2,188 +2,161 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { getCourses, CourseListItem } from '@/api/courses';
 
-// Fallback data when API returns no courses
-const fallbackCourses: CourseListItem[] = [
+const PATHWAYS = [
   {
-    id: 'fallback-1',
-    title: 'Fullstack Web Development với React & Node.js',
-    description: 'Khóa học toàn diện về phát triển web fullstack',
-    thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDvL-3rWD6n1zTp6iNLoTplo5Tc13d92CXNgB694DGmIDFcAqxm20aWQ5zc2fWvYFhCDooaSoHvnZalMvXTNB8opUw6buL1VWStH1PbtrPyqBZ8MGsWdKNsloxManSL2fb1f3dsu-2bpINYJMZ3ha4nU7YJ2AcAjNdekAOYsiHuZMApDq13DRpgGIJQL6B4ItYPlA26VbvK5k2kqjRoRRiWmIB8yPbYH7XquZdb9jgCgMlcZMn8sMNf-V_sAQ1TOgpTkVcA5gtwTTur',
-    price: 199,
-    visibility: 'public',
-    createdAt: '',
-    instructor: { id: '', fullName: 'Glacier Team', avatarUrl: null },
-    owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
-    _count: { sections: 12, members: 1200 },
+    id: 'web',
+    icon: 'code',
+    title: 'Lập trình Web',
+    desc: 'Từ HTML/CSS đến React, NodeJS và Fullstack hiện đại',
+    color: 'from-sky-500 to-blue-600',
+    bg: 'bg-sky-50',
+    tags: ['React', 'NodeJS', 'TypeScript', 'NextJS'],
+    steps: ['HTML & CSS cơ bản', 'JavaScript ES6+', 'ReactJS', 'Backend với NodeJS', 'Fullstack Project'],
   },
   {
-    id: 'fallback-2',
-    title: 'Mastering Figma: Từ cơ bản đến nâng cao',
-    description: 'Thiết kế UI/UX chuyên nghiệp với Figma',
-    thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBJ1oczZRpMZH5RjaohLMt9Cr3CgGNUqwsSG2tMlPHCEupfVNqLi3BrC3xjLbpXOJS11lK6k7lCmNyJvIfHs2ZsMgtb68GDPsX_o73qR088CWFt_AO70Z51zyxGsuwozWeuOVYdt4-cQLPaPkLaPfNCPiobmezmgqbjm8s-jwLX69Yj-guDcrVrD9zBTCugKqg3iezOpCqUUET4DOIRBC8MAE574zV02gWVxZpaEVUzF_zwIqc0D9X5IcAPJmXit9MMTk29eP60tnvo',
-    price: 149,
-    visibility: 'public',
-    createdAt: '',
-    instructor: { id: '', fullName: 'Glacier Team', avatarUrl: null },
-    owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
-    _count: { sections: 8, members: 850 },
+    id: 'data',
+    icon: 'analytics',
+    title: 'Khoa học Dữ liệu',
+    desc: 'Python, Machine Learning và phân tích dữ liệu thực chiến',
+    color: 'from-purple-500 to-violet-600',
+    bg: 'bg-purple-50',
+    tags: ['Python', 'Pandas', 'ML', 'SQL'],
+    steps: ['Python cơ bản', 'Pandas & NumPy', 'Trực quan hóa dữ liệu', 'Machine Learning', 'Deep Learning'],
   },
   {
-    id: 'fallback-3',
-    title: 'Phân tích dữ liệu kinh doanh với Python',
-    description: 'Khóa học Data Science thực chiến',
-    thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB5m84Q-9rjedfa6f6DpNCsWN3Dmi-0-kENCNGiuixU3dkVWdCkAavD_Vz1Kn-5M9l1Gmk3cS-NLkvQhviQ2YQVOxPG7b75__aaxITshn1QWOzja-1E72Hvgi8QDNxJ8Kpru5UHMVe0WhpEv40QrRiev47-DVoekuhkXmkPRpwSCu4fFKZMCi7IBI0FV2tUb3AEKMs7CzcipYbXKhQDuv_D11IBsMESPyc3xZjlFBcJHb2kDkXyR1YMTbpmlxqrA3rWaMZKJdqGd2PF',
-    price: 210,
-    visibility: 'public',
-    createdAt: '',
-    instructor: { id: '', fullName: 'Glacier Team', avatarUrl: null },
-    owner: { id: '', fullName: 'Glacier Team', avatarUrl: null },
-    _count: { sections: 14, members: 540 },
+    id: 'design',
+    icon: 'palette',
+    title: 'Thiết kế UI/UX',
+    desc: 'Figma, Prototyping và Design System chuyên nghiệp',
+    color: 'from-pink-500 to-rose-600',
+    bg: 'bg-pink-50',
+    tags: ['Figma', 'Prototyping', 'Design System', 'UX Research'],
+    steps: ['Nguyên lý thiết kế', 'Figma cơ bản', 'UI Components', 'UX Research', 'Design System'],
+  },
+  {
+    id: 'mobile',
+    icon: 'smartphone',
+    title: 'Lập trình Mobile',
+    desc: 'React Native, Flutter và phát triển ứng dụng di động',
+    color: 'from-emerald-500 to-teal-600',
+    bg: 'bg-emerald-50',
+    tags: ['React Native', 'Flutter', 'iOS', 'Android'],
+    steps: ['Mobile fundamentals', 'React Native cơ bản', 'Navigation & State', 'API Integration', 'Publish App'],
   },
 ];
 
 export default function Home() {
   const [courses, setCourses] = useState<CourseListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalCourses, setTotalCourses] = useState(0);
+  const [selectedPathway, setSelectedPathway] = useState('web');
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const res = await getCourses({ limit: 6 });
-        if (res.success && res.data && res.data.data.length > 0) {
-          setCourses(res.data.data);
-        } else {
-          setCourses(fallbackCourses);
-        }
-      } catch {
-        setCourses(fallbackCourses);
-      } finally {
-        setIsLoading(false);
+    getCourses({ limit: 6 }).then((res) => {
+      if (res.success && res.data) {
+        setCourses(res.data.data);
+        setTotalCourses(res.data.meta?.total || res.data.data.length);
       }
-    };
-    fetchCourses();
+      setIsLoading(false);
+    });
   }, []);
 
-  return (
-    <div className='bg-white text-slate-900 selection:bg-sky-500/20 font-sans min-h-screen flex flex-col'>
-      <main className='flex-1'>
-        {/* Hero Section */}
-        <section className='relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-[#f8fbff]'>
-          {/* Background Decorative Elements */}
-          <div className='absolute top-0 left-1/4 w-125 h-125 bg-sky-500/10 rounded-full blur-[120px] -z-10'></div>
-          <div className='absolute bottom-0 right-1/4 w-150 h-150 bg-purple-600/5 rounded-full blur-[140px] -z-10'></div>
+  const fadeUp = {
+    initial: { opacity: 0, y: 30 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.2 },
+    transition: { duration: 0.6 },
+  };
 
-          <div className='max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center'>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.6 }}
-              className='text-left space-y-8'
-            >
-              <div className='inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-500 text-xs font-bold tracking-wide uppercase'>
-                <span className='material-symbols-outlined text-sm'>
-                  auto_awesome
-                </span>
-                <span>Kỷ nguyên học tập mới</span>
+  return (
+    <div className="bg-white text-slate-900 min-h-screen flex flex-col font-sans selection:bg-sky-500/20">
+      <main className="flex-1">
+
+        {/* ── Hero ── */}
+        <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-gradient-to-b from-[#f0f9ff] to-white">
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-sky-400/10 rounded-full blur-[120px] -z-10" />
+          <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-purple-600/5 rounded-full blur-[140px] -z-10" />
+
+          <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center py-16">
+            <motion.div {...fadeUp} className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-600 text-xs font-bold uppercase tracking-wide">
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                Kỷ nguyên học tập mới
               </div>
-              <h1 className='text-5xl md:text-7xl font-extrabold tracking-tight leading-tight text-slate-900'>
+
+              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight text-slate-900">
                 Học Tập{' '}
-                <span className='bg-linear-to-r from-sky-500 to-purple-600 bg-clip-text text-transparent'>
+                <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
                   Không Giới Hạn
                 </span>
               </h1>
-              <p className='text-slate-600 text-lg md:text-xl max-w-xl leading-relaxed'>
-                Nâng tầm tri thức với nền tảng E-learning thế hệ mới. Trải
-                nghiệm học tập đỉnh cao trong không gian kỹ thuật số tinh tế và
-                hiện đại.
+
+              <p className="text-slate-600 text-lg md:text-xl max-w-xl leading-relaxed">
+                Nâng tầm tri thức với nền tảng E-learning thế hệ mới. Lộ trình học rõ ràng, giảng viên chuyên nghiệp, cộng đồng sôi động.
               </p>
-              <div className='flex flex-wrap gap-4'>
-                <Button
-                  size='lg'
-                  className='bg-sky-500 text-white rounded-xl font-bold text-lg shadow-xl shadow-sky-500/25 hover:shadow-sky-500/40 h-auto py-4 px-8 flex items-center space-x-2'
+
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/courses"
+                  className="inline-flex items-center gap-2 bg-sky-500 text-white font-bold text-lg py-4 px-8 rounded-xl shadow-xl shadow-sky-500/25 hover:bg-sky-600 hover:shadow-sky-500/40 transition-all"
                 >
-                  <span>Khám phá ngay</span>
-                  <span className='material-symbols-outlined'>
-                    arrow_forward
-                  </span>
-                </Button>
-                <Button
-                  variant='outline'
-                  size='lg'
-                  asChild
-                  className='bg-sky-50/70 backdrop-blur-md border-sky-500/10 text-slate-700 rounded-xl font-bold text-lg hover:bg-white shadow-sm h-auto py-4 px-8 flex items-center space-x-2'
+                  Khám phá ngay
+                  <span className="material-symbols-outlined">arrow_forward</span>
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-2 bg-white border border-sky-200 text-slate-700 font-bold text-lg py-4 px-8 rounded-xl shadow-sm hover:bg-sky-50 transition-all"
                 >
-                  <Link href='/call'>
-                    <span className='material-symbols-outlined'>
-                      video_camera_front
-                    </span>
-                    <span>Test WebRTC Call</span>
-                  </Link>
-                </Button>
+                  <span className="material-symbols-outlined">person_add</span>
+                  Đăng ký miễn phí
+                </Link>
               </div>
-              <div className='flex items-center space-x-4 pt-4'>
-                <div className='flex -space-x-3'>
-                  <div className='w-10 h-10 rounded-full border-2 border-white overflow-hidden shadow-sm'>
-                    <img
-                      className='w-full h-full object-cover'
-                      alt='Student'
-                      src='https://lh3.googleusercontent.com/aida-public/AB6AXuCoLcZt8R31CwX3UiyL5JxZf-X251KAIKT8ZXC5YlL4nUC870JjR0Km4WzFJsip6_pzz0hPTJki_YMdT4TZSVrOZl3RRjcBKEVDVGR6t1x6AsCFBvw6Bl6tIbGWcfu5t9eyI21LtKP0t6YpJPKsV71m8LX8rJSARv-_dVEgT0Gb4NkiEUAp6LQN7RWNKKBkG8X25KKbMzZ4fyxFfCJSWvY0ucPclgX3kUJ0r_IjGymPsg6Xk5RfsyGYhGxDUKl4opdReA3vi4IBvTK3'
-                    />
-                  </div>
-                  <div className='w-10 h-10 rounded-full border-2 border-white overflow-hidden shadow-sm'>
-                    <img
-                      className='w-full h-full object-cover'
-                      alt='Student'
-                      src='https://lh3.googleusercontent.com/aida-public/AB6AXuCkO_Nqjs9J1sadJXPGkTo5mQJ2_LFmmkOfSSfpU2-pbpemIdug4Za0KLe2FGnQMb6FLCc3gNWTyBLV9K5iiCFvXvati_Pxv8S_NZWQbVGrAd41-NTJUc6_a1ZjLdzALtx9IqLXsiqNrrgd00w1Aw1jtY9uC9ygea6t4EVAUTAu-zvcJBQI47ftl8xWJuAXOyq2Gt68EB5eKqFB8nlJnB59YueTteLgm9YdhcT9J46HR2KvQQG4y22WrxaFUxGW7rGTxfVw8QxjTj6I'
-                    />
-                  </div>
-                  <div className='w-10 h-10 rounded-full border-2 border-white overflow-hidden shadow-sm'>
-                    <img
-                      className='w-full h-full object-cover'
-                      alt='Instructor'
-                      src='https://lh3.googleusercontent.com/aida-public/AB6AXuDRnnukvkmBxnY72y0nXXhU9TgyYgW2WdZiZHWphwbuQldiCQBJYXqWHyAzTyIWCK_bN-X6Xx3b_oXPCwID4pO20utCSnqD5Ra5NXLEHGWQhBy1SCwUadme-uJDNOHg3cM-tiYgyTMtTltMarGgtvBA3-dWq6YXtJSXJgApHtTBSNcyT1xsA8SXTDL2ee-YJgw0M8UTtGR1N_lz_1pIJjcba5sA14Izp9Pkw6pOYnfVdWHxBN9whiaxjlLIRoa6E-MMPAep9rCxtp3v'
-                    />
-                  </div>
+
+              <div className="flex items-center gap-4 pt-2">
+                <div className="flex -space-x-2">
+                  {['AB6AXuCoLcZt8R31', 'AB6AXuCkO_Nqjs9J1', 'AB6AXuDRnnukvkmBxn'].map((key, i) => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gradient-to-br from-sky-300 to-indigo-400 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                      {String.fromCharCode(65 + i)}
+                    </div>
+                  ))}
                 </div>
-                <p className='text-sm text-slate-500 font-medium'>
-                  Tham gia cùng{' '}
-                  <span className='text-sky-500 font-bold'>10,000+</span> học
-                  viên khác
+                <p className="text-sm text-slate-500 font-medium">
+                  Tham gia cùng <span className="text-sky-500 font-bold">{totalCourses > 0 ? `${totalCourses * 120}+` : '10,000+'}</span> học viên khác
                 </p>
               </div>
             </motion.div>
+
             <motion.div
               initial={{ opacity: 0, scale: 0.95, x: 20 }}
               whileInView={{ opacity: 1, scale: 1, x: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className='relative'
+              className="relative hidden md:block"
             >
-              <div className='bg-white/85 backdrop-blur-xl border border-sky-500/20 rounded-3xl p-4 rotate-3 transform transition-transform hover:rotate-0 duration-500 shadow-2xl'>
-                <img
-                  className='rounded-2xl w-full h-full object-cover shadow-inner'
-                  alt='Dashboard Dashboard'
-                  src='https://lh3.googleusercontent.com/aida-public/AB6AXuDsShA9-Xp_8PjhhBjFkZHA1jDKOvzkXeHp3I7H7B-gqYFuWcFn6RJPdvLVEXVqBWocqAAZZJIBeOe-xo-wLAOJVLCJ81R2ShE6LhJOJ8pX3Ao6IcoDMZFnOUAO8QuqSUoIS27bME35VU3h9gKol4s8wE9EzwzqMKbDlcGJgUI87dRSKc7qCStrP2kdQI7Mqaae2X7R_y9kd4DCW0mQeu9DNBscURf5BDIQ9nmQt0HJdc-OowxZ8-__FtxxqSD-yZgSdMP7_CjfEmo6'
-                />
-                <div className='absolute -bottom-6 -left-6 bg-white/85 backdrop-blur-xl border border-sky-500/20 p-4 rounded-2xl shadow-xl flex items-center space-x-4 animate-bounce-slow'>
-                  <div className='w-12 h-12 bg-sky-500/10 rounded-full flex items-center justify-center'>
-                    <span className='material-symbols-outlined text-sky-500'>
-                      verified
-                    </span>
+              <div className="bg-white/85 backdrop-blur-xl border border-sky-500/20 rounded-3xl p-4 rotate-2 hover:rotate-0 duration-500 transition-transform shadow-2xl">
+                <div className="rounded-2xl overflow-hidden aspect-video bg-gradient-to-br from-sky-100 to-indigo-100 flex items-center justify-center">
+                  <div className="text-center space-y-4 p-8">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mx-auto shadow-xl">
+                      <span className="material-symbols-outlined text-white text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+                    </div>
+                    <p className="text-slate-600 font-semibold">Glacier Learning Platform</p>
+                    <div className="flex gap-2 justify-center flex-wrap">
+                      {['React', 'Python', 'Figma', 'NodeJS'].map(tag => (
+                        <span key={tag} className="text-xs px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 font-medium border border-sky-200">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute -bottom-6 -left-6 bg-white/90 backdrop-blur-xl border border-sky-200 p-4 rounded-2xl shadow-xl flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <span className="material-symbols-outlined text-emerald-600" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                   </div>
                   <div>
-                    <p className='text-xs text-slate-500'>Chứng chỉ quốc tế</p>
-                    <p className='font-bold text-slate-900'>Đạt chuẩn ISO</p>
+                    <p className="text-xs text-slate-500">Chứng chỉ quốc tế</p>
+                    <p className="font-bold text-slate-900 text-sm">Được công nhận toàn cầu</p>
                   </div>
                 </div>
               </div>
@@ -191,254 +164,257 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Trending Courses Section */}
-        <section className='py-24 max-w-7xl mx-auto px-6'>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
-            className='flex flex-col md:flex-row justify-between items-end mb-12 gap-6'
-          >
-            <div className='space-y-4'>
-              <h2 className='text-4xl font-bold tracking-tight text-slate-900'>
-                Khóa học xu hướng
-              </h2>
-              <p className='text-slate-600 max-w-lg'>
-                Khám phá những khóa học được cộng đồng quan tâm nhất trong tuần
-                qua.
-              </p>
+        {/* ── Stats ── */}
+        <section className="py-14 bg-gradient-to-r from-[#006382] to-[#0091aa]">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-white text-center">
+              {[
+                { icon: 'menu_book', value: totalCourses > 0 ? `${totalCourses}+` : '50+', label: 'Khóa học' },
+                { icon: 'groups', value: totalCourses > 0 ? `${totalCourses * 120}+` : '10,000+', label: 'Học viên' },
+                { icon: 'school', value: '20+', label: 'Giảng viên' },
+                { icon: 'workspace_premium', value: '100%', label: 'Hài lòng' },
+              ].map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="space-y-2"
+                >
+                  <span className="material-symbols-outlined text-white/70 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>{stat.icon}</span>
+                  <p className="text-4xl font-black">{stat.value}</p>
+                  <p className="text-white/80 text-sm font-medium">{stat.label}</p>
+                </motion.div>
+              ))}
             </div>
-            <div className='flex space-x-2'>
-              <Button
-                variant='outline'
-                size='icon'
-                className='bg-sky-50/70 backdrop-blur-md border-sky-500/10 rounded-lg hover:bg-sky-500/10 text-slate-700'
-              >
-                <span className='material-symbols-outlined'>chevron_left</span>
-              </Button>
-              <Button
-                variant='outline'
-                size='icon'
-                className='bg-sky-50/70 backdrop-blur-md border-sky-500/10 rounded-lg hover:bg-sky-500/10 text-slate-700'
-              >
-                <span className='material-symbols-outlined'>chevron_right</span>
-              </Button>
+          </div>
+        </section>
+
+        {/* ── Trending Courses ── */}
+        <section className="py-24 max-w-7xl mx-auto px-6">
+          <motion.div {...fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-sky-600 uppercase tracking-wide">
+                <span className="w-6 h-0.5 bg-sky-500 rounded-full" />
+                Nổi bật nhất
+              </div>
+              <h2 className="text-4xl font-bold tracking-tight text-slate-900">Khóa học xu hướng</h2>
+              <p className="text-slate-600 max-w-lg">Khám phá những khóa học được cộng đồng quan tâm nhất.</p>
             </div>
+            <Link href="/courses" className="flex items-center gap-2 text-sky-600 font-semibold hover:underline shrink-0">
+              Xem tất cả <span className="material-symbols-outlined text-lg">arrow_forward</span>
+            </Link>
           </motion.div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {isLoading
-              ? /* Skeleton loading cards */
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className='h-full'>
-                    <Card className='bg-white border border-slate-100 rounded-2xl overflow-hidden flex flex-col h-full animate-pulse'>
-                      <div className='h-48 bg-slate-200' />
-                      <CardContent className='p-6 space-y-4 grow flex flex-col'>
-                        <div className='h-6 bg-slate-200 rounded w-3/4' />
-                        <div className='h-4 bg-slate-100 rounded w-1/2' />
-                        <div className='pt-4 mt-auto border-t border-slate-50 flex justify-between items-center'>
-                          <div className='h-8 bg-slate-200 rounded w-24' />
-                          <div className='h-10 w-10 bg-slate-200 rounded-lg' />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-80 bg-slate-100 animate-pulse rounded-2xl" />
                 ))
-              : /* Dynamic course cards */
-                courses.map((course, index) => (
+              : courses.length > 0
+              ? courses.map((course, i) => (
                   <motion.div
                     key={course.id}
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.2 }}
-                    transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
-                    className='h-full'
+                    viewport={{ once: true, amount: 0.1 }}
+                    transition={{ duration: 0.5, delay: 0.08 * i }}
                   >
-                    <Card className='bg-white border border-slate-100 group rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-sky-500/5 hover:border-sky-500/20 transition-all duration-300 flex flex-col h-full'>
-                      <div className='relative h-48 overflow-hidden'>
-                        <img
-                          className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                          alt={course.title}
-                          src={
-                            course.thumbnailUrl ||
-                            'https://placehold.co/600x400/e0f2fe/0ea5e9?text=Course'
-                          }
-                        />
-                        <div className='absolute top-4 left-4 bg-sky-50/70 backdrop-blur-md border border-sky-500/10 px-3 py-1 rounded-full text-[10px] font-bold text-sky-500 uppercase'>
-                          {course._count.sections} Chương
+                    <Link href={`/courses/${course.id}`} className="group block bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-sky-500/8 hover:border-sky-200 transition-all duration-300 h-full">
+                      <div className="relative h-48 overflow-hidden bg-slate-100">
+                        {course.thumbnailUrl ? (
+                          <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-sky-100 to-indigo-100 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-5xl text-sky-300">play_circle</span>
+                          </div>
+                        )}
+                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-sky-600 border border-sky-100">
+                          {course._count?.sections || 0} Chương
                         </div>
+                        {Number(course.price) === 0 && (
+                          <div className="absolute top-3 right-3 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">MIỄN PHÍ</div>
+                        )}
                       </div>
-                      <CardContent className='p-6 space-y-4 grow flex flex-col'>
-                        <h3 className='text-xl font-bold leading-tight text-slate-900 group-hover:text-sky-500 transition-colors'>
-                          {course.title}
-                        </h3>
-                        <div className='flex items-center space-x-4 text-sm text-slate-500'>
-                          <div className='flex items-center space-x-1'>
-                            <span className='material-symbols-outlined text-[16px]'>
-                              person
-                            </span>
-                            <span>
-                              {(course.instructor ?? course.owner)?.fullName ||
-                                'Instructor'}
-                            </span>
-                          </div>
-                          <div className='flex items-center space-x-1'>
-                            <span className='material-symbols-outlined text-[16px]'>
-                              group
-                            </span>
-                            <span>{course._count.members} học viên</span>
-                          </div>
-                        </div>
-                        <div className='pt-4 mt-auto border-t border-slate-50 flex justify-between items-center'>
-                          <span className='text-2xl font-bold text-sky-500'>
-                            {Number(course.price) === 0
-                              ? 'Miễn phí'
-                              : `$${Number(course.price).toFixed(2)}`}
+                      <div className="p-6 space-y-3">
+                        <h3 className="text-base font-bold leading-tight text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-2">{course.title}</h3>
+                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">person</span>
+                            {course.instructor?.fullName || 'Giảng viên'}
                           </span>
-                          <Button
-                            variant='secondary'
-                            size='icon'
-                            className='bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white rounded-lg transition-all shadow-sm'
-                          >
-                            <span className='material-symbols-outlined'>
-                              add_shopping_cart
-                            </span>
-                          </Button>
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">group</span>
+                            {course._count?.members || 0} học viên
+                          </span>
                         </div>
-                      </CardContent>
-                    </Card>
+                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
+                          <span className="text-xl font-black text-sky-600">
+                            {Number(course.price) === 0 ? 'Miễn phí' : `$${Number(course.price).toFixed(2)}`}
+                          </span>
+                          <span className="text-xs font-semibold text-sky-600 bg-sky-50 px-3 py-1.5 rounded-lg group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                            Xem ngay →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
                   </motion.div>
-                ))}
+                ))
+              : (
+                <div className="col-span-3 text-center py-16">
+                  <span className="material-symbols-outlined text-5xl text-slate-300">school</span>
+                  <p className="text-slate-500 mt-3">Chưa có khóa học nào. <Link href="/register" className="text-sky-500 underline">Đăng ký để cập nhật!</Link></p>
+                </div>
+              )}
           </div>
         </section>
 
-        {/* Customer Reviews Section */}
-        <section className='py-24 bg-[#f0f9ff] relative overflow-hidden'>
-          <div className='absolute top-1/2 left-0 w-full h-px bg-linear-to-r from-transparent via-sky-500/20 to-transparent -z-10'></div>
-          <div className='max-w-7xl mx-auto px-6'>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.6 }}
-              className='text-center mb-16 space-y-4'
-            >
-              <h2 className='text-4xl font-bold text-slate-900'>
-                Học viên nói gì về chúng tôi
-              </h2>
-              <p className='text-slate-600 max-w-2xl mx-auto'>
-                Hàng ngàn câu chuyện thành công bắt đầu từ Glacier Learning. Hãy
-                nghe họ chia sẻ về hành trình của mình.
-              </p>
+        {/* ── Pathways ── */}
+        <section className="py-24 bg-[#f8fbff]">
+          <div className="max-w-7xl mx-auto px-6">
+            <motion.div {...fadeUp} className="text-center mb-14 space-y-4">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-sky-600 uppercase tracking-wide">
+                <span className="w-6 h-0.5 bg-sky-500 rounded-full" />
+                Lộ trình học tập
+                <span className="w-6 h-0.5 bg-sky-500 rounded-full" />
+              </div>
+              <h2 className="text-4xl font-bold text-slate-900">Chọn lộ trình phù hợp với bạn</h2>
+              <p className="text-slate-600 max-w-2xl mx-auto">Mỗi lộ trình được thiết kế bởi chuyên gia, giúp bạn đi từ cơ bản đến thành thạo một cách có hệ thống.</p>
             </motion.div>
-            <div className='grid md:grid-cols-3 gap-8'>
-              {/* Testimonial 1 */}
-              <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className='h-full'
-              >
-                <Card className='bg-white rounded-3xl relative group shadow-sm hover:shadow-md transition-all border border-sky-100 h-full'>
-                  <CardContent className='p-8 space-y-6'>
-                    <span className='material-symbols-outlined text-5xl text-sky-500/10 absolute top-4 right-8'>
-                      format_quote
-                    </span>
-                    <p className='text-slate-700 italic leading-relaxed relative z-10'>
-                      "Khóa học Fullstack thực sự thay đổi tư duy của mình. Nội
-                      dung rất cập nhật và hỗ trợ từ instructor cực kỳ nhiệt
-                      tình. Xứng đáng đầu tư!"
-                    </p>
-                    <div className='flex items-center space-x-4'>
-                      <img
-                        className='w-12 h-12 rounded-full object-cover ring-2 ring-sky-500/20'
-                        alt='Student'
-                        src='https://lh3.googleusercontent.com/aida-public/AB6AXuAdF7D4MLkDQiLI0YDnAq-bnWFjqXx4uQzIQj5BKAqucb-25OjodqmhkWuHwWrk-tBkpzWVJz9M4G0NMpN05c63BsnGdXep_T-o7kd6bd6GHuAEpIeFSri054OqI4ypBFJJT255i05mU1I-IaRnaPBB9I3rWbNdedkUnxYHHul3P7TS8TC7BG9kC_frq5zasGIZ2Guat29eAy0FuvJ_-oB6dXjG-Ti_0tXPU9wvX4gQytZGfZTvR1vG51hIUS0Jcb_CWSM0IrGLfEzw'
-                      />
-                      <div>
-                        <h4 className='font-bold text-slate-900'>Minh Trần</h4>
-                        <p className='text-xs text-slate-500'>
-                          Software Engineer tại FPT
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
 
-              {/* Testimonial 2 */}
-              <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className='h-full'
-              >
-                <Card className='bg-white rounded-3xl relative group shadow-sm hover:shadow-md transition-all border border-sky-100 md:translate-y-8 h-full'>
-                  <CardContent className='p-8 space-y-6'>
-                    <span className='material-symbols-outlined text-5xl text-sky-500/10 absolute top-4 right-8'>
-                      format_quote
-                    </span>
-                    <p className='text-slate-700 italic leading-relaxed relative z-10'>
-                      "Giao diện học tập rất mượt mà và hiện đại. Cảm giác như
-                      đang sống trong một không gian tương lai. Học không hề
-                      thấy mệt mỏi."
-                    </p>
-                    <div className='flex items-center space-x-4'>
-                      <img
-                        className='w-12 h-12 rounded-full object-cover ring-2 ring-sky-500/20'
-                        alt='Student'
-                        src='https://lh3.googleusercontent.com/aida-public/AB6AXuB8IGSpeqMI1y6ud1EQSwv71ap9UEootJjxsjINxCvJJYbGcFP4urkEDPuxPtKVStOrAFKgz020ySUZZtM2k5M-3DMlnJFjd2PSWt882frgQB6UZI29-9JfodpBS4VlymHe4YGWUdAfSL-P1O0rSltedhM5LOROuIISJXHBlYSitYHK3EhR2Lg8WGfgwhFd-BzngZoYQUcW6rrcmUG15VZ3E2ymhGmiwdCKJIeiQ1O1AiDpr23jGUXpfwPZY-nYkMMXOjsQBDro2fZp'
-                      />
-                      <div>
-                        <h4 className='font-bold text-slate-900'>
-                          Linh Nguyễn
-                        </h4>
-                        <p className='text-xs text-slate-500'>UI/UX Designer</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Testimonial 3 */}
-              <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className='h-full'
-              >
-                <Card className='bg-white rounded-3xl relative group shadow-sm hover:shadow-md transition-all border border-sky-100 h-full'>
-                  <CardContent className='p-8 space-y-6'>
-                    <span className='material-symbols-outlined text-5xl text-sky-500/10 absolute top-4 right-8'>
-                      format_quote
-                    </span>
-                    <p className='text-slate-700 italic leading-relaxed relative z-10'>
-                      "Lộ trình học tập rõ ràng, giúp mình từ một người không
-                      biết gì về dữ liệu đã có thể tự tin ứng tuyển vào các công
-                      ty lớn."
-                    </p>
-                    <div className='flex items-center space-x-4'>
-                      <img
-                        className='w-12 h-12 rounded-full object-cover ring-2 ring-sky-500/20'
-                        alt='Student'
-                        src='https://lh3.googleusercontent.com/aida-public/AB6AXuC5Hn5fWsm1MhRPXa3QAy-wpDyPKS4Fpg2UmqL565so-lJSfLSk-rWnV126swdBamHZF99Cg5Qwi-MAVWbMwSkrCdWpciF9ZE0KNPDhJtJ7QcJfnq0mf0RIfpbtGgRNDvP7Edkksg9GbjeizdYnIHT2h0mJ6paVAR8Gnfjy4G43r1Hlw9W43rKFrMg6-5vx8cyB7Feft-pd1ZOQMQlGY0fTqJ8sIN92iJe5dyyP9j3WW2BjeqY9a90eIqhG9c2Q2S_RAU48JGk8rVGF'
-                      />
-                      <div>
-                        <h4 className='font-bold text-slate-900'>Hoàng Nam</h4>
-                        <p className='text-xs text-slate-500'>Data Analyst</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+            {/* Pathway selector */}
+            <div className="flex flex-wrap gap-3 justify-center mb-10">
+              {PATHWAYS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPathway(p.id)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all border ${
+                    selectedPathway === p.id
+                      ? 'bg-sky-600 text-white border-sky-600 shadow-lg shadow-sky-500/20'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-600'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: selectedPathway === p.id ? "'FILL' 1" : "'FILL' 0" }}>{p.icon}</span>
+                  {p.title}
+                </button>
+              ))}
             </div>
+
+            {/* Pathway detail */}
+            {PATHWAYS.filter((p) => p.id === selectedPathway).map((pathway) => (
+              <motion.div
+                key={pathway.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="grid md:grid-cols-2 gap-8 items-center"
+              >
+                <div className="space-y-6">
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${pathway.color} flex items-center justify-center shadow-xl`}>
+                    <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>{pathway.icon}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900 mb-2">{pathway.title}</h3>
+                    <p className="text-slate-600 leading-relaxed">{pathway.desc}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {pathway.tags.map(tag => (
+                      <span key={tag} className={`text-xs font-semibold px-3 py-1.5 rounded-full ${pathway.bg} text-slate-700 border border-slate-200`}>{tag}</span>
+                    ))}
+                  </div>
+                  <Link
+                    href={`/pathway?track=${pathway.id}`}
+                    className={`inline-flex items-center gap-2 text-white font-bold py-3 px-7 rounded-xl bg-gradient-to-r ${pathway.color} shadow-lg hover:opacity-90 transition-opacity`}
+                  >
+                    Bắt đầu lộ trình
+                    <span className="material-symbols-outlined">arrow_forward</span>
+                  </Link>
+                </div>
+
+                <div className="space-y-3">
+                  {pathway.steps.map((step, i) => (
+                    <motion.div
+                      key={step}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-sky-100 transition-all group"
+                    >
+                      <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${pathway.color} flex items-center justify-center text-white text-xs font-black shrink-0 shadow-md`}>
+                        {i + 1}
+                      </div>
+                      <span className="font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">{step}</span>
+                      {i === 0 && <span className="ml-auto text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Bắt đầu</span>}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </section>
+
+        {/* ── CTA ── */}
+        <section className="py-24 bg-gradient-to-br from-[#006382] via-[#0079a0] to-[#005672] text-white relative overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl" />
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-8">
+            <motion.div {...fadeUp} className="space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black leading-tight">Sẵn sàng bắt đầu<br />hành trình của bạn?</h2>
+              <p className="text-white/80 text-lg max-w-xl mx-auto">Tham gia cùng hàng nghìn học viên đang chinh phục kiến thức mỗi ngày trên Glacier Learning.</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-wrap gap-4 justify-center"
+            >
+              <Link href="/register" className="bg-white text-[#006382] font-black py-4 px-10 rounded-xl text-lg shadow-xl hover:bg-sky-50 transition-colors">
+                Đăng ký miễn phí
+              </Link>
+              <Link href="/courses" className="bg-white/10 border border-white/30 text-white font-bold py-4 px-10 rounded-xl text-lg hover:bg-white/20 transition-colors backdrop-blur-sm">
+                Xem khóa học
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+
       </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-400 py-12 px-6">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-8">
+          <div className="md:col-span-1 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-sky-400/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-sky-400" style={{ fontVariationSettings: "'FILL' 1" }}>ac_unit</span>
+              </div>
+              <span className="text-white font-black text-xl">Glacier</span>
+            </div>
+            <p className="text-sm leading-relaxed">Nền tảng học tập E-learning thế hệ mới, nơi tri thức không có giới hạn.</p>
+          </div>
+          {[
+            { title: 'Học tập', links: [{ label: 'Khóa học', href: '/courses' }, { label: 'Lộ trình', href: '/pathway' }, { label: 'Tài nguyên', href: '/resources' }] },
+            { title: 'Tài khoản', links: [{ label: 'Đăng nhập', href: '/login' }, { label: 'Đăng ký', href: '/register' }, { label: 'Dashboard', href: '/dashboard' }] },
+            { title: 'Liên hệ', links: [{ label: 'Email: hello@glacier.vn', href: '#' }, { label: 'Facebook', href: '#' }] },
+          ].map((col) => (
+            <div key={col.title} className="space-y-3">
+              <h4 className="text-white font-semibold text-sm">{col.title}</h4>
+              <ul className="space-y-2">
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    <Link href={link.href} className="text-sm hover:text-white transition-colors">{link.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/10 text-xs text-center">
+          © {new Date().getFullYear()} Glacier Learning. Mọi quyền được bảo lưu.
+        </div>
+      </footer>
     </div>
   );
 }

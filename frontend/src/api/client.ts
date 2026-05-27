@@ -114,8 +114,12 @@ export const apiPut = <T>(
     body: body ? JSON.stringify(body) : undefined,
   });
 
-export const apiDelete = <T>(endpoint: string): Promise<ApiResponse<T>> =>
-  apiRequest<T>(endpoint, { method: 'DELETE' });
+export const apiDelete = <T>(endpoint: string, body?: any): Promise<ApiResponse<T>> =>
+  apiRequest<T>(endpoint, {
+    method: 'DELETE',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
 
 export const apiPatch = <T>(
   endpoint: string,

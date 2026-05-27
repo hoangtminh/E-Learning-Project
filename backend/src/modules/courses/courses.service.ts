@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -33,7 +34,7 @@ export class CoursesService {
 
     const [courses, total] = await Promise.all([
       this.prisma.course.findMany({
-        where: { visibility: 'public' },
+        where: { visibility: { in: ['public', 'sale'] } },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -46,7 +47,7 @@ export class CoursesService {
           },
         },
       }),
-      this.prisma.course.count({ where: { visibility: 'public' } }),
+      this.prisma.course.count({ where: { visibility: { in: ['public', 'sale'] } } }),
     ]);
 
     return {
@@ -61,8 +62,13 @@ export class CoursesService {
   }
 
   async findOne(id: string) {
-    const course = await this.prisma.course.findUnique({
-      where: { id },
+    const course = await this.prisma.course.findFirst({
+      where: {
+        OR: [
+          { id: id },
+          { slug: id }
+        ]
+      },
       include: {
         instructor: {
           select: { id: true, fullName: true, avatarUrl: true, email: true },
@@ -98,7 +104,7 @@ export class CoursesService {
     }
 
     return this.prisma.course.update({
-      where: { id },
+      where: { id: course.id },
       data: dto,
       include: {
         instructor: {
@@ -118,7 +124,7 @@ export class CoursesService {
     }
 
     return this.prisma.course.delete({
-      where: { id },
+      where: { id: course.id },
     });
   }
 
@@ -140,6 +146,11 @@ export class CoursesService {
 
     if (existing) {
       throw new ConflictException('You are already enrolled in this course');
+    }
+
+    // Block direct enrollment for paid courses
+    if (Number(course.price) > 0) {
+      throw new BadRequestException('This is a paid course. You must pay to enroll.');
     }
 
     // Private courses require invitation

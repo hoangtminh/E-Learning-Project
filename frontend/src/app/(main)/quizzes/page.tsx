@@ -1,4 +1,4 @@
-import { QuizLibrary } from "@/components/main/quizzes/QuizLibrary";
+import { QuizLibrary } from "@/app/(main)/quizzes/components/QuizLibrary";
 
 export default function QuizzesPage() {
   return <QuizLibrary />;

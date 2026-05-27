@@ -6,16 +6,20 @@ import React, {
   useState,
   ReactNode,
   useCallback,
+  useMemo,
 } from 'react';
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/api/client';
 import {
   ClassroomMember,
   getMembers as apiGetMembers,
   removeMember as apiRemoveMember,
+  addMemberByEmail as apiAddMemberByEmail,
   joinByCode as apiJoinByCode,
   getPendingMembers as apiGetPendingMembers,
   approveMember as apiApproveMember,
   rejectMember as apiRejectMember,
+  updateMemberRole as apiUpdateMemberRole,
+  leaveClassroom as apiLeaveClassroom,
   linkCourse as apiLinkCourse,
   unlinkCourse as apiUnlinkCourse,
   ClassroomMemberUser,
@@ -37,6 +41,7 @@ export type Classroom = {
   _count?: { members: number };
   owner?: { id: string; fullName: string | null; avatarUrl: string | null; email: string };
   linkedCourses?: ClassroomLinkedCourse[];
+  role?: 'owner' | 'admin' | 'member';
 };
 
 export type PendingMember = {
@@ -61,6 +66,13 @@ interface ClassroomContextType {
   loadingMembers: boolean;
   fetchMembers: (classroomId: string) => Promise<void>;
   removeMember: (classroomId: string, userId: string) => Promise<void>;
+  addMemberByEmail: (classroomId: string, email: string) => Promise<void>;
+  updateMemberRole: (
+    classroomId: string,
+    userId: string,
+    role: 'owner' | 'admin' | 'member',
+  ) => Promise<void>;
+  leaveClassroom: (classroomId: string) => Promise<void>;
 
   pendingMembers: PendingMember[];
   loadingPending: boolean;
@@ -103,7 +115,13 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     try {
       const res = await apiGet<Classroom[]>('/classrooms');
       if (res.success && res.data) {
-        setClassrooms(res.data);
+        // Sanitize arrays safely with defaults
+        const cleaned = res.data.map((c) => ({
+          ...c,
+          members: c.members ?? [],
+          linkedCourses: c.linkedCourses ?? [],
+        }));
+        setClassrooms(cleaned);
       } else {
         console.error('Fetch classrooms failed:', res.error);
       }
@@ -114,38 +132,50 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const createClassroom = async (
+  const createClassroom = useCallback(async (
     title: string,
     description: string,
     isPublic = false,
   ) => {
-    const res = await apiPost('/classrooms', { title, description, isPublic });
+    const res = await apiPost<Classroom>('/classrooms', { title, description, isPublic });
     if (!res.success) throw new Error(res.error || 'Tạo lớp thất bại');
-    await fetchClassrooms();
-  };
+    if (res.data) {
+      setClassrooms((prev) => [res.data!, ...prev]);
+    }
+  }, []);
 
-  const updateClassroom = async (
+  const updateClassroom = useCallback(async (
     id: string,
     title: string,
     description?: string,
   ) => {
-    const res = await apiPatch(`/classrooms/${id}`, { title, description });
+    const res = await apiPatch<Classroom>(`/classrooms/${id}`, { title, description });
     if (!res.success) throw new Error(res.error || 'Cập nhật thất bại');
-    await fetchClassrooms();
-  };
+    if (res.data) {
+      setClassrooms((prev) => prev.map((c) => (c.id === id ? res.data! : c)));
+      setClassroom((prev) => (prev && prev.id === id ? { ...prev, ...res.data! } : prev));
+    }
+  }, []);
 
-  const deleteClassroom = async (id: string) => {
+  const deleteClassroom = useCallback(async (id: string) => {
     const res = await apiDelete(`/classrooms/${id}`);
     if (!res.success) throw new Error(res.error || 'Xóa thất bại');
-    await fetchClassrooms();
-  };
+    setClassrooms((prev) => prev.filter((c) => c.id !== id));
+    setClassroom((prev) => (prev && prev.id === id ? null : prev));
+  }, []);
 
-  const joinByCode = async (code: string) => {
+  const joinByCode = useCallback(async (code: string) => {
     const res = await apiJoinByCode(code);
     if (!res.success) throw new Error(res.error || 'Tham gia thất bại');
-    await fetchPendingClassrooms();
-    await fetchClassrooms();
-  };
+    const classroomsRes = await apiGet<Classroom[]>('/classrooms');
+    if (classroomsRes.success && classroomsRes.data) {
+      setClassrooms(classroomsRes.data);
+    }
+    const pendingRes = await apiGetMyPendingClassrooms();
+    if (pendingRes.success && pendingRes.data) {
+      setPendingClassrooms(pendingRes.data);
+    }
+  }, []);
 
   const fetchPendingClassrooms = useCallback(async () => {
     setLoadingPendingClassrooms(true);
@@ -161,18 +191,24 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const cancelJoinRequest = async (classroomId: string, userId: string) => {
+  const cancelJoinRequest = useCallback(async (classroomId: string, userId: string) => {
     const res = await apiCancelJoinRequest(classroomId, userId);
     if (!res.success) throw new Error(res.error || 'Hủy yêu cầu thất bại');
-    await fetchPendingClassrooms();
-  };
+    setPendingClassrooms((prev) => prev.filter((req) => req.classroom.id !== classroomId));
+  }, []);
 
   const fetchClassroom = useCallback(async (id: string) => {
     setLoadingClassroom(true);
     try {
       const res = await apiGet<Classroom>(`/classrooms/${id}`);
       if (res.success && res.data) {
-        setClassroom(res.data);
+        // Sanitize array properties safely
+        const cleaned = {
+          ...res.data,
+          members: res.data.members ?? [],
+          linkedCourses: res.data.linkedCourses ?? [],
+        };
+        setClassroom(cleaned);
       } else {
         console.error('Fetch classroom failed:', res.error);
       }
@@ -197,11 +233,19 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const removeMember = async (classroomId: string, userId: string) => {
+  const removeMember = useCallback(async (classroomId: string, userId: string) => {
     const res = await apiRemoveMember(classroomId, userId);
     if (!res.success) throw new Error(res.error || 'Xóa thành viên thất bại');
-    await fetchMembers(classroomId);
-  };
+    setMembers((prev) => prev.filter((m) => m.userId !== userId));
+  }, []);
+
+  const addMemberByEmail = useCallback(async (classroomId: string, email: string) => {
+    const res = await apiAddMemberByEmail(classroomId, email);
+    if (!res.success) throw new Error(res.error || 'Thêm thành viên thất bại');
+    if (res.data) {
+      setMembers((prev) => [...prev, res.data!]);
+    }
+  }, []);
 
   const fetchPendingMembers = useCallback(async (classroomId: string) => {
     setLoadingPending(true);
@@ -217,61 +261,135 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const approveMember = async (classroomId: string, userId: string) => {
+  const approveMember = useCallback(async (classroomId: string, userId: string) => {
     const res = await apiApproveMember(classroomId, userId);
     if (!res.success) throw new Error(res.error || 'Duyệt thành viên thất bại');
-    await fetchPendingMembers(classroomId);
-    await fetchMembers(classroomId);
-  };
+    setPendingMembers((prev) => prev.filter((m) => m.user.id !== userId));
+    if (res.data) {
+      setMembers((prev) => [...prev, res.data!]);
+    }
+  }, []);
 
-  const rejectMember = async (classroomId: string, userId: string) => {
+  const rejectMember = useCallback(async (classroomId: string, userId: string) => {
     const res = await apiRejectMember(classroomId, userId);
     if (!res.success) throw new Error(res.error || 'Từ chối thành viên thất bại');
-    await fetchPendingMembers(classroomId);
-  };
+    setPendingMembers((prev) => prev.filter((m) => m.user.id !== userId));
+  }, []);
 
-  const linkCourse = async (classroomId: string, courseId: string) => {
+  const updateMemberRole = useCallback(async (
+    classroomId: string,
+    userId: string,
+    role: 'owner' | 'admin' | 'member',
+  ) => {
+    const res = await apiUpdateMemberRole(classroomId, userId, role);
+    if (!res.success) throw new Error(res.error || 'Cập nhật vai trò thất bại');
+    if (res.data) {
+      setMembers((prev) => prev.map((m) => (m.userId === userId ? res.data! : m)));
+      setClassroom((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          members: prev.members?.map((m) => (m.userId === userId ? res.data! : m)),
+        };
+      });
+    }
+  }, []);
+
+  const leaveClassroom = useCallback(async (classroomId: string) => {
+    const res = await apiLeaveClassroom(classroomId);
+    if (!res.success) throw new Error(res.error || 'Rời lớp học thất bại');
+    setClassrooms((prev) => prev.filter((c) => c.id !== classroomId));
+    setClassroom((prev) => (prev && prev.id === classroomId ? null : prev));
+  }, []);
+
+  const linkCourse = useCallback(async (classroomId: string, courseId: string) => {
     const res = await apiLinkCourse(classroomId, courseId);
     if (!res.success) throw new Error(res.error || 'Liên kết khóa học thất bại');
-    await fetchClassroom(classroomId);
-  };
+    if (res.data) {
+      setClassroom((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          linkedCourses: [...(prev.linkedCourses || []), res.data as any],
+        };
+      });
+    }
+  }, []);
 
-  const unlinkCourse = async (classroomId: string, courseId: string) => {
+  const unlinkCourse = useCallback(async (classroomId: string, courseId: string) => {
     const res = await apiUnlinkCourse(classroomId, courseId);
     if (!res.success) throw new Error(res.error || 'Hủy liên kết khóa học thất bại');
-    await fetchClassroom(classroomId);
-  };
+    setClassroom((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        linkedCourses: (prev.linkedCourses || []).filter((lc) => lc.course.id !== courseId),
+      };
+    });
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    classrooms,
+    loading,
+    fetchClassrooms,
+    createClassroom,
+    updateClassroom,
+    deleteClassroom,
+    joinByCode,
+    classroom,
+    loadingClassroom,
+    fetchClassroom,
+    members,
+    loadingMembers,
+    fetchMembers,
+    removeMember,
+    addMemberByEmail,
+    updateMemberRole,
+    leaveClassroom,
+    pendingMembers,
+    loadingPending,
+    fetchPendingMembers,
+    approveMember,
+    rejectMember,
+    linkCourse,
+    unlinkCourse,
+    pendingClassrooms,
+    loadingPendingClassrooms,
+    fetchPendingClassrooms,
+    cancelJoinRequest,
+  }), [
+    classrooms,
+    loading,
+    fetchClassrooms,
+    createClassroom,
+    updateClassroom,
+    deleteClassroom,
+    joinByCode,
+    classroom,
+    loadingClassroom,
+    fetchClassroom,
+    members,
+    loadingMembers,
+    fetchMembers,
+    removeMember,
+    addMemberByEmail,
+    updateMemberRole,
+    leaveClassroom,
+    pendingMembers,
+    loadingPending,
+    fetchPendingMembers,
+    approveMember,
+    rejectMember,
+    linkCourse,
+    unlinkCourse,
+    pendingClassrooms,
+    loadingPendingClassrooms,
+    fetchPendingClassrooms,
+    cancelJoinRequest,
+  ]);
 
   return (
-    <ClassroomContext.Provider
-      value={{
-        classrooms,
-        loading,
-        fetchClassrooms,
-        createClassroom,
-        updateClassroom,
-        deleteClassroom,
-        joinByCode,
-        classroom,
-        loadingClassroom,
-        fetchClassroom,
-        members,
-        loadingMembers,
-        fetchMembers,
-        removeMember,
-        pendingMembers,
-        loadingPending,
-        fetchPendingMembers,
-        approveMember,
-        rejectMember,
-        linkCourse,
-        unlinkCourse,
-        pendingClassrooms,
-        loadingPendingClassrooms,
-        fetchPendingClassrooms,
-        cancelJoinRequest,
-      }}
-    >
+    <ClassroomContext.Provider value={contextValue}>
       {children}
     </ClassroomContext.Provider>
   );

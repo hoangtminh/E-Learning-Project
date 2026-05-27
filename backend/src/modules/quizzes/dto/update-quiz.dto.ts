@@ -39,4 +39,13 @@ export class ShareQuizDto {
   @IsString({ each: true })
   @IsOptional()
   userIds?: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  emails?: string[];
+
+  @IsString()
+  @IsOptional()
+  classroomId?: string;
 }

@@ -43,6 +43,16 @@ export class TasksController {
     return this.tasksService.findAll(this.getUserId(req), classroomId);
   }
 
+  /** GET /classrooms/:classroomId/tasks/:taskId */
+  @Get(':taskId')
+  findOne(
+    @Req() req: any,
+    @Param('classroomId') classroomId: string,
+    @Param('taskId') taskId: string,
+  ) {
+    return this.tasksService.findOne(this.getUserId(req), classroomId, taskId);
+  }
+
   /** POST /classrooms/:classroomId/tasks */
   @Post()
   create(

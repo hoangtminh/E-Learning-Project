@@ -68,6 +68,58 @@ export class TasksService {
     });
   }
 
+  async findAllForUser(userId: string) {
+    // Find all classrooms the user is a member of
+    const memberships = await this.prisma.classroomMember.findMany({
+      where: { userId },
+      select: { classroomId: true },
+    });
+
+    const classroomIds = memberships.map(m => m.classroomId);
+
+    return this.prisma.classroomTask.findMany({
+      where: { classroomId: { in: classroomIds } },
+      include: {
+        classroom: { select: { id: true, title: true } },
+        creator: { select: { id: true, fullName: true, avatarUrl: true } },
+        submissions: { where: { userId } },
+        _count: { select: { submissions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(userId: string, classroomId: string, taskId: string) {
+    await this.assertMembership(userId, classroomId);
+    const task = await this.prisma.classroomTask.findFirst({
+      where: { id: taskId, classroomId },
+      include: {
+        classroom: { select: { id: true, title: true } },
+        creator: { select: { id: true, fullName: true, avatarUrl: true } },
+        submissions: { where: { userId } },
+        _count: { select: { submissions: true } },
+      },
+    });
+    if (!task) throw new NotFoundException('Task not found');
+    return task;
+  }
+
+  async findOneForUser(userId: string, taskId: string) {
+    const task = await this.prisma.classroomTask.findUnique({
+      where: { id: taskId },
+      include: {
+        classroom: { select: { id: true, title: true } },
+        creator: { select: { id: true, fullName: true, avatarUrl: true } },
+        submissions: { where: { userId } },
+        _count: { select: { submissions: true } },
+      },
+    });
+    if (!task) throw new NotFoundException('Task not found');
+
+    await this.assertMembership(userId, task.classroomId);
+    return task;
+  }
+
   async create(userId: string, classroomId: string, dto: CreateTaskDto) {
     await this.assertAdminOrOwner(userId, classroomId);
     const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });

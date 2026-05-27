@@ -58,7 +58,7 @@ export default function CourseDetailPage() {
 
         {/* Right column — Buy card */}
         <div className='lg:col-span-1'>
-          <CourseBuyCard course={course} />
+          <CourseBuyCard courseId={course.id} course={course} />
         </div>
       </div>
     </div>
