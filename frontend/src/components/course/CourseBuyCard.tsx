@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { enrollCourse, checkEnrollment } from '@/api/enrollment';
-import { getCourse } from '@/api/courses';
+import { getCourse, getCourses, CourseListItem } from '@/api/courses';
+import { getCourseProgress } from '@/api/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { appAlert } from '@/components/ui/app-dialog-provider';
 
@@ -19,6 +20,7 @@ interface CourseBuyCardProps {
   enrolled?: boolean;
   onEnroll?: () => void;
   enrolling?: boolean;
+  courseDetail?: any;
 }
 
 const includes = [
@@ -68,7 +70,8 @@ export function CourseBuyCard({
   courseId, 
   enrolled: propsEnrolled, 
   onEnroll: propsOnEnroll, 
-  enrolling: propsEnrolling 
+  enrolling: propsEnrolling,
+  courseDetail
 }: CourseBuyCardProps) {
   const discount = Math.round((1 - course.price / course.originalPrice) * 100);
   const countdown = useCountdown(38528000);
@@ -79,6 +82,89 @@ export function CourseBuyCard({
   const [enrolling, setEnrolling] = useState(false);
   const [firstLessonId, setFirstLessonId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState<{ completed: number; total: number; percent: number } | null>(null);
+  const [related, setRelated] = useState<CourseListItem[]>([]);
+
+  // Calculate dynamic includes if courseDetail is provided
+  const sections = courseDetail?.sections || [];
+  const totalLessons = sections.reduce((acc: number, s: any) => acc + (s.lessons?.length || 0), 0);
+  const videoLessons = sections.reduce(
+    (acc: number, s: any) => acc + (s.lessons?.filter((l: any) => l.type === 'video').length || 0),
+    0
+  );
+  const quizLessons = sections.reduce(
+    (acc: number, s: any) => acc + (s.lessons?.filter((l: any) => l.type === 'quiz').length || 0),
+    0
+  );
+  const textLessons = sections.reduce(
+    (acc: number, s: any) => acc + (s.lessons?.filter((l: any) => l.type === 'text').length || 0),
+    0
+  );
+
+  const calculatedIncludes = courseDetail
+    ? [
+        ...(videoLessons > 0 ? [{ icon: 'ondemand_video', text: `${videoLessons} bài học video chất lượng` }] : []),
+        ...(quizLessons > 0 ? [{ icon: 'quiz', text: `${quizLessons} bài kiểm tra thực hành` }] : []),
+        ...(textLessons > 0 ? [{ icon: 'description', text: `${textLessons} tài liệu & bài đọc thêm` }] : []),
+        ...(totalLessons === 0 ? [{ icon: 'play_lesson', text: 'Chương trình học đang cập nhật' }] : []),
+        { icon: 'all_inclusive', text: 'Truy cập trọn đời trên mọi thiết bị' },
+        ...(courseDetail.hasCertificate || courseDetail.visibility === 'public'
+          ? [{ icon: 'workspace_premium', text: 'Chứng chỉ hoàn thành khóa học' }]
+          : [])
+      ]
+    : includes;
+
+  useEffect(() => {
+    if (courseId) {
+      getCourses({ limit: 6 }).then((res) => {
+        if (res.success && res.data && res.data.data) {
+          const other = res.data.data.filter((c) => c.id !== courseId);
+          setRelated(other.slice(0, 2));
+        }
+      });
+    }
+  }, [courseId]);
+
+  const coursesToRender = related.length > 0 
+    ? related.map((c) => ({
+        id: c.id,
+        title: c.title,
+        rating: 4.8,
+        price: Number(c.price) === 0 ? 'Miễn phí' : `₫${Number(c.price).toLocaleString('vi-VN')}`,
+        img: c.thumbnailUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDsShA9-Xp_8PjhhBjFkZHA1jDKOvzkXeHp3I7H7B-gqYFuWcFn6RJPdvLVEXVqBWocqAAZZJIBeOe-xo-wLAOJVLCJ81R2ShE6LhJOJ8pX3Ao6IcoDMZFnOUAO8QuqSUoIS27bME35VU3h9gKol4s8wE9EzwzqMKbDlcGJgUI87dRSKc7qCStrP2kdQI7Mqaae2X7R_y9kd4DCW0mQeu9DNBscURf5BDIQ9nmQt0HJdc-OowxZ8-__FtxxqSD-yZgSdMP7_CjfEmo6',
+      }))
+    : relatedCourses.map((c) => ({
+        id: null,
+        title: c.title,
+        rating: c.rating,
+        price: c.price,
+        img: c.img,
+      }));
+
+  const handleRelatedClick = (id: string | null) => {
+    if (id) {
+      router.push(`/courses/${id}`);
+    }
+  };
+
+  useEffect(() => {
+    if (courseId && user && enrolled) {
+      getCourse(courseId).then((res) => {
+        if (res.success && res.data) {
+          const sections = res.data.sections || [];
+          const total = sections.reduce((acc, s) => acc + (s.lessons?.length || 0), 0);
+          
+          getCourseProgress(courseId).then((progRes) => {
+            if (progRes.success && progRes.data) {
+              const completed = progRes.data.filter((p) => p.isCompleted).length;
+              const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+              setProgress({ completed, total, percent });
+            }
+          });
+        }
+      });
+    }
+  }, [courseId, user, enrolled]);
 
   useEffect(() => {
     if (propsEnrolled !== undefined) {
@@ -210,30 +296,53 @@ export function CourseBuyCard({
           </div>
         </div>
 
-        {/* Pricing */}
+        {/* Pricing & Progress */}
         <div className="p-6 space-y-5">
-          <div className="flex items-end gap-3">
-            <span className="text-4xl font-black text-[#252f43]">
-              ₫{course.price.toLocaleString('vi-VN')}
-            </span>
-            <div className="mb-1">
-              <span className="text-sm text-[#525b72] line-through">
-                ₫{course.originalPrice.toLocaleString('vi-VN')}
-              </span>
-              <span className="ml-2 text-sm font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
-                -{discount}%
-              </span>
-            </div>
-          </div>
+          {!enrolled ? (
+            <>
+              <div className="flex items-end gap-3">
+                <span className="text-4xl font-black text-[#252f43]">
+                  ₫{course.price.toLocaleString('vi-VN')}
+                </span>
+                <div className="mb-1">
+                  <span className="text-sm text-[#525b72] line-through">
+                    ₫{course.originalPrice.toLocaleString('vi-VN')}
+                  </span>
+                  <span className="ml-2 text-sm font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    -{discount}%
+                  </span>
+                </div>
+              </div>
 
-          {/* Countdown */}
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-[#b31b25]/5 border border-[#b31b25]/20">
-            <span className="material-symbols-outlined text-[#b31b25] text-lg">timer</span>
-            <div>
-              <p className="text-xs font-bold text-[#b31b25]">Giá ưu đãi kết thúc sau:</p>
-              <p className="text-sm font-black text-[#b31b25]">{countdown}</p>
-            </div>
-          </div>
+              {/* Countdown */}
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-[#b31b25]/5 border border-[#b31b25]/20">
+                <span className="material-symbols-outlined text-[#b31b25] text-lg">timer</span>
+                <div>
+                  <p className="text-xs font-bold text-[#b31b25]">Giá ưu đãi kết thúc sau:</p>
+                  <p className="text-sm font-black text-[#b31b25]">{countdown}</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Progress Bar for Enrolled Users */
+            progress && (
+              <div className="space-y-2.5 p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-emerald-800">Tiến độ học tập</span>
+                  <span className="font-black text-emerald-700">{progress.percent}%</span>
+                </div>
+                <div className="w-full h-2 bg-emerald-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-600 rounded-full transition-all duration-500 ease-out" 
+                    style={{ width: `${progress.percent}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Đã hoàn thành <strong className="text-emerald-700 font-bold">{progress.completed}</strong>/{progress.total} bài học
+                </p>
+              </div>
+            )
+          )}
 
           {/* CTA Buttons */}
           {enrolled ? (
@@ -271,7 +380,7 @@ export function CourseBuyCard({
         <div className="px-6 pb-6 space-y-3 border-t border-[#a3adc7]/20 pt-5">
           <h4 className="text-sm font-bold text-[#252f43]">Khóa học bao gồm:</h4>
           <div className="space-y-2.5">
-            {includes.map((item) => (
+            {calculatedIncludes.map((item) => (
               <div key={item.icon} className="flex items-center gap-3 text-sm text-[#525b72]">
                 <span className="material-symbols-outlined text-base text-[#006382]">{item.icon}</span>
                 <span>{item.text}</span>
@@ -285,7 +394,7 @@ export function CourseBuyCard({
           {[
             { icon: 'bookmark', label: 'Lưu' },
             { icon: 'share',    label: 'Chia sẻ' },
-            { icon: 'card_gift',label: 'Tặng' },
+            { icon: 'redeem',   label: 'Tặng' },
           ].map((btn) => (
             <button type="button"
               key={btn.icon}
@@ -301,9 +410,13 @@ export function CourseBuyCard({
       {/* Related courses */}
       <div className="glass-panel rounded-2xl p-4 space-y-3">
         <h4 className="text-sm font-bold text-[#252f43] px-2">Khóa học liên quan</h4>
-        {relatedCourses.map((c) => (
-          <div key={c.title} className="flex gap-3 hover:bg-[#006382]/5 p-2 rounded-xl transition-colors cursor-pointer group">
-            <img src={c.img} alt={c.title} className="w-16 h-12 rounded-lg object-cover flex-shrink-0" />
+        {coursesToRender.map((c, idx) => (
+          <div 
+            key={c.title + idx} 
+            onClick={() => handleRelatedClick(c.id)}
+            className="flex gap-3 hover:bg-[#006382]/5 p-2 rounded-xl transition-colors cursor-pointer group"
+          >
+            <img src={c.img} alt={c.title} className="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-slate-100" />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-[#252f43] group-hover:text-[#006382] transition-colors truncate">
                 {c.title}

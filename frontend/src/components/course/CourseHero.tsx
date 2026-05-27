@@ -107,7 +107,13 @@ export function CourseHero({ course, onBuy, price }: CourseHeroProps) {
           <div className="flex items-center gap-2">
             <StarRating rating={course.rating} />
             <span className="text-amber-400 font-black text-lg">{course.rating}</span>
-            <span className="text-slate-400 text-sm">({(course.reviewCount / 1000).toFixed(1)}k đánh giá)</span>
+            <span className="text-slate-400 text-sm">
+              (
+              {course.reviewCount >= 1000
+                ? `${(course.reviewCount / 1000).toFixed(1)}k`
+                : course.reviewCount}
+              {' '}đánh giá)
+            </span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-300 text-sm">
             <span className="material-symbols-outlined text-base">group</span>
@@ -138,7 +144,7 @@ export function CourseHero({ course, onBuy, price }: CourseHeroProps) {
           </div>
 
           {onBuy && !course.enrolled && (
-            <div className="flex items-center gap-6">
+            <div className="lg:hidden flex items-center gap-6">
               {price !== undefined && (
                 <div className="text-right">
                   <p className="text-white text-2xl font-black">

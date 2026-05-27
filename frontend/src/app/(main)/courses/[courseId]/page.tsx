@@ -215,7 +215,7 @@ export default function CourseDetailPage() {
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
         {/* Left column: Tabs */}
         <div className="min-w-0">
-          <CourseTabs courseId={courseId} course={course} />
+          <CourseTabs courseId={courseId} course={course} enrolled={enrolled} />
         </div>
 
         {/* Right column: Buy card */}
@@ -226,6 +226,7 @@ export default function CourseDetailPage() {
             enrolled={enrolled} 
             onEnroll={handleEnroll} 
             enrolling={enrolling} 
+            courseDetail={course}
           />
         </aside>
       </div>

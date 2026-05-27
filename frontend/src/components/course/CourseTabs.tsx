@@ -19,9 +19,10 @@ type TabId = typeof tabs[number]['id'];
 interface CourseTabsProps {
   courseId: string;
   course?: any;
+  enrolled?: boolean;
 }
 
-export function CourseTabs({ courseId, course }: CourseTabsProps) {
+export function CourseTabs({ courseId, course, enrolled = false }: CourseTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
 
   return (
@@ -52,7 +53,7 @@ export function CourseTabs({ courseId, course }: CourseTabsProps) {
       {/* Tab panels */}
       <div className="pt-8">
         {activeTab === 'overview'   && <CourseOverviewTab course={course} />}
-        {activeTab === 'curriculum' && <CourseCurriculumTab courseId={courseId} />}
+        {activeTab === 'curriculum' && <CourseCurriculumTab courseId={courseId} enrolled={enrolled} />}
         {activeTab === 'instructor' && <CourseInstructorTab course={course} />}
         {activeTab === 'reviews'    && <CourseReviewsTab />}
       </div>
