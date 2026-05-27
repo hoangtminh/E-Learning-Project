@@ -8,6 +8,7 @@ import {
   getMyTeachingCourses,
 } from '@/api/instructor';
 import { createCourse, deleteCourse } from '@/api/courses';
+import { stripHtml } from '@/lib/utils';
 
 export default function InstructorStudioPage() {
   const { user } = useAuth();
@@ -236,7 +237,7 @@ export default function InstructorStudioPage() {
                       {course.title}
                     </h3>
                     <p className="text-slate-500 text-sm mt-1 line-clamp-2">
-                      {course.description || 'Chưa có mô tả'}
+                      {stripHtml(course.description) || 'Chưa có mô tả'}
                     </p>
                     <div className="flex items-center gap-4 mt-4 text-xs text-slate-400">
                       <span className="flex items-center gap-1">

@@ -33,12 +33,67 @@ export default function LearningLessonPage() {
   const [activeTab, setActiveTab] = useState<'discuss' | 'notes' | 'resources'>('notes');
   const [progresses, setProgresses] = useState<UserProgress[]>([]);
   const [hasSeeked, setHasSeeked] = useState(false);
+  const [textCompleted, setTextCompleted] = useState(false);
+  const [duration, setDuration] = useState(0);
   const playerRef = useRef<any>(null);
+  const textContainerRef = useRef<HTMLDivElement>(null);
+  const textSentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchAll();
     setHasSeeked(false);
+    setTextCompleted(false);
+    setDuration(0);
   }, [courseId, lessonId]);
+
+  // Re-fetch progress when user returns to tab (e.g., after submitting quiz in another tab)
+  useEffect(() => {
+    const handleFocus = async () => {
+      try {
+        const progressRes = await getCourseProgress(courseId);
+        if (progressRes.success && progressRes.data) {
+          setProgresses(progressRes.data);
+        }
+      } catch (err) {
+        console.error('Error refetching progress on focus:', err);
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [courseId]);
+
+  // IntersectionObserver for text lesson scroll-to-bottom detection
+  useEffect(() => {
+    if (currentLesson?.type !== 'text' || !textSentinelRef.current || !textContainerRef.current) return;
+
+    const existingProgress = progresses.find((p) => p.lessonId === lessonId);
+    if (existingProgress?.isCompleted) {
+      setTextCompleted(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTextCompleted(true);
+          // Auto-save completion
+          onSave({
+            courseId,
+            lessonId,
+            lastWatchedSecond: 0,
+            completed: true,
+          });
+          observer.disconnect();
+        }
+      },
+      {
+        root: textContainerRef.current,
+        threshold: 1.0,
+      },
+    );
+    observer.observe(textSentinelRef.current);
+    return () => observer.disconnect();
+  }, [currentLesson, lessonId, progresses]);
 
   const fetchAll = async () => {
     try {
@@ -115,39 +170,7 @@ export default function LearningLessonPage() {
 
   const { report } = useProgress(onSave, 8000);
 
-  const toggleLessonCompletion = async (targetLessonId: string, currentCompleted: boolean) => {
-    try {
-      const isCompleted = !currentCompleted;
-      setProgresses((prev) => {
-        const existingIdx = prev.findIndex((p) => p.lessonId === targetLessonId);
-        if (existingIdx > -1) {
-          const copy = [...prev];
-          copy[existingIdx] = { ...copy[existingIdx], isCompleted };
-          return copy;
-        } else {
-          return [
-            ...prev,
-            {
-              id: '',
-              userId: '',
-              courseId,
-              lessonId: targetLessonId,
-              lastWatchedSecond: 0,
-              isCompleted,
-              updatedAt: new Date().toISOString(),
-            },
-          ];
-        }
-      });
 
-      await saveLessonProgress(courseId, targetLessonId, {
-        lastWatchedSecond: 0,
-        isCompleted,
-      });
-    } catch (err) {
-      console.error('Failed to toggle completion:', err);
-    }
-  };
 
   const handlePlayerReady = () => {
     if (!hasSeeked && playerRef.current) {
@@ -228,18 +251,21 @@ export default function LearningLessonPage() {
             {currentLesson?.type === 'video' && currentLesson?.contentUrl ? (
               <ReactPlayer
                 ref={playerRef}
+                url={currentLesson.contentUrl}
                 src={currentLesson.contentUrl}
                 width="100%"
                 height="100%"
                 controls
                 style={{ position: 'absolute', top: 0, left: 0 }}
                 onReady={handlePlayerReady}
+                onDuration={(d: number) => setDuration(d)}
                 onProgress={(state: any) => {
+                  const isCloseToEnd = duration > 0 && state.playedSeconds >= duration - 2;
                   report({
                     courseId,
                     lessonId,
                     lastWatchedSecond: state.playedSeconds,
-                    completed: state.played >= 0.9,
+                    completed: isCloseToEnd,
                   });
                 }}
                 onEnded={() => {
@@ -253,20 +279,48 @@ export default function LearningLessonPage() {
               />
             ) : currentLesson?.type === 'quiz' && currentLesson?.contentUrl ? (
               <div className="absolute inset-0 flex items-center justify-center text-slate-500 bg-[#1a2235]">
-                <div className="text-center space-y-4">
-                  <span className="material-symbols-outlined text-5xl text-purple-500">quiz</span>
-                  <h3 className="text-xl font-bold text-white">Bài kiểm tra</h3>
-                  <p className="text-sm text-slate-400 max-w-md mx-auto">Bài học này là một bài kiểm tra trắc nghiệm. Hãy làm bài để đánh giá kiến thức của bạn.</p>
-                  <Link href={`/quizzes/${currentLesson.contentUrl}`} target="_blank" className="inline-block px-6 py-2.5 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                    Làm bài Quiz ngay
-                  </Link>
-                </div>
+                {(() => {
+                  const quizProgress = progresses.find((p) => p.lessonId === lessonId);
+                  const quizDone = quizProgress?.isCompleted ?? false;
+                  return (
+                    <div className="text-center space-y-4">
+                      <span className={`material-symbols-outlined text-5xl ${quizDone ? 'text-emerald-500' : 'text-purple-500'}`}>
+                        {quizDone ? 'check_circle' : 'quiz'}
+                      </span>
+                      <h3 className="text-xl font-bold text-white">
+                        {quizDone ? 'Đã hoàn thành bài kiểm tra!' : 'Bài kiểm tra'}
+                      </h3>
+                      <p className="text-sm text-slate-400 max-w-md mx-auto">
+                        {quizDone
+                          ? 'Bạn đã nộp bài kiểm tra này. Tiến trình đã được ghi nhận.'
+                          : 'Bài học này là một bài kiểm tra trắc nghiệm. Hãy làm bài để đánh giá kiến thức của bạn.'}
+                      </p>
+                      <Link
+                        href={`/quizzes/${currentLesson.contentUrl}`}
+                        target="_blank"
+                        className={`inline-block px-6 py-2.5 text-white rounded-lg font-semibold transition-colors ${
+                          quizDone ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-purple-600 hover:bg-purple-700'
+                        }`}
+                      >
+                        {quizDone ? 'Xem lại Quiz' : 'Làm bài Quiz ngay'}
+                      </Link>
+                    </div>
+                  );
+                })()}
               </div>
             ) : currentLesson?.type === 'text' || currentLesson?.body ? (
-              <div className="absolute inset-0 overflow-y-auto p-8 bg-[#1a2235]">
+              <div ref={textContainerRef} className="absolute inset-0 overflow-y-auto p-8 bg-[#1a2235]">
                 <div className="max-w-3xl mx-auto prose prose-invert prose-sm">
                   <h2>{currentLesson.title}</h2>
                   <div dangerouslySetInnerHTML={{ __html: currentLesson.body || '<p class="text-slate-400">Nội dung trống.</p>' }} />
+                  {/* Sentinel element to detect scroll to bottom */}
+                  <div ref={textSentinelRef} className="h-1" />
+                  {textCompleted && (
+                    <div className="flex items-center gap-2 mt-4 py-3 px-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                      <span className="material-symbols-outlined text-emerald-400 text-lg">check_circle</span>
+                      <span className="text-sm text-emerald-400 font-medium">Bạn đã đọc xong bài học này!</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -303,10 +357,14 @@ export default function LearningLessonPage() {
                 Bài tiếp theo
                 <span className="material-symbols-outlined text-base">arrow_forward</span>
               </Link>
-            ) : (
+            ) : completedPercent === 100 ? (
               <span className="text-sm text-emerald-400 font-medium flex items-center gap-2">
                 <span className="material-symbols-outlined text-base">check_circle</span>
                 Đã hoàn thành khóa học!
+              </span>
+            ) : (
+              <span className="text-sm text-slate-400 font-medium flex items-center gap-2" title="Hãy hoàn thành tất cả bài học">
+                Hoàn thành tất cả bài học để đạt 100%
               </span>
             )}
           </div>
@@ -403,20 +461,16 @@ export default function LearningLessonPage() {
                             <span className="truncate text-xs">{lesson.title}</span>
                           </Link>
                           
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              toggleLessonCompletion(lesson.id, isCompleted);
-                            }}
-                            className={`p-1 rounded hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 ml-2 ${
-                              isCompleted ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+                          <span
+                            className={`p-1 flex items-center justify-center shrink-0 ml-2 ${
+                              isCompleted ? 'text-emerald-400' : 'text-slate-600'
                             }`}
+                            title={isCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành'}
                           >
-                            <span className="material-symbols-outlined text-base">
+                            <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: isCompleted ? "'FILL' 1" : "'FILL' 0" }}>
                               {isCompleted ? 'check_circle' : 'radio_button_unchecked'}
                             </span>
-                          </button>
+                          </span>
                         </div>
                       );
                     })}
