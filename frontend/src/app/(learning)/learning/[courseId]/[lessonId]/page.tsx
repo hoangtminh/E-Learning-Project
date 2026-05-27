@@ -292,9 +292,8 @@ export default function LearningLessonPage() {
                       <Link
                         href={`/quizzes/${currentLesson.contentUrl}/take`}
                         target="_blank"
-                        className={`inline-block px-6 py-2.5 text-white rounded-lg font-semibold transition-colors ${
-                          quizDone ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-purple-600 hover:bg-purple-700'
-                        }`}
+                        className={`inline-block px-6 py-2.5 text-white rounded-lg font-semibold transition-colors ${quizDone ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-purple-600 hover:bg-purple-700'
+                          }`}
                       >
                         {quizDone ? 'Xem lại Quiz / Làm lại' : 'Làm bài Quiz ngay'}
                       </Link>
@@ -375,8 +374,8 @@ export default function LearningLessonPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
-                      ? 'border-indigo-500 text-indigo-400'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-indigo-500 text-indigo-400'
+                    : 'border-transparent text-slate-500 hover:text-slate-300'
                     }`}
                 >
                   <span className="material-symbols-outlined text-base">{tab.icon}</span>
@@ -438,11 +437,10 @@ export default function LearningLessonPage() {
                       return (
                         <div
                           key={lesson.id}
-                          className={`flex items-center justify-between px-6 py-2 text-sm transition-colors border-l-2 ${
-                            isActive
+                          className={`flex items-center justify-between px-6 py-2 text-sm transition-colors border-l-2 ${isActive
                               ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500'
                               : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border-transparent'
-                          }`}
+                            }`}
                         >
                           <Link
                             href={`/learning/${courseId}/${lesson.id}`}
@@ -453,11 +451,10 @@ export default function LearningLessonPage() {
                             </span>
                             <span className="truncate text-xs">{lesson.title}</span>
                           </Link>
-                          
+
                           <span
-                            className={`p-1 flex items-center justify-center shrink-0 ml-2 ${
-                              isCompleted ? 'text-emerald-400' : 'text-slate-600'
-                            }`}
+                            className={`p-1 flex items-center justify-center shrink-0 ml-2 ${isCompleted ? 'text-emerald-400' : 'text-slate-600'
+                              }`}
                             title={isCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành'}
                           >
                             <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: isCompleted ? "'FILL' 1" : "'FILL' 0" }}>

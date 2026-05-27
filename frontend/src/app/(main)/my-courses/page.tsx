@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCourses } from '@/contexts/CourseContext';
 import { appConfirm } from '@/components/ui/app-dialog-provider';
 import { toast } from 'sonner';
+import { stripHtml } from '@/lib/utils';
 
 type CourseCardData = {
   id: string;
@@ -90,7 +91,7 @@ function CourseCard({
           </h3>
         </Link>
         <p className='text-slate-500 text-xs line-clamp-2 mb-4'>
-          {course.description || 'Chưa có mô tả cho khóa học này.'}
+          {stripHtml(course.description) || 'Chưa có mô tả cho khóa học này.'}
         </p>
 
         <div className='mt-auto flex items-center justify-between pt-4 border-t border-slate-100 gap-3'>
