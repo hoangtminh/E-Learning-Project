@@ -75,9 +75,21 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
           )}
         </div>
       ) : (
-        <div className="text-center py-12 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-          <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">edit_note</span>
-          <p className="text-slate-400 text-sm">Giảng viên chưa thêm mô tả cho khóa học này.</p>
+        <div className="glass-panel-elevated rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-4 border border-dashed border-[#006382]/20 bg-slate-50/30 relative overflow-hidden">
+          {/* Subtle decorative glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-sky-400/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="w-16 h-16 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 shadow-sm border border-sky-100/50 relative z-10">
+            <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 0" }}>
+              auto_stories
+            </span>
+          </div>
+          <div className="max-w-md space-y-1.5 relative z-10">
+            <h3 className="font-bold text-[#252f43] text-base">Chưa có mô tả khóa học</h3>
+            <p className="text-xs text-[#525b72] leading-relaxed">
+              Giảng viên hiện chưa bổ sung phần mô tả chi tiết cho khóa học này. Tuy nhiên, bạn vẫn có thể xem đầy đủ danh sách bài học ở tab <strong>"Nội dung khóa học"</strong> bên cạnh để bắt đầu học tập ngay nhé!
+            </p>
+          </div>
         </div>
       )}
     </div>
