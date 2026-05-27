@@ -92,10 +92,9 @@ export default function Dashboard() {
           </div>
         ) : courses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((enrollment: any) => {
-              const course = enrollment.course;
+            {courses.map((course: any) => {
               return (
-                <div key={enrollment.id} className="group bg-white rounded-2xl border border-[#a3adc7]/20 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
+                <div key={course.id} className="group bg-white rounded-2xl border border-[#a3adc7]/20 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
                   <div className="h-40 bg-slate-100 relative overflow-hidden">
                     {course.thumbnailUrl ? (
                       <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

@@ -228,7 +228,7 @@ export default function LearningLessonPage() {
             {currentLesson?.type === 'video' && currentLesson?.contentUrl ? (
               <ReactPlayer
                 ref={playerRef}
-                url={currentLesson.contentUrl}
+                src={currentLesson.contentUrl}
                 width="100%"
                 height="100%"
                 controls
