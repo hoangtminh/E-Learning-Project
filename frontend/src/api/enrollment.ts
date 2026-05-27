@@ -9,6 +9,9 @@ export const checkEnrollment = (courseId: string) =>
 
 export type EnrolledCourse = CourseListItem & {
   enrolledAt?: string;
+  progressPercent?: number;
+  completedLessons?: number;
+  totalLessons?: number;
 };
 
 export const getMyEnrolledCourses = () =>

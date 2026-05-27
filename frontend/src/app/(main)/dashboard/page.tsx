@@ -120,10 +120,10 @@ export default function Dashboard() {
                     
                     <div className="space-y-3 mt-auto">
                       <div className="w-full bg-[#f1f4f9] rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-[#006382] h-1.5 rounded-full" style={{ width: '0%' }}></div>
+                        <div className="bg-[#006382] h-1.5 rounded-full" style={{ width: `${course?.progressPercent ?? 0}%` }}></div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-[#525b72]">0% hoàn thành</span>
+                        <span className="text-xs font-medium text-[#525b72]">{course?.progressPercent ?? 0}% hoàn thành</span>
                         <Link href={`/courses/${course?.id}`} className="text-sm font-bold text-[#006382] bg-[#006382]/10 px-4 py-1.5 rounded-full hover:bg-[#006382] hover:text-white transition-colors">
                           Tiếp tục
                         </Link>

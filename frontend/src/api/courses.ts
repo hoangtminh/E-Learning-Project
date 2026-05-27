@@ -33,6 +33,7 @@ export interface Lesson {
   contentUrl: string | null;
   rawText: string | null;
   orderIndex: number | null;
+  durationSec?: number;
 }
 
 export interface Section {
@@ -44,6 +45,12 @@ export interface Section {
 
 export interface CourseDetail extends CourseListItem {
   sections: Section[];
+  totalDurationMin?: number;
+  durationBreakdown?: {
+    video: number;
+    text: number;
+    quiz: number;
+  };
 }
 
 export interface CourseListResponse {

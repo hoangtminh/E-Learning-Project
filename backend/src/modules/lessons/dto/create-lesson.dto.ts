@@ -38,4 +38,8 @@ export class CreateLessonDto {
   @Min(0)
   order?: number;
 
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  durationSec?: number;
 }

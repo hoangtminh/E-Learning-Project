@@ -23,4 +23,8 @@ export class UpdateLessonDto {
   @Min(0)
   order?: number;
 
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  durationSec?: number;
 }

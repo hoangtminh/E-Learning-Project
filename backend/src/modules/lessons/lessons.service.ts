@@ -51,10 +51,18 @@ export class LessonsService {
       throw new NotFoundException(`Section with ID ${sectionId} not found`);
     }
 
+    // Dynamic duration resolution for YouTube URL
+    let resolvedDurationSec = dto.durationSec;
+    if (dto.type === 'video' && dto.contentUrl && (!resolvedDurationSec || resolvedDurationSec === 0)) {
+      const ytDuration = await getYoutubeVideoDuration(dto.contentUrl);
+      if (ytDuration) resolvedDurationSec = ytDuration;
+    }
+
     try {
       return await this.prisma.lesson.create({
         data: {
           ...dto,
+          durationSec: resolvedDurationSec,
           sectionId,
         },
       });
@@ -84,10 +92,28 @@ export class LessonsService {
   }
 
   async update(id: string, dto: UpdateLessonDto) {
-    await this.findOne(id);
+    const lesson = await this.findOne(id);
+
+    // Dynamic duration resolution for YouTube URL
+    let resolvedDurationSec = dto.durationSec;
+    if (
+      (dto.type === 'video' || (!dto.type && lesson.type === 'video')) &&
+      (dto.contentUrl || lesson.contentUrl) &&
+      (!resolvedDurationSec || resolvedDurationSec === 0)
+    ) {
+      const targetUrl = dto.contentUrl || lesson.contentUrl;
+      if (targetUrl) {
+        const ytDuration = await getYoutubeVideoDuration(targetUrl);
+        if (ytDuration) resolvedDurationSec = ytDuration;
+      }
+    }
+
     return this.prisma.lesson.update({
       where: { id },
-      data: dto,
+      data: {
+        ...dto,
+        ...(resolvedDurationSec !== undefined ? { durationSec: resolvedDurationSec } : {}),
+      },
     });
   }
 
@@ -96,5 +122,40 @@ export class LessonsService {
     return this.prisma.lesson.delete({
       where: { id },
     });
+  }
+}
+
+// ── YouTube Video Duration Scraper Helper ──
+async function getYoutubeVideoDuration(url: string): Promise<number | null> {
+  try {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    const videoId = (match && match[2].length === 11) ? match[2] : null;
+    if (!videoId) return null;
+
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      },
+    });
+    const html = await response.text();
+    
+    // Find lengthSeconds":"123"
+    const lengthSecondsMatch = html.match(/"lengthSeconds"\s*:\s*"(\d+)"/);
+    if (lengthSecondsMatch && lengthSecondsMatch[1]) {
+      return parseInt(lengthSecondsMatch[1], 10);
+    }
+
+    // Try backup check for approxDurationMs
+    const approxDurationMatch = html.match(/"approxDurationMs"\s*:\s*"(\d+)"/);
+    if (approxDurationMatch && approxDurationMatch[1]) {
+      return Math.round(parseInt(approxDurationMatch[1], 10) / 1000);
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error fetching YouTube duration:', error);
+    return null;
   }
 }

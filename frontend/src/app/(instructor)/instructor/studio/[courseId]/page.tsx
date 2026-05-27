@@ -48,6 +48,18 @@ export default function CourseEditorPage() {
   const [newLessonInputMode, setNewLessonInputMode] = useState<'url' | 'upload'>('url');
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadingFile, setUploadingFile] = useState<boolean>(false);
+
+  // Lesson Editing States
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [editLessonTitle, setEditLessonTitle] = useState('');
+  const [editLessonType, setEditLessonType] = useState('video');
+  const [editLessonUrl, setEditLessonUrl] = useState('');
+  const [editLessonBody, setEditLessonBody] = useState('');
+  const [editLessonInputMode, setEditLessonInputMode] = useState<'url' | 'upload'>('url');
+  const [editUploadProgress, setEditUploadProgress] = useState<number>(0);
+  const [editUploadingFile, setEditUploadingFile] = useState<boolean>(false);
+  const [newLessonDuration, setNewLessonDuration] = useState<number | undefined>(undefined);
+  const [editLessonDuration, setEditLessonDuration] = useState<number | undefined>(undefined);
   
   // Quizzes
   const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([]);
@@ -149,8 +161,9 @@ export default function CourseEditorPage() {
         type: newLessonType,
         order: section ? section.lessons.length : 0,
       };
-      if (newLessonType === 'video' && newLessonUrl.trim()) {
-        payload.contentUrl = newLessonUrl.trim();
+      if (newLessonType === 'video') {
+        if (newLessonUrl.trim()) payload.contentUrl = newLessonUrl.trim();
+        if (newLessonDuration) payload.durationSec = newLessonDuration;
       }
       if (newLessonType === 'text' && newLessonBody.trim()) {
         payload.body = newLessonBody.trim();
@@ -170,6 +183,7 @@ export default function CourseEditorPage() {
         setNewLessonUrl('');
         setNewLessonBody('');
         setNewLessonType('video');
+        setNewLessonDuration(undefined);
         setAddingLessonTo(null);
       } else {
         void appAlert(res.error || 'Thêm bài học thất bại');
@@ -193,6 +207,59 @@ export default function CourseEditorPage() {
       );
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const startEditingLesson = (lesson: LessonItem) => {
+    setEditingLessonId(lesson.id);
+    setEditLessonTitle(lesson.title);
+    setEditLessonType(lesson.type);
+    setEditLessonUrl(lesson.contentUrl || '');
+    setEditLessonBody(lesson.body || '');
+    setEditLessonInputMode(lesson.contentUrl?.includes('s3.amazonaws.com') || lesson.contentUrl?.includes('glacier-bucket') ? 'upload' : 'url');
+  };
+
+  const handleUpdateLesson = async (sectionId: string, lessonId: string) => {
+    if (!editLessonTitle.trim()) return;
+    try {
+      const payload: any = {
+        title: editLessonTitle.trim(),
+        type: editLessonType,
+      };
+      if (editLessonType === 'video') {
+        payload.contentUrl = editLessonUrl.trim();
+        payload.body = null;
+        if (editLessonDuration) payload.durationSec = editLessonDuration;
+      }
+      if (editLessonType === 'text') {
+        payload.body = editLessonBody.trim();
+        payload.contentUrl = editLessonUrl.trim() || null;
+      }
+      if (editLessonType === 'quiz') {
+        payload.contentUrl = editLessonUrl.trim(); // quizId
+        payload.body = null;
+      }
+
+      const res = await updateLesson(lessonId, payload);
+      if (res.success && res.data) {
+        setSections((prev) =>
+          prev.map((s) =>
+            s.id === sectionId
+              ? {
+                  ...s,
+                  lessons: s.lessons.map((l) => (l.id === lessonId ? res.data! : l)),
+                }
+              : s,
+          ),
+        );
+        setEditLessonDuration(undefined);
+        setEditingLessonId(null);
+      } else {
+        void appAlert(res.error || 'Cập nhật bài học thất bại');
+      }
+    } catch (err: any) {
+      console.error(err);
+      void appAlert(err.message || 'Đã xảy ra lỗi khi cập nhật bài học');
     }
   };
 
@@ -406,23 +473,239 @@ export default function CourseEditorPage() {
                   <div className="pl-16 pr-6 pb-4 space-y-2">
                     {section.lessons.map((lesson) => {
                       const t = typeLabels[lesson.type] || typeLabels.text;
+                      const isEditingThis = editingLessonId === lesson.id;
                       return (
-                        <div key={lesson.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-sky-200 transition-colors bg-white">
-                          <span className={`material-symbols-outlined text-lg ${t.color}`}>{t.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-700 truncate">{lesson.title}</p>
-                            <p className="text-[11px] text-slate-400">
-                              {t.label}
-                              {lesson.contentUrl && ' · URL đã gắn'}
-                              {lesson.durationSec && ` · ${Math.floor(lesson.durationSec / 60)}m`}
-                            </p>
+                        <div key={lesson.id} className="space-y-3 p-3 rounded-xl border border-slate-100 hover:border-sky-200 transition-colors bg-white">
+                          <div className="flex items-center gap-3">
+                            <span className={`material-symbols-outlined text-lg ${t.color}`}>{t.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-700 truncate">{lesson.title}</p>
+                              <p className="text-[11px] text-slate-400">
+                                {t.label}
+                                {lesson.contentUrl && ' · URL đã gắn'}
+                                {lesson.durationSec && ` · ${Math.floor(lesson.durationSec / 60)}m`}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => startEditingLesson(lesson)}
+                                className="text-slate-300 hover:text-sky-600 transition-colors p-1"
+                                title="Chỉnh sửa bài học"
+                              >
+                                <span className="material-symbols-outlined text-base">edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteLesson(section.id, lesson.id)}
+                                className="text-slate-300 hover:text-red-500 transition-colors p-1"
+                                title="Xóa bài học"
+                              >
+                                <span className="material-symbols-outlined text-base">close</span>
+                              </button>
+                            </div>
                           </div>
-                          <button
-                            onClick={() => handleDeleteLesson(section.id, lesson.id)}
-                            className="text-slate-300 hover:text-red-500 transition-colors p-1"
-                          >
-                            <span className="material-symbols-outlined text-base">close</span>
-                          </button>
+
+                          {isEditingThis && (
+                            <div className="p-4 border border-sky-200 rounded-xl bg-sky-50/20 space-y-3 mt-2">
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1">Tên bài học</label>
+                                <input
+                                  value={editLessonTitle}
+                                  onChange={(e) => setEditLessonTitle(e.target.value)}
+                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                  placeholder="Tên bài học..."
+                                />
+                              </div>
+                              <div className="flex gap-3 items-start">
+                                <select
+                                  value={editLessonType}
+                                  onChange={(e) => { setEditLessonType(e.target.value); setEditLessonUrl(''); setEditLessonBody(''); }}
+                                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 shrink-0"
+                                >
+                                  <option value="video">Video</option>
+                                  <option value="text">Văn bản</option>
+                                  <option value="quiz">Quiz</option>
+                                </select>
+
+                                {/* Dynamic content field based on type */}
+                                {editLessonType === 'video' && (
+                                  <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-4 text-xs mb-1">
+                                      <label className="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" checked={editLessonInputMode === 'url'} onChange={() => setEditLessonInputMode('url')} /> Dán URL
+                                      </label>
+                                      <label className="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" checked={editLessonInputMode === 'upload'} onChange={() => setEditLessonInputMode('upload')} /> Up file từ máy
+                                      </label>
+                                    </div>
+                                    {editLessonInputMode === 'url' ? (
+                                      <input
+                                        value={editLessonUrl}
+                                        onChange={(e) => setEditLessonUrl(e.target.value)}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                        placeholder="Dán URL video (YouTube, Vimeo...)"
+                                      />
+                                    ) : (
+                                      <div className="relative">
+                                        <input
+                                          type="file"
+                                          accept="video/*"
+                                          disabled={editUploadingFile}
+                                          onChange={async (e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                              const file = e.target.files[0];
+                                              
+                                              // Extract video duration locally
+                                              try {
+                                                const videoUrl = URL.createObjectURL(file);
+                                                const tempVideo = document.createElement('video');
+                                                tempVideo.preload = 'metadata';
+                                                tempVideo.onloadedmetadata = () => {
+                                                  URL.revokeObjectURL(videoUrl);
+                                                  const dur = Math.round(tempVideo.duration);
+                                                  setEditLessonDuration(dur);
+                                                };
+                                                tempVideo.src = videoUrl;
+                                              } catch (err) {
+                                                console.error('Error getting video metadata:', err);
+                                              }
+
+                                              setEditUploadingFile(true);
+                                              setEditUploadProgress(0);
+                                              const result = await uploadLessonFile(file, (p) => setEditUploadProgress(p));
+                                              setEditUploadingFile(false);
+                                              if (result.success && result.publicUrl) {
+                                                setEditLessonUrl(result.publicUrl);
+                                              } else {
+                                                alert('Upload thất bại: ' + (result.error || 'Lỗi không xác định'));
+                                              }
+                                            }
+                                          }}
+                                          className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                                        />
+                                        {editUploadingFile && (
+                                          <div className="mt-2">
+                                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                              <span>Đang upload...</span>
+                                              <span>{editUploadProgress}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-200 rounded-full h-2">
+                                              <div
+                                                className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                                                style={{ width: `${editUploadProgress}%` }}
+                                              />
+                                            </div>
+                                          </div>
+                                        )}
+                                        {!editUploadingFile && editLessonUrl && editLessonInputMode === 'upload' && (
+                                          <p className="mt-1 text-xs text-green-600">✓ Upload thành công!</p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {editLessonType === 'text' && (
+                                  <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-4 text-xs mb-1">
+                                      <label className="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" checked={editLessonInputMode === 'url'} onChange={() => setEditLessonInputMode('url')} /> Nhập nội dung
+                                      </label>
+                                      <label className="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" checked={editLessonInputMode === 'upload'} onChange={() => setEditLessonInputMode('upload')} /> Up file từ máy
+                                      </label>
+                                    </div>
+                                    {editLessonInputMode === 'url' ? (
+                                      <textarea
+                                        value={editLessonBody}
+                                        onChange={(e) => setEditLessonBody(e.target.value)}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+                                        placeholder="Nhập nội dung văn bản bài học..."
+                                        rows={4}
+                                      />
+                                    ) : (
+                                      <div className="relative">
+                                        <input
+                                          type="file"
+                                          accept=".txt,.pdf,.doc,.docx"
+                                          disabled={editUploadingFile}
+                                          onChange={async (e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                              const file = e.target.files[0];
+                                              setEditUploadingFile(true);
+                                              setEditUploadProgress(0);
+                                              const result = await uploadLessonFile(file, (p) => setEditUploadProgress(p));
+                                              setEditUploadingFile(false);
+                                              if (result.success && result.publicUrl) {
+                                                setEditLessonUrl(result.publicUrl);
+                                                setEditLessonBody('File đã upload: ' + file.name);
+                                              } else {
+                                                alert('Upload thất bại: ' + (result.error || 'Lỗi không xác định'));
+                                              }
+                                            }
+                                          }}
+                                          className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                                        />
+                                        {editUploadingFile && (
+                                          <div className="mt-2">
+                                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                              <span>Đang upload...</span>
+                                              <span>{editUploadProgress}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-200 rounded-full h-2">
+                                              <div
+                                                className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                                                style={{ width: `${editUploadProgress}%` }}
+                                              />
+                                            </div>
+                                          </div>
+                                        )}
+                                        {!editUploadingFile && editLessonUrl && editLessonInputMode === 'upload' && (
+                                          <p className="mt-1 text-xs text-green-600">✓ Upload thành công!</p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {editLessonType === 'quiz' && (
+                                  <div className="flex-1">
+                                    {availableQuizzes.length === 0 ? (
+                                      <div className="px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-700">
+                                        Bạn chưa có bài Quiz nào. Hãy tạo Quiz trước.
+                                      </div>
+                                    ) : (
+                                      <select
+                                        value={editLessonUrl}
+                                        onChange={(e) => setEditLessonUrl(e.target.value)}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                      >
+                                        <option value="">-- Chọn bài Quiz --</option>
+                                        {availableQuizzes.map(q => (
+                                          <option key={q.id} value={q.id}>{q.title}</option>
+                                        ))}
+                                      </select>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleUpdateLesson(section.id, lesson.id)}
+                                  disabled={!editLessonTitle.trim()}
+                                  className="px-4 py-1.5 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 disabled:opacity-50"
+                                >
+                                  Cập nhật
+                                </button>
+                                <button
+                                  onClick={() => { setEditingLessonId(null); }}
+                                  className="px-4 py-1.5 text-slate-500 text-sm"
+                                >
+                                  Hủy
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -475,6 +758,22 @@ export default function CourseEditorPage() {
                                     onChange={async (e) => {
                                       if (e.target.files && e.target.files.length > 0) {
                                         const file = e.target.files[0];
+                                        
+                                        // Extract video duration locally
+                                        try {
+                                          const videoUrl = URL.createObjectURL(file);
+                                          const tempVideo = document.createElement('video');
+                                          tempVideo.preload = 'metadata';
+                                          tempVideo.onloadedmetadata = () => {
+                                            URL.revokeObjectURL(videoUrl);
+                                            const dur = Math.round(tempVideo.duration);
+                                            setNewLessonDuration(dur);
+                                          };
+                                          tempVideo.src = videoUrl;
+                                        } catch (err) {
+                                          console.error('Error getting video metadata:', err);
+                                        }
+
                                         setUploadingFile(true);
                                         setUploadProgress(0);
                                         const result = await uploadLessonFile(file, (p) => setUploadProgress(p));

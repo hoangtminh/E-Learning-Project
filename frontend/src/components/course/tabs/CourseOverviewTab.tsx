@@ -10,10 +10,6 @@ const colorMap: Record<string, string> = {
 };
 
 export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
-  const totalLessons = course?.sections?.reduce(
-    (acc: number, s: any) => acc + (s.lessons?.length ?? 0),
-    0,
-  ) ?? 0;
   const totalSections = course?.sections?.length ?? 0;
   const videoLessons = course?.sections?.reduce(
     (acc: number, s: any) =>
@@ -25,11 +21,23 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
       acc + (s.lessons?.filter((l: any) => l.type === 'quiz').length ?? 0),
     0,
   ) ?? 0;
-  const totalHours = Math.round(totalLessons * 0.5);
+
+  // Real course duration calculation
+  const totalMin = course?.totalDurationMin || 0;
+  let formattedDuration = '0 phút';
+  if (totalMin > 0) {
+    if (totalMin < 60) {
+      formattedDuration = `${totalMin}m`;
+    } else {
+      const hours = Math.floor(totalMin / 60);
+      const mins = totalMin % 60;
+      formattedDuration = `${hours}h${mins > 0 ? ` ${mins}m` : ''}`;
+    }
+  }
 
   const highlights = [
     { icon: 'play_lesson',       color: 'primary',   count: String(videoLessons),     label: 'Bài học video' },
-    { icon: 'schedule',          color: 'tertiary',  count: `${totalHours}h`,         label: 'Thời lượng' },
+    { icon: 'schedule',          color: 'tertiary',  count: formattedDuration,         label: 'Thời lượng' },
     { icon: 'quiz',              color: 'secondary', count: String(quizLessons),      label: 'Bài kiểm tra' },
     { icon: 'folder',            color: 'emerald',   count: String(totalSections),    label: 'Phần học' },
   ];
@@ -42,12 +50,39 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
       {/* Stats bento */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {highlights.map((h) => (
-          <div key={h.label} className="glass-panel rounded-xl p-4 flex flex-col items-center text-center gap-2">
+          <div 
+            key={h.label} 
+            className={`glass-panel rounded-xl p-4 flex flex-col items-center text-center gap-2 relative ${
+              h.label === 'Thời lượng' && course?.durationBreakdown ? 'group/duration cursor-help hover:z-40 transition-all' : ''
+            }`}
+          >
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorMap[h.color]}`}>
               <span className="material-symbols-outlined">{h.icon}</span>
             </div>
             <span className="text-2xl font-black text-[#252f43]">{h.count}</span>
             <span className="text-xs text-[#525b72] font-medium">{h.label}</span>
+
+            {/* Tooltip Breakdown for Duration */}
+            {h.label === 'Thời lượng' && course?.durationBreakdown && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 p-4 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl text-left text-white opacity-0 pointer-events-none group-hover/duration:opacity-100 group-hover/duration:pointer-events-auto transition-all duration-300 transform translate-y-1 group-hover/duration:translate-y-0 z-30">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-8 border-transparent w-0 h-0" style={{ borderBottomColor: 'rgba(15,23,42,0.95)' }}></div>
+                <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2.5">Phân bổ thời lượng</h5>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-xs text-sky-400">play_circle</span> Học qua video</span>
+                    <strong className="font-bold text-white">{Math.round((course.durationBreakdown.video || 0) / 60)} phút</strong>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-xs text-emerald-400">article</span> Bài đọc & Tài liệu</span>
+                    <strong className="font-bold text-white">{Math.round((course.durationBreakdown.text || 0) / 60)} phút</strong>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-xs text-purple-400">quiz</span> Trắc nghiệm</span>
+                    <strong className="font-bold text-white">{Math.round((course.durationBreakdown.quiz || 0) / 60)} phút</strong>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
