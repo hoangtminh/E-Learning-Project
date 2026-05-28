@@ -8,6 +8,7 @@ import {
   getMyTeachingCourses,
 } from '@/api/instructor';
 import { createCourse, deleteCourse } from '@/api/courses';
+import { stripHtml } from '@/lib/utils';
 import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
 import { stripHtml } from '@/lib/utils';
 

@@ -277,6 +277,22 @@ export class CoursesService {
             instructor: {
               select: { id: true, fullName: true, avatarUrl: true },
             },
+            sections: {
+              include: {
+                _count: {
+                  select: { lessons: true },
+                },
+              },
+            },
+            progresses: {
+              where: {
+                userId,
+                isCompleted: true,
+              },
+              select: {
+                lessonId: true,
+              },
+            },
             _count: {
               select: { sections: true, members: true },
             },
