@@ -10,7 +10,6 @@ import {
 import { createCourse, deleteCourse } from '@/api/courses';
 import { stripHtml } from '@/lib/utils';
 import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
-import { stripHtml } from '@/lib/utils';
 
 export default function InstructorStudioPage() {
   const { user } = useAuth();

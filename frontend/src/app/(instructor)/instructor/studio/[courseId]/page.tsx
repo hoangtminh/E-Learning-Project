@@ -64,16 +64,6 @@ export default function CourseEditorPage() {
   // Quizzes
   const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([]);
 
-  // Lesson editing states
-  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editType, setEditType] = useState('video');
-  const [editUrl, setEditUrl] = useState('');
-  const [editBody, setEditBody] = useState('');
-  const [editInputMode, setEditInputMode] = useState<'url' | 'upload'>('url');
-  const [editUploadingFile, setEditUploadingFile] = useState(false);
-  const [editUploadProgress, setEditUploadProgress] = useState(0);
-
   useEffect(() => {
     fetchData();
   }, [courseId]);
