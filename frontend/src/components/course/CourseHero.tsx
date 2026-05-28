@@ -9,7 +9,7 @@ interface CourseHeroProps {
     rating: number;
     reviewCount: number;
     studentCount: number;
-    totalHours: number;
+    totalHours: string | number;
     updatedAt: string;
     isBestSeller: boolean;
     hasCertificate: boolean;
@@ -107,7 +107,13 @@ export function CourseHero({ course, onBuy, price }: CourseHeroProps) {
           <div className="flex items-center gap-2">
             <StarRating rating={course.rating} />
             <span className="text-amber-400 font-black text-lg">{course.rating}</span>
-            <span className="text-slate-400 text-sm">({(course.reviewCount / 1000).toFixed(1)}k đánh giá)</span>
+            <span className="text-slate-400 text-sm">
+              (
+              {course.reviewCount >= 1000
+                ? `${(course.reviewCount / 1000).toFixed(1)}k`
+                : course.reviewCount}
+              {' '}đánh giá)
+            </span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-300 text-sm">
             <span className="material-symbols-outlined text-base">group</span>
@@ -115,7 +121,17 @@ export function CourseHero({ course, onBuy, price }: CourseHeroProps) {
           </div>
           <div className="flex items-center gap-1.5 text-slate-300 text-sm">
             <span className="material-symbols-outlined text-base">schedule</span>
-            <span><strong className="text-white font-bold">{course.totalHours}</strong> giờ nội dung</span>
+            <span>
+              {typeof course.totalHours === 'string' ? (
+                course.totalHours.includes('phút') || course.totalHours.includes('giờ') ? (
+                  <span><strong className="text-white font-bold">{course.totalHours}</strong> nội dung</span>
+                ) : (
+                  <span><strong className="text-white font-bold">{course.totalHours}</strong> giờ nội dung</span>
+                )
+              ) : (
+                <span><strong className="text-white font-bold">{course.totalHours}</strong> giờ nội dung</span>
+              )}
+            </span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-300 text-sm">
             <span className="material-symbols-outlined text-base">update</span>

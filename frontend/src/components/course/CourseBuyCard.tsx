@@ -20,6 +20,7 @@ interface CourseBuyCardProps {
   enrolled?: boolean;
   onEnroll?: () => void;
   enrolling?: boolean;
+  courseDetail?: any;
 }
 
 const includes = [
@@ -69,7 +70,8 @@ export function CourseBuyCard({
   courseId, 
   enrolled: propsEnrolled, 
   onEnroll: propsOnEnroll, 
-  enrolling: propsEnrolling 
+  enrolling: propsEnrolling,
+  courseDetail
 }: CourseBuyCardProps) {
   const discount = Math.round((1 - course.price / course.originalPrice) * 100);
   const countdown = useCountdown(38528000);
@@ -82,6 +84,35 @@ export function CourseBuyCard({
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<{ completed: number; total: number; percent: number } | null>(null);
   const [related, setRelated] = useState<CourseListItem[]>([]);
+
+  // Calculate dynamic includes if courseDetail is provided
+  const sections = courseDetail?.sections || [];
+  const totalLessons = sections.reduce((acc: number, s: any) => acc + (s.lessons?.length || 0), 0);
+  const videoLessons = sections.reduce(
+    (acc: number, s: any) => acc + (s.lessons?.filter((l: any) => l.type === 'video').length || 0),
+    0
+  );
+  const quizLessons = sections.reduce(
+    (acc: number, s: any) => acc + (s.lessons?.filter((l: any) => l.type === 'quiz').length || 0),
+    0
+  );
+  const textLessons = sections.reduce(
+    (acc: number, s: any) => acc + (s.lessons?.filter((l: any) => l.type === 'text').length || 0),
+    0
+  );
+
+  const calculatedIncludes = courseDetail
+    ? [
+        ...(videoLessons > 0 ? [{ icon: 'ondemand_video', text: `${videoLessons} bài học video chất lượng` }] : []),
+        ...(quizLessons > 0 ? [{ icon: 'quiz', text: `${quizLessons} bài kiểm tra thực hành` }] : []),
+        ...(textLessons > 0 ? [{ icon: 'description', text: `${textLessons} tài liệu & bài đọc thêm` }] : []),
+        ...(totalLessons === 0 ? [{ icon: 'play_lesson', text: 'Chương trình học đang cập nhật' }] : []),
+        { icon: 'all_inclusive', text: 'Truy cập trọn đời trên mọi thiết bị' },
+        ...(courseDetail.hasCertificate || courseDetail.visibility === 'public'
+          ? [{ icon: 'workspace_premium', text: 'Chứng chỉ hoàn thành khóa học' }]
+          : [])
+      ]
+    : includes;
 
   useEffect(() => {
     if (courseId) {
@@ -349,7 +380,7 @@ export function CourseBuyCard({
         <div className="px-6 pb-6 space-y-3 border-t border-[#a3adc7]/20 pt-5">
           <h4 className="text-sm font-bold text-[#252f43]">Khóa học bao gồm:</h4>
           <div className="space-y-2.5">
-            {includes.map((item) => (
+            {calculatedIncludes.map((item) => (
               <div key={item.icon} className="flex items-center gap-3 text-sm text-[#525b72]">
                 <span className="material-symbols-outlined text-base text-[#006382]">{item.icon}</span>
                 <span>{item.text}</span>

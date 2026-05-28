@@ -25,12 +25,24 @@ const DEFAULT_AVATAR =
  * Map API CourseDetail data into the shape each UI component expects.
  */
 function mapCourseToHeroProps(course: CourseDetail, enrolled: boolean) {
-  const totalLessons = course.sections.reduce(
-    (acc, s) => acc + s.lessons.length,
-    0,
-  );
-  // Estimate ~0.5 hours per lesson as a rough duration calculation
-  const totalHours = Math.round(totalLessons * 0.5);
+  // Dynamic duration calculation from totalDurationMin
+  const totalMin = course.totalDurationMin || 0;
+  let totalHoursStr = '';
+  
+  if (totalMin <= 0) {
+    totalHoursStr = '0 phút';
+  } else if (totalMin < 60) {
+    totalHoursStr = `${totalMin} phút`;
+  } else {
+    const hours = Math.floor(totalMin / 60);
+    const mins = totalMin % 60;
+    if (mins === 0) {
+      totalHoursStr = `${hours} giờ`;
+    } else {
+      // e.g. 2.5 hours can be represented as 2 giờ 30 phút
+      totalHoursStr = `${hours} giờ ${mins} phút`;
+    }
+  }
 
   const cleanDescription = stripHtml(course.description);
 
@@ -42,7 +54,7 @@ function mapCourseToHeroProps(course: CourseDetail, enrolled: boolean) {
     rating: 4.8,
     reviewCount: course._count?.members ? course._count.members * 2 : 0,
     studentCount: course._count?.members ?? 0,
-    totalHours,
+    totalHours: totalHoursStr,
     updatedAt: new Date(course.createdAt).toLocaleDateString('vi-VN'),
     isBestSeller: (course._count?.members ?? 0) > 50,
     hasCertificate: true,
@@ -215,7 +227,7 @@ export default function CourseDetailPage() {
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
         {/* Left column: Tabs */}
         <div className="min-w-0">
-          <CourseTabs courseId={courseId} course={course} />
+          <CourseTabs courseId={courseId} course={course} enrolled={enrolled} />
         </div>
 
         {/* Right column: Buy card */}
@@ -226,6 +238,7 @@ export default function CourseDetailPage() {
             enrolled={enrolled} 
             onEnroll={handleEnroll} 
             enrolling={enrolling} 
+            courseDetail={course}
           />
         </aside>
       </div>

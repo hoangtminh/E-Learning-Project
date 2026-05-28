@@ -19,6 +19,7 @@ type CourseCardData = {
   instructor?: { fullName: string | null } | null;
   enrolledAt?: string;
   visibility?: string;
+  progressPercent?: number;
 };
 
 function CourseCard({
@@ -93,6 +94,22 @@ function CourseCard({
         <p className='text-slate-500 text-xs line-clamp-2 mb-4'>
           {stripHtml(course.description) || 'Chưa có mô tả cho khóa học này.'}
         </p>
+
+        {/* Dynamic Progress Bar for Enrolled Courses */}
+        {course.enrolledAt && course.progressPercent !== undefined && (
+          <div className="space-y-1.5 mb-4">
+            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+              <span>Tiến độ</span>
+              <span>{course.progressPercent}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-sky-500 rounded-full transition-all duration-300"
+                style={{ width: `${course.progressPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className='mt-auto flex items-center justify-between pt-4 border-t border-slate-100 gap-3'>
           <div className='min-w-0'>

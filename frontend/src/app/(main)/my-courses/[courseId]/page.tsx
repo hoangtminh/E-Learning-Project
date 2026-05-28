@@ -53,12 +53,12 @@ export default function CourseDetailPage() {
         {/* Left column */}
         <div className='lg:col-span-2 space-y-10'>
           <CourseProgressBanner course={course} />
-          <CourseTabs courseId={course.id} />
+          <CourseTabs courseId={course.id} enrolled={true} />
         </div>
 
         {/* Right column — Buy card */}
         <div className='lg:col-span-1'>
-          <CourseBuyCard courseId={course.id} course={course} />
+          <CourseBuyCard courseId={course.id} course={course} courseDetail={course} />
         </div>
       </div>
     </div>

@@ -91,7 +91,76 @@ export class CoursesService {
       throw new NotFoundException(`Course with ID ${id} not found`);
     }
 
-    return course;
+    // Dynamic duration calculation
+    let totalVideoSec = 0;
+    let totalTextSec = 0;
+    let totalQuizSec = 0;
+
+    // Collect all quiz IDs to fetch their durations in one query
+    const quizIds: string[] = [];
+    course.sections.forEach((s) => {
+      s.lessons.forEach((l) => {
+        if (l.type === 'quiz' && l.contentUrl) {
+          quizIds.push(l.contentUrl);
+        }
+      });
+    });
+
+    // Fetch quiz durations
+    const quizzes = quizIds.length > 0
+      ? await this.prisma.quiz.findMany({
+          where: { id: { in: quizIds } },
+          select: { id: true, duration: true },
+        })
+      : [];
+    const quizDurationMap = new Map(quizzes.map((q) => [q.id, q.duration]));
+
+    // Map through lessons to enrich and aggregate
+    const enrichedSections = course.sections.map((s) => ({
+      ...s,
+      lessons: s.lessons.map((l) => {
+        let finalDurationSec = l.durationSec || 0;
+        if (l.type === 'video') {
+          totalVideoSec += finalDurationSec;
+        } else if (l.type === 'text') {
+          // Calculate dynamic reading time based on word count of the body text (approx 200 words per minute)
+          if (!finalDurationSec) {
+            const textContent = l.body || '';
+            // Strip HTML tags if any (quill editor outputs HTML)
+            const plainText = textContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            const wordCount = plainText ? plainText.split(/\s+/).length : 0;
+            // 200 WPM, min 1 minute (60 seconds)
+            const readingTimeMin = Math.max(1, Math.ceil(wordCount / 200));
+            finalDurationSec = readingTimeMin * 60;
+          }
+          totalTextSec += finalDurationSec;
+        } else if (l.type === 'quiz') {
+          // Look up quiz duration in map (default to 15 minutes = 900 seconds)
+          const quizMin = l.contentUrl ? (quizDurationMap.get(l.contentUrl) || 15) : 15;
+          finalDurationSec = quizMin * 60;
+          totalQuizSec += finalDurationSec;
+        }
+        return {
+          ...l,
+          durationSec: finalDurationSec,
+        };
+      }),
+    }));
+
+    const totalSec = totalVideoSec + totalTextSec + totalQuizSec;
+    // Round to nearest minute
+    const totalDurationMin = Math.round(totalSec / 60);
+
+    return {
+      ...course,
+      sections: enrichedSections,
+      totalDurationMin,
+      durationBreakdown: {
+        video: totalVideoSec,
+        text: totalTextSec,
+        quiz: totalQuizSec,
+      },
+    };
   }
 
   async update(id: string, userId: string, dto: UpdateCourseDto) {
@@ -233,18 +302,30 @@ export class CoursesService {
       orderBy: { enrolledAt: 'desc' },
     });
 
-    return memberships.map((m) => {
-      const totalLessons = m.course.sections.reduce((acc, section) => acc + (section._count?.lessons || 0), 0);
-      const completedLessons = m.course.progresses.length;
-      const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    const enrolledCourses = await Promise.all(
+      memberships.map(async (m) => {
+        const totalLessons = await this.prisma.lesson.count({
+          where: { section: { courseId: m.course.id } },
+        });
+        const completedLessons = await this.prisma.userProgress.count({
+          where: {
+            userId,
+            courseId: m.course.id,
+            isCompleted: true,
+          },
+        });
+        const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+        return {
+          ...m.course,
+          enrolledAt: m.enrolledAt,
+          progressPercent,
+          completedLessons,
+          totalLessons,
+        };
+      })
+    );
 
-      const { sections, progresses, ...courseData } = m.course;
-      return {
-        ...courseData,
-        enrolledAt: m.enrolledAt,
-        progressPercent,
-      };
-    });
+    return enrolledCourses;
   }
 
   async unenrollCourse(userId: string, courseId: string) {
