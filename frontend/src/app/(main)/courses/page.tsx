@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCourses } from '@/contexts/CourseContext';
+import { stripHtml } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -64,7 +65,7 @@ function CatalogCourseCard({ course }: { course: CatalogCourse }) {
           </h3>
         </Link>
         <p className='text-slate-500 text-xs line-clamp-2 mb-4'>
-          {course.description || 'Chưa có mô tả cho khóa học này.'}
+          {stripHtml(course.description) || 'Chưa có mô tả cho khóa học này.'}
         </p>
 
         <div className='mt-auto flex items-center justify-between pt-4 border-t border-slate-100 gap-3'>

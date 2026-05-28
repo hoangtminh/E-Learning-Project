@@ -8,6 +8,7 @@ import {
   getMyTeachingCourses,
 } from '@/api/instructor';
 import { createCourse, deleteCourse } from '@/api/courses';
+import { stripHtml } from '@/lib/utils';
 import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
 
 export default function InstructorStudioPage() {
@@ -288,7 +289,7 @@ export default function InstructorStudioPage() {
                       {course?.title}
                     </h3>
                     <p className="text-slate-500 text-sm mt-1 line-clamp-2">
-                      {course?.description || 'Chưa có mô tả'}
+                      {stripHtml(course?.description) || 'Chưa có mô tả'}
                     </p>
                     <div className="flex items-center justify-between mt-4">
                       <div className="flex items-center gap-4 text-xs text-slate-400">

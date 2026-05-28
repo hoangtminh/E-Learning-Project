@@ -208,6 +208,22 @@ export class CoursesService {
             instructor: {
               select: { id: true, fullName: true, avatarUrl: true },
             },
+            sections: {
+              include: {
+                _count: {
+                  select: { lessons: true },
+                },
+              },
+            },
+            progresses: {
+              where: {
+                userId,
+                isCompleted: true,
+              },
+              select: {
+                lessonId: true,
+              },
+            },
             _count: {
               select: { sections: true, members: true },
             },
@@ -217,10 +233,18 @@ export class CoursesService {
       orderBy: { enrolledAt: 'desc' },
     });
 
-    return memberships.map((m) => ({
-      ...m.course,
-      enrolledAt: m.enrolledAt,
-    }));
+    return memberships.map((m) => {
+      const totalLessons = m.course.sections.reduce((acc, section) => acc + (section._count?.lessons || 0), 0);
+      const completedLessons = m.course.progresses.length;
+      const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+      const { sections, progresses, ...courseData } = m.course;
+      return {
+        ...courseData,
+        enrolledAt: m.enrolledAt,
+        progressPercent,
+      };
+    });
   }
 
   async unenrollCourse(userId: string, courseId: string) {

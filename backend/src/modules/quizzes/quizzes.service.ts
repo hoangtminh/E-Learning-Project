@@ -336,6 +336,43 @@ export class QuizzesService {
       },
     });
 
+    // Auto-mark corresponding course lessons as completed
+    try {
+      const matchingLessons = await this.prisma.lesson.findMany({
+        where: {
+          type: 'quiz',
+          contentUrl: quizId,
+        },
+        include: {
+          section: true,
+        },
+      });
+
+      for (const lesson of matchingLessons) {
+        await this.prisma.userProgress.upsert({
+          where: {
+            userId_lessonId: {
+              userId,
+              lessonId: lesson.id,
+            },
+          },
+          update: {
+            isCompleted: true,
+            updatedAt: new Date(),
+          },
+          create: {
+            userId,
+            courseId: lesson.section.courseId,
+            lessonId: lesson.id,
+            lastWatchedSecond: 0,
+            isCompleted: true,
+          },
+        });
+      }
+    } catch (progressErr) {
+      console.error('Failed to auto-update progress for quiz submission:', progressErr);
+    }
+
     return this.getSubmissionDetails(userId, submission.id);
   }
 

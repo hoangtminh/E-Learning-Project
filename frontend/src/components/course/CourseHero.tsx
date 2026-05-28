@@ -138,7 +138,7 @@ export function CourseHero({ course, onBuy, price }: CourseHeroProps) {
           </div>
 
           {onBuy && !course.enrolled && (
-            <div className="flex items-center gap-6">
+            <div className="lg:hidden flex items-center gap-6">
               {price !== undefined && (
                 <div className="text-right">
                   <p className="text-white text-2xl font-black">

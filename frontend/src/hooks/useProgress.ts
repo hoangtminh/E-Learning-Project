@@ -21,6 +21,12 @@ export function useProgress(
 
   const report = useCallback(
     (p: ProgressPayload) => {
+      if (p.completed) {
+        if (timer.current) clearTimeout(timer.current);
+        onSave(p);
+        last.current = null;
+        return;
+      }
       last.current = p;
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => {
