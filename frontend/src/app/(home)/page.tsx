@@ -87,7 +87,7 @@ export default function Home() {
                 Kỷ nguyên học tập mới
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight text-slate-900">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight leading-tight text-slate-900">
                 Học Tập{' '}
                 <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
                   Không Giới Hạn
@@ -192,8 +192,8 @@ export default function Home() {
         </section>
 
         {/* ── Trending Courses ── */}
-        <section className="py-24 max-w-7xl mx-auto px-6">
-          <motion.div {...fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+        <section className="py-16 md:py-24 max-w-7xl mx-auto px-6">
+          <motion.div {...fadeUp} className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 text-xs font-bold text-sky-600 uppercase tracking-wide">
                 <span className="w-6 h-0.5 bg-sky-500 rounded-full" />
@@ -271,7 +271,7 @@ export default function Home() {
         </section>
 
         {/* ── Pathways ── */}
-        <section className="py-24 bg-[#f8fbff]">
+        <section className="py-16 md:py-24 bg-[#f8fbff]">
           <div className="max-w-7xl mx-auto px-6">
             <motion.div {...fadeUp} className="text-center mb-14 space-y-4">
               <div className="inline-flex items-center gap-2 text-xs font-bold text-sky-600 uppercase tracking-wide">
@@ -355,7 +355,7 @@ export default function Home() {
         </section>
 
         {/* ── CTA ── */}
-        <section className="py-24 bg-gradient-to-br from-[#006382] via-[#0079a0] to-[#005672] text-white relative overflow-hidden">
+        <section className="py-16 md:py-24 bg-gradient-to-br from-[#006382] via-[#0079a0] to-[#005672] text-white relative overflow-hidden">
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl" />
           <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-8">
@@ -381,40 +381,6 @@ export default function Home() {
         </section>
 
       </main>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-8">
-          <div className="md:col-span-1 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-sky-400/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-sky-400" style={{ fontVariationSettings: "'FILL' 1" }}>ac_unit</span>
-              </div>
-              <span className="text-white font-black text-xl">Glacier</span>
-            </div>
-            <p className="text-sm leading-relaxed">Nền tảng học tập E-learning thế hệ mới, nơi tri thức không có giới hạn.</p>
-          </div>
-          {[
-            { title: 'Học tập', links: [{ label: 'Khóa học', href: '/courses' }, { label: 'Lộ trình', href: '/pathway' }, { label: 'Tài nguyên', href: '/resources' }] },
-            { title: 'Tài khoản', links: [{ label: 'Đăng nhập', href: '/login' }, { label: 'Đăng ký', href: '/register' }, { label: 'Dashboard', href: '/dashboard' }] },
-            { title: 'Liên hệ', links: [{ label: 'Email: hello@glacier.vn', href: '#' }, { label: 'Facebook', href: '#' }] },
-          ].map((col) => (
-            <div key={col.title} className="space-y-3">
-              <h4 className="text-white font-semibold text-sm">{col.title}</h4>
-              <ul className="space-y-2">
-                {col.links.map((link) => (
-                  <li key={link.label}>
-                    <Link href={link.href} className="text-sm hover:text-white transition-colors">{link.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/10 text-xs text-center">
-          © {new Date().getFullYear()} Glacier Learning. Mọi quyền được bảo lưu.
-        </div>
-      </footer>
     </div>
   );
 }

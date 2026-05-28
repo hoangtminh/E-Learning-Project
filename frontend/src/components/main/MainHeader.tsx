@@ -40,13 +40,23 @@ const SEGMENT_LABELS: Record<string, string> = {
   result: 'Kết quả',
 };
 
-export function MainHeader() {
+export function MainHeader({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const router = useRouter();
   const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const segments = pathname.split('/').filter(Boolean);
 
@@ -108,7 +118,7 @@ export function MainHeader() {
     instructor: '/instructor/studio',
   };
 
-  const breadcrumbs = segments.map((seg, i) => {
+  const allBreadcrumbs = segments.map((seg, i) => {
     const defaultHref = '/' + segments.slice(0, i + 1).join('/');
     const href = SEGMENT_HREF_OVERRIDES[seg] ?? defaultHref;
     const isId = seg.length >= 20;
@@ -117,6 +127,10 @@ export function MainHeader() {
     else if (isId) label = 'Chi tiết';
     return { label, href };
   });
+
+  const breadcrumbs = isMobile && allBreadcrumbs.length > 2
+    ? allBreadcrumbs.slice(allBreadcrumbs.length - 2)
+    : allBreadcrumbs;
 
   const handleSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
@@ -133,28 +147,46 @@ export function MainHeader() {
     .toUpperCase();
 
   return (
-    <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm flex items-center justify-between px-6 z-10 sticky top-0 shrink-0">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
-        {breadcrumbs.length === 0 ? (
-          <Link href='/' className='font-black text-slate-900 hover:text-sky-600 transition-colors'>
-            Glacier Learning
-          </Link>
-        ) : (
-          breadcrumbs.map((crumb, i) => (
-            <span key={i} className="flex items-center gap-1.5">
-              {i > 0 && <ChevronRight className="size-3.5 text-slate-400" />}
-              {i < breadcrumbs.length - 1 ? (
-                <Link href={crumb.href} className="text-slate-500 hover:text-slate-900 font-medium capitalize transition-colors">
-                  {crumb.label}
-                </Link>
-              ) : (
-                <span className="font-bold text-slate-900 capitalize">{crumb.label}</span>
+    <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm flex items-center justify-between px-6 z-10 sticky top-0 shrink-0 gap-4">
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Mobile Sidebar Hamburger Toggle */}
+        <button
+          onClick={onToggleSidebar}
+          className="md:hidden w-9 h-9 flex items-center justify-center text-slate-600 hover:text-sky-600 hover:bg-slate-100 rounded-lg shrink-0 transition-colors"
+          aria-label="Toggle navigation menu"
+        >
+          <span className="material-symbols-outlined text-[24px]">menu</span>
+        </button>
+
+        <nav className="flex items-center gap-1.5 text-sm overflow-x-auto no-scrollbar whitespace-nowrap min-w-0" aria-label="Breadcrumb">
+          {breadcrumbs.length === 0 ? (
+            <Link href='/' className='font-black text-slate-900 hover:text-sky-600 transition-colors'>
+              Glacier Learning
+            </Link>
+          ) : (
+            <>
+              {isMobile && allBreadcrumbs.length > 2 && (
+                <span className="flex items-center gap-1.5 text-slate-400 font-medium">
+                  ...
+                  <ChevronRight className="size-3.5 text-slate-400" />
+                </span>
               )}
-            </span>
-          ))
-        )}
-      </nav>
+              {breadcrumbs.map((crumb, i) => (
+                <span key={i} className="flex items-center gap-1.5">
+                  {i > 0 && <ChevronRight className="size-3.5 text-slate-400" />}
+                  {i < breadcrumbs.length - 1 ? (
+                    <Link href={crumb.href} className="text-slate-500 hover:text-slate-900 font-medium capitalize transition-colors">
+                      {crumb.label}
+                    </Link>
+                  ) : (
+                    <span className="font-bold text-slate-900 capitalize">{crumb.label}</span>
+                  )}
+                </span>
+              ))}
+            </>
+          )}
+        </nav>
+      </div>
 
       {/* Right actions */}
       <div className="flex items-center gap-3">

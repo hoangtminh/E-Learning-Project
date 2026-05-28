@@ -57,15 +57,15 @@ export default function ClassroomInfoPage() {
   return (
     <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full'>
       {/* Page Header */}
-      <div className='flex justify-between items-center mb-6'>
+      <div className='flex justify-between items-center mb-4 md:mb-6'>
         <div>
-          <h2 className='text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
+          <h2 className='text-lg sm:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
             <span className='material-symbols-outlined text-indigo-600' style={{ fontVariationSettings: "'FILL' 1" }}>
               info
             </span>
             Thông tin lớp học
           </h2>
-          <p className='text-slate-500 text-sm mt-1'>
+          <p className='text-slate-500 text-xs sm:text-sm mt-1'>
             Xem chi tiết thông tin chung và danh sách thành viên trong lớp.
           </p>
         </div>
@@ -76,7 +76,7 @@ export default function ClassroomInfoPage() {
         <div className='lg:col-span-8 space-y-6 sm:space-y-8'>
           {/* General Info */}
           <section>
-            <h2 className='text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2 mb-4 px-2'>
+            <h2 className='text-base sm:text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2 mb-4 px-2'>
               <span
                 className='material-symbols-outlined text-sky-600'
                 style={{ fontVariationSettings: "'FILL' 1" }}
@@ -103,7 +103,7 @@ export default function ClassroomInfoPage() {
                     'Chưa có mô tả nào cho lớp học này.'}
                 </p>
               </div>
-              <div className='flex gap-8 border-t border-slate-100 pt-4'>
+              <div className='flex flex-wrap gap-4 sm:gap-8 border-t border-slate-100 pt-4'>
                 <div>
                   <h3 className='text-xs font-bold text-slate-400 uppercase tracking-wider mb-1'>
                     Ngày khởi tạo
@@ -141,7 +141,7 @@ export default function ClassroomInfoPage() {
           {/* Members Section */}
           <section>
             <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 px-2 gap-4'>
-              <h2 className='text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
+              <h2 className='text-base sm:text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
                 <span
                   className='material-symbols-outlined text-purple-600'
                   style={{ fontVariationSettings: "'FILL' 1" }}

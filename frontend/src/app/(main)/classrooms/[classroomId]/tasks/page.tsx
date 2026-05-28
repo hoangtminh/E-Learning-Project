@@ -489,15 +489,15 @@ export default function ClassroomTasksPage() {
   return (
     <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full'>
       {/* Page Header */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4'>
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3 sm:gap-4'>
         <div>
-          <h2 className='text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
+          <h2 className='text-lg sm:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
             <span className='material-symbols-outlined text-purple-600' style={{ fontVariationSettings: "'FILL' 1" }}>
               assignment
             </span>
             Bài tập về nhà
           </h2>
-          <p className='text-slate-500 text-sm mt-1'>
+          <p className='text-slate-500 text-xs sm:text-sm mt-1'>
             Theo dõi tiến độ hoàn thành và điểm số các bài tập của bạn.
           </p>
         </div>

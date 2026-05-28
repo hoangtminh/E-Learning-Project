@@ -4,6 +4,12 @@ import { useEffect } from 'react';
 import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useClassrooms } from '@/contexts/ClassroomContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function AdminLayout({
   children,
@@ -74,27 +80,61 @@ export default function AdminLayout({
 
   return (
     <div className='flex flex-col min-h-screen bg-slate-50'>
-      <div className='bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md'>
-        <div className='flex items-center gap-3'>
-          <span className='material-symbols-outlined text-indigo-400 text-3xl'>admin_panel_settings</span>
-          <div>
-            <h1 className='text-xl font-bold'>{classroom?.title || 'Dashboard Quản Trị'}</h1>
-            <p className='text-slate-400 text-xs'>Khu vực dành riêng cho chủ lớp</p>
+      <div className='bg-slate-900 text-white px-3 md:px-6 py-2.5 md:py-4 flex justify-between items-center shadow-md gap-3 shrink-0'>
+        <div className='flex items-center gap-2 md:gap-3 min-w-0'>
+          <span className='material-symbols-outlined text-indigo-400 text-2xl md:text-3xl shrink-0'>admin_panel_settings</span>
+          <div className='min-w-0'>
+            <h1 className='text-sm md:text-xl font-bold truncate'>{classroom?.title || 'Dashboard Quản Trị'}</h1>
+            <p className='text-slate-400 text-[10px] md:text-xs truncate'>Khu vực dành riêng cho chủ lớp</p>
           </div>
         </div>
-        <Link
-          href={`/classrooms/${classroomId}`}
-          className='flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm transition-colors'
-        >
-          <span className='material-symbols-outlined text-[18px]'>arrow_back</span>
-          Quay lại lớp học
-        </Link>
+        
+        <div className='flex items-center gap-2 shrink-0'>
+          {/* Mobile Admin Navigation Dropdown */}
+          <div className='md:hidden'>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className='w-8 h-8 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-lg transition-colors border-0 cursor-pointer' aria-label="Admin menu">
+                  <span className='material-symbols-outlined text-[20px]'>settings</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end' className='w-48 bg-white border border-slate-200 shadow-xl rounded-2xl p-1.5 z-50'>
+                {adminTabs.map((tab) => {
+                  const isActive = pathname.startsWith(tab.path);
+                  return (
+                    <DropdownMenuItem key={tab.path} asChild>
+                      <Link
+                        href={tab.path}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                          isActive
+                            ? 'bg-indigo-50 text-indigo-700 font-bold'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                      >
+                        <span className='material-symbols-outlined text-[18px]'>{tab.icon}</span>
+                        {tab.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <Link
+            href={`/classrooms/${classroomId}`}
+            className='flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-colors text-white shrink-0'
+          >
+            <span className='material-symbols-outlined text-[16px] md:text-[18px]'>arrow_back</span>
+            <span className='hidden xs:inline'>Quay lại</span>
+          </Link>
+        </div>
       </div>
 
-      <div className='flex flex-1 max-w-7xl mx-auto w-full px-6 py-8 gap-8'>
-        {/* Sidebar */}
-        <aside className='w-64 shrink-0'>
-          <nav className='flex flex-col gap-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm'>
+      <div className='flex flex-col md:flex-row flex-1 max-w-7xl mx-auto w-full px-3 md:px-6 py-4 md:py-8 gap-4 md:gap-8 min-h-0'>
+        {/* Sidebar (Desktop only) */}
+        <aside className='hidden md:block w-64 shrink-0'>
+          <nav className='flex flex-col gap-1.5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-20'>
             {adminTabs.map((tab) => {
               const isActive = pathname.startsWith(tab.path);
               return (
@@ -103,7 +143,7 @@ export default function AdminLayout({
                   href={tab.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-indigo-50 text-indigo-700'
+                      ? 'bg-indigo-50 text-indigo-700 font-semibold'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >

@@ -22,15 +22,15 @@ export default function ClassroomCoursesPage() {
 
   return (
     <div className='p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto w-full'>
-      <div className='flex justify-between items-center mb-6'>
+      <div className='flex justify-between items-center mb-4 md:mb-6'>
         <div>
-          <h2 className='text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
+          <h2 className='text-lg sm:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
             <span className='material-symbols-outlined text-indigo-600' style={{ fontVariationSettings: "'FILL' 1" }}>
               menu_book
             </span>
             Khóa học liên kết
           </h2>
-          <p className='text-slate-500 text-sm mt-1'>
+          <p className='text-slate-500 text-xs sm:text-sm mt-1'>
             Các khóa học chính thức được gắn kèm với lớp học này.
           </p>
         </div>
