@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete, ApiResponse } from './client';
+import { apiGet, apiPost, apiPatch, apiDelete, ApiResponse } from './client';
 
 export enum ConversationType {
   CLASSROOM_COMMON = 'classroom',
@@ -27,6 +27,7 @@ export interface ConversationMember {
   userId: string;
   conversationId: string;
   joinedAt: string;
+  notificationsEnabled: boolean;
   user: UserSummary;
 }
 
@@ -66,4 +67,7 @@ export const chatApi = {
   
   removeMember: (conversationId: string, userId: string) => 
     apiDelete<void>(`/chat/conversations/${conversationId}/members/${userId}`),
+
+  updateNotificationSettings: (conversationId: string, enabled: boolean) =>
+    apiPatch<void>(`/chat/conversations/${conversationId}/notifications`, { enabled }),
 };

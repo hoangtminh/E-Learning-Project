@@ -9,6 +9,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "scripts": {
+    "db:push": "prisma db push --accept-data-loss",
     "prisma:generate": "prisma generate",
     "prisma seed": "ts-node prisma/seed.ts",
     "postinstall": "prisma generate",

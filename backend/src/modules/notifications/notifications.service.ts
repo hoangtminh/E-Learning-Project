@@ -78,4 +78,12 @@ export class NotificationsService {
     });
     return { success: true };
   }
+
+  sendEventToUser(userId: string, event: string, data: any) {
+    try {
+      this.notificationsGateway.server.to(`notification/${userId}`).emit(event, data);
+    } catch (err) {
+      console.error(`Failed to emit live socket event ${event} to user ${userId}:`, err);
+    }
+  }
 }

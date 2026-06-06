@@ -518,7 +518,15 @@ export class ClassroomsService {
 
         const allMembers = await this.prisma.classroomMember.findMany({
           where: { classroomId },
-          select: { userId: true },
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+          },
         });
 
         let notificationType = 'post';
@@ -536,25 +544,57 @@ export class ClassroomsService {
 
         const authorName = post.author.fullName || post.author.email || 'Thành viên';
         const classroomName = classroom?.title || 'Lớp học';
-        
-        let notifyContent = `${authorName} đã tạo trong classroom ${classroomName} có 1 thông báo`;
-        if (notificationType !== 'post') {
-          notifyContent += ` ${typeLabel}`;
-        }
-        
         const link = `/classrooms/${classroomId}`;
+
+        const contentLower = content.toLowerCase();
+        const isPingAll = contentLower.includes('@all');
+
+        const isPinged = (m: typeof allMembers[0]) => {
+          if (isPingAll) return true;
+          const email = m.user.email.toLowerCase();
+          const fullName = m.user.fullName?.toLowerCase();
+          const mId = m.user.id;
+          if (contentLower.includes('@' + email)) return true;
+          if (fullName && contentLower.includes('@' + fullName)) return true;
+          if (fullName && contentLower.includes(`@[${fullName}](${mId})`)) return true;
+          if (contentLower.includes('@' + mId)) return true;
+          return false;
+        };
+
+        // Always emit classroom:refresh-posts event to all other classroom members so their UI updates immediately
+        allMembers
+          .filter((m) => m.userId !== userId)
+          .forEach((m) => {
+            this.notificationsService.sendEventToUser(m.userId, 'classroom:refresh-posts', { classroomId });
+          });
 
         const promises = allMembers
           .filter((m) => m.userId !== userId)
-          .map((m) =>
-            this.notificationsService.createNotification(
+          .filter((m) => m.notificationsEnabled || isPinged(m))
+          .map((m) => {
+            const pinged = isPinged(m);
+            let notifyContent = '';
+            if (pinged) {
+              if (isPingAll) {
+                notifyContent = `${authorName} đã nhắc đến mọi người trong classroom ${classroomName}`;
+              } else {
+                notifyContent = `${authorName} đã nhắc đến bạn trong classroom ${classroomName}`;
+              }
+            } else {
+              notifyContent = `${authorName} đã tạo trong classroom ${classroomName} có 1 thông báo`;
+              if (notificationType !== 'post') {
+                notifyContent += ` ${typeLabel}`;
+              }
+            }
+
+            return this.notificationsService.createNotification(
               m.userId,
               userId,
               notificationType,
               notifyContent,
               link,
-            ),
-          );
+            );
+          });
         await Promise.all(promises);
       } catch (err) {
         console.error('Failed to create classroom post notifications:', err);
@@ -580,13 +620,29 @@ export class ClassroomsService {
       throw new ForbiddenException('Only the author can edit this post');
 
     // Update current post directly
-    return this.prisma.classroomPost.update({
+    const updatedPost = await this.prisma.classroomPost.update({
       where: { id: postId },
       data: { content },
       include: {
         author: { select: { id: true, fullName: true, avatarUrl: true } },
       },
     });
+
+    // Notify other classroom members to refresh their posts in real-time
+    try {
+      const allMembers = await this.prisma.classroomMember.findMany({
+        where: { classroomId },
+      });
+      allMembers
+        .filter((m) => m.userId !== userId)
+        .forEach((m) => {
+          this.notificationsService.sendEventToUser(m.userId, 'classroom:refresh-posts', { classroomId });
+        });
+    } catch (err) {
+      console.error('Failed to broadcast post update event:', err);
+    }
+
+    return updatedPost;
   }
 
   async deletePost(classroomId: string, postId: string, userId: string) {
@@ -596,12 +652,36 @@ export class ClassroomsService {
     if (!post) throw new NotFoundException('Post not found');
     if (post.classroomId !== classroomId)
       throw new BadRequestException('Post does not belong to this classroom');
-    if (post.authorId !== userId)
-      throw new ForbiddenException('Only the author can delete this post');
 
-    return this.prisma.classroomPost.delete({
+    // Check if user is author OR owner/admin of the classroom
+    const member = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId } },
+    });
+    const isOwnerOrAdmin = member && (member.role === ClassroomRole.owner || member.role === ClassroomRole.admin);
+
+    if (post.authorId !== userId && !isOwnerOrAdmin) {
+      throw new ForbiddenException('Only the author or classroom admins can delete this post');
+    }
+
+    const deletedPost = await this.prisma.classroomPost.delete({
       where: { id: postId },
     });
+
+    // Notify other classroom members to refresh their posts in real-time
+    try {
+      const allMembers = await this.prisma.classroomMember.findMany({
+        where: { classroomId },
+      });
+      allMembers
+        .filter((m) => m.userId !== userId)
+        .forEach((m) => {
+          this.notificationsService.sendEventToUser(m.userId, 'classroom:refresh-posts', { classroomId });
+        });
+    } catch (err) {
+      console.error('Failed to broadcast post delete event:', err);
+    }
+
+    return deletedPost;
   }
 
   // --- COMMENTS ---

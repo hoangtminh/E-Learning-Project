@@ -130,6 +130,19 @@ export class ClassroomMembersController {
     return this.membersService.leaveClassroom(this.getUserId(req), classroomId);
   }
 
+  @Patch('notifications')
+  updateNotificationSettings(
+    @Req() req: any,
+    @Param('classroomId') classroomId: string,
+    @Body('enabled') enabled: boolean,
+  ) {
+    return this.membersService.updateNotificationSettings(
+      this.getUserId(req),
+      classroomId,
+      enabled,
+    );
+  }
+
   @Patch('members/:userId/role')
   updateMemberRole(
     @Req() req: any,

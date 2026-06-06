@@ -15,6 +15,7 @@ export type ClassroomMember = {
   userId: string;
   role: 'owner' | 'admin' | 'member';
   joinedAt: string;
+  notificationsEnabled: boolean;
   user: ClassroomMemberUser;
 };
 
@@ -292,4 +293,7 @@ export const updateComment = (classroomId: string, commentId: string, content: s
 
 export const deleteComment = (classroomId: string, commentId: string) =>
   apiDelete(`/classrooms/${classroomId}/comments/${commentId}`);
+
+export const toggleClassroomNotifications = (classroomId: string, enabled: boolean) =>
+  apiPatch<void>(`/classrooms/${classroomId}/notifications`, { enabled });
 

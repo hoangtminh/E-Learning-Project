@@ -6,7 +6,6 @@ generator client {
 
 datasource db {
   provider     = "mysql"
-  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
@@ -176,11 +175,12 @@ model Classroom {
 }
 
 model ClassroomMember {
-  id          String        @id @default(cuid())
-  classroomId String        @map("classroom_id")
-  userId      String        @map("user_id")
-  role        ClassroomRole @default(member)
-  joinedAt    DateTime      @default(now()) @map("joined_at")
+  id                   String        @id @default(cuid())
+  classroomId          String        @map("classroom_id")
+  userId               String        @map("user_id")
+  role                 ClassroomRole @default(member)
+  joinedAt             DateTime      @default(now()) @map("joined_at")
+  notificationsEnabled Boolean       @default(true) @map("notifications_enabled")
 
   classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -329,10 +329,11 @@ model Conversation {
 }
 
 model ConversationMember {
-  id             String   @id @default(cuid())
-  conversationId String   @map("conversation_id")
-  userId         String   @map("user_id")
-  joinedAt       DateTime @default(now()) @map("joined_at")
+  id                   String   @id @default(cuid())
+  conversationId       String   @map("conversation_id")
+  userId               String   @map("user_id")
+  joinedAt             DateTime @default(now()) @map("joined_at")
+  notificationsEnabled Boolean  @default(true) @map("notifications_enabled")
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)

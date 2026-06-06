@@ -11,7 +11,7 @@ export interface NotificationDto {
   id: string;
   userId: string;
   creatorId: string | null;
-  type: string; // 'call' | 'task' | 'file' | 'post'
+  type: string; // 'call' | 'task' | 'file' | 'post' | 'chat'
   content: string;
   link: string | null;
   isRead: boolean;

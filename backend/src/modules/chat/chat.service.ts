@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ChatGateway } from './chat.gateway';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ChatService {
@@ -16,6 +17,7 @@ export class ChatService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createConversation(userId: string, dto: CreateConversationDto) {
@@ -142,15 +144,30 @@ export class ChatService {
   async sendMessage(userId: string, dto: SendMessageDto) {
     const { conversationId, content, fileUrl } = dto;
 
-    // Verify membership
-    const member = await this.prisma.conversationMember.findFirst({
-      where: {
-        conversationId,
-        userId,
+    // Verify membership & fetch all conversation members at once to avoid multiple DB trips
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    if (!member) {
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    const senderMember = conversation.members.find((m) => m.userId === userId);
+    if (!senderMember) {
       throw new ForbiddenException('You are not a member of this conversation');
     }
 
@@ -167,16 +184,70 @@ export class ChatService {
             id: true,
             fullName: true,
             avatarUrl: true,
+            email: true,
           },
         },
       },
     });
 
-    // Broadcast to all participants
-    const participantIds = await this.getConversationParticipants(conversationId);
-    participantIds.forEach((id) => {
-      this.chatGateway.server.to(`chat/${id}`).emit('new_message', message);
+    // Parse mentions
+    const contentLower = (content || '').toLowerCase();
+    const isPingAll = contentLower.includes('@all');
+
+    const isPinged = (m: typeof conversation.members[0]) => {
+      if (isPingAll) return true;
+      const email = m.user.email.toLowerCase();
+      const fullName = m.user.fullName?.toLowerCase();
+      const mId = m.user.id;
+      if (contentLower.includes('@' + email)) return true;
+      if (fullName && contentLower.includes('@' + fullName)) return true;
+      if (fullName && contentLower.includes(`@[${fullName}](${mId})`)) return true;
+      if (contentLower.includes('@' + mId)) return true;
+      return false;
+    };
+
+    // Broadcast WebSocket 'new_message' to all conversation members so their UI updates immediately
+    conversation.members.forEach((m) => {
+      this.chatGateway.server.to(`chat/${m.userId}`).emit('new_message', message);
     });
+
+    // Asynchronously create database notifications for other conversation members
+    (async () => {
+      try {
+        const senderName = message.sender.fullName || message.sender.email || 'Thành viên';
+        const conversationName = conversation.title || 'cuộc trò chuyện';
+        const textPreview = content && content.length > 50 ? content.slice(0, 50) + '...' : content || 'tệp đính kèm';
+        const link = `/chat/${conversationId}`;
+
+        const promises = conversation.members
+          .filter((m) => m.userId !== userId)
+          .filter((m) => m.notificationsEnabled || isPinged(m))
+          .map((m) => {
+            const pinged = isPinged(m);
+            let notifyContent = '';
+            if (pinged) {
+              if (isPingAll) {
+                notifyContent = `${senderName} đã nhắc đến mọi người trong ${conversationName}`;
+              } else {
+                notifyContent = `${senderName} đã nhắc đến bạn trong ${conversationName}`;
+              }
+            } else {
+              notifyContent = `${senderName} đã gửi tin nhắn trong ${conversationName}: "${textPreview}"`;
+            }
+
+            return this.notificationsService.createNotification(
+              m.userId,
+              userId,
+              'chat',
+              notifyContent,
+              link,
+            );
+          });
+        await Promise.all(promises);
+      } catch (err) {
+        console.error('Failed to create chat notifications:', err);
+      }
+    })();
 
     return message;
   }
@@ -309,5 +380,24 @@ export class ChatService {
       select: { userId: true },
     });
     return members.map((m) => m.userId);
+  }
+
+  async updateNotificationSettings(
+    userId: string,
+    conversationId: string,
+    enabled: boolean,
+  ) {
+    const member = await this.prisma.conversationMember.findFirst({
+      where: { conversationId, userId },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Bạn không phải là thành viên của cuộc trò chuyện này');
+    }
+
+    return this.prisma.conversationMember.update({
+      where: { id: member.id },
+      data: { notificationsEnabled: enabled },
+    });
   }
 }

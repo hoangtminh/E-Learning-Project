@@ -639,4 +639,23 @@ export class ClassroomMembersService {
 
     return { success: true };
   }
+
+  async updateNotificationSettings(
+    userId: string,
+    classroomId: string,
+    enabled: boolean,
+  ) {
+    const member = await this.prisma.classroomMember.findUnique({
+      where: { classroomId_userId: { classroomId, userId } },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Bạn không phải là thành viên của lớp học này');
+    }
+
+    return this.prisma.classroomMember.update({
+      where: { classroomId_userId: { classroomId, userId } },
+      data: { notificationsEnabled: enabled },
+    });
+  }
 }

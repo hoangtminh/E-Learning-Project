@@ -27,7 +27,9 @@ import {
   PendingClassroomRequest,
   getMyPendingClassrooms as apiGetMyPendingClassrooms,
   cancelJoinRequest as apiCancelJoinRequest,
+  toggleClassroomNotifications as apiToggleClassroomNotifications,
 } from '@/api/classroom';
+import { useAuth } from './AuthContext';
 
 export type Classroom = {
   id: string;
@@ -88,6 +90,7 @@ interface ClassroomContextType {
   loadingPendingClassrooms: boolean;
   fetchPendingClassrooms: () => Promise<void>;
   cancelJoinRequest: (classroomId: string, userId: string) => Promise<void>;
+  toggleClassroomNotifications: (classroomId: string, enabled: boolean) => Promise<void>;
 }
 
 const ClassroomContext = createContext<ClassroomContextType | undefined>(
@@ -95,6 +98,9 @@ const ClassroomContext = createContext<ClassroomContextType | undefined>(
 );
 
 export function ClassroomProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const currentUserId = user?.userId || user?.id;
+
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -328,6 +334,23 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const toggleClassroomNotifications = useCallback(async (
+    classroomId: string,
+    enabled: boolean,
+  ) => {
+    const res = await apiToggleClassroomNotifications(classroomId, enabled);
+    if (!res.success) throw new Error(res.error || 'Cập nhật thông báo thất bại');
+    setClassroom((prev) => {
+      if (!prev || prev.id !== classroomId) return prev;
+      return {
+        ...prev,
+        members: prev.members?.map((m) =>
+          m.userId === currentUserId ? { ...m, notificationsEnabled: enabled } : m
+        ),
+      };
+    });
+  }, [currentUserId]);
+
   const contextValue = useMemo(() => ({
     classrooms,
     loading,
@@ -357,6 +380,7 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     loadingPendingClassrooms,
     fetchPendingClassrooms,
     cancelJoinRequest,
+    toggleClassroomNotifications,
   }), [
     classrooms,
     loading,
@@ -386,6 +410,7 @@ export function ClassroomProvider({ children }: { children: ReactNode }) {
     loadingPendingClassrooms,
     fetchPendingClassrooms,
     cancelJoinRequest,
+    toggleClassroomNotifications,
   ]);
 
   return (

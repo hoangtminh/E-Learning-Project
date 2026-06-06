@@ -21,7 +21,7 @@ interface ChatContextType {
   hasMore: boolean;
   messageLoadingError: boolean;
   fetchConversations: () => Promise<void>;
-  setCurrentConversationById: (id: string) => Promise<void>;
+  setCurrentConversationById: (id: string | null) => Promise<void>;
   loadMoreMessages: () => Promise<void>;
   retryLoadMessages: () => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
@@ -36,6 +36,7 @@ interface ChatContextType {
   showInfo: boolean;
   setShowInfo: (show: boolean) => void;
   unreadConversations: Record<string, boolean>;
+  toggleChatNotifications: (conversationId: string, enabled: boolean) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -104,7 +105,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const setCurrentConversationById = useCallback(
-    async (id: string) => {
+    async (id: string | null) => {
+      if (id === null) {
+        setCurrentConversation(null);
+        setMessages([]);
+        return;
+      }
       setMessageLoadingError(false);
       const conv = conversations.find((c) => c.id === id);
       if (conv) {
@@ -255,6 +261,43 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     [],
   );
 
+  const toggleChatNotifications = useCallback(
+    async (conversationId: string, enabled: boolean) => {
+      try {
+        const res = await chatApi.updateNotificationSettings(conversationId, enabled);
+        if (!res.success) throw new Error(res.error || 'Cập nhật thông báo thất bại');
+        
+        // Update current conversation
+        setCurrentConversation((prev) => {
+          if (!prev || prev.id !== conversationId) return prev;
+          return {
+            ...prev,
+            members: prev.members.map((m) =>
+              m.userId === user?.userId ? { ...m, notificationsEnabled: enabled } : m
+            ),
+          };
+        });
+
+        // Update conversations list (sidebar)
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== conversationId) return c;
+            return {
+              ...c,
+              members: c.members.map((m) =>
+                m.userId === user?.userId ? { ...m, notificationsEnabled: enabled } : m
+              ),
+            };
+          })
+        );
+      } catch (error) {
+        console.error('Failed to toggle chat notifications:', error);
+        throw error;
+      }
+    },
+    [user],
+  );
+
   const pathname = usePathname();
   const isChatPage = pathname?.startsWith('/chat');
 
@@ -355,6 +398,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         showInfo,
         setShowInfo,
         unreadConversations,
+        toggleChatNotifications,
       }}
     >
       {children}

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Delete,
@@ -89,5 +90,18 @@ export class ChatController {
   @Delete('messages/:id')
   deleteMessage(@Request() req, @Param('id') id: string) {
     return this.chatService.deleteMessage(req.user.userId, id);
+  }
+
+  @Patch('conversations/:id/notifications')
+  toggleNotifications(
+    @Request() req,
+    @Param('id') conversationId: string,
+    @Body('enabled') enabled: boolean,
+  ) {
+    return this.chatService.updateNotificationSettings(
+      req.user.userId,
+      conversationId,
+      enabled,
+    );
   }
 }
