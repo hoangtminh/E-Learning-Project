@@ -5,8 +5,9 @@ import { getMyAssignments, Assignment } from '@/api/assignments';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNowStrict, isPast, isFuture } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Loader2, BookX, ChevronRight } from 'lucide-react';
+import { Loader2, BookX, ChevronRight, Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -29,16 +30,21 @@ export default function AssignmentsPage() {
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center h-full'>
-        <Loader2 className='w-8 h-8 animate-spin text-sky-500' />
+      <div className='flex flex-col items-center justify-center h-full min-h-[400px] gap-3'>
+        <Loader2 className='w-8 h-8 animate-spin text-primary' strokeWidth={2} />
+        <p className='text-xs text-on-surface-variant/70 font-medium'>Đang tải danh sách bài tập...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className='flex items-center justify-center h-full text-red-500'>
-        Error: {error}
+      <div className='flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6'>
+        <div className='w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive mb-3'>
+          <AlertCircle className='size-6' />
+        </div>
+        <h3 className='text-lg font-bold text-on-surface mb-1'>Lỗi tải dữ liệu</h3>
+        <p className='text-sm text-destructive max-w-md'>{error}</p>
       </div>
     );
   }
@@ -60,14 +66,17 @@ export default function AssignmentsPage() {
   });
 
   const EmptyState = ({ message, subMessage }: { message: string, subMessage?: string }) => (
-    <div className='flex flex-col items-center justify-center py-24 text-center'>
-      <div className='relative mb-8'>
-        <div className='absolute inset-0 bg-sky-100 rounded-full blur-2xl opacity-50' />
-        <BookX size={80} className='text-slate-300 relative z-10' strokeWidth={1.5} />
+    <motion.div 
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className='flex flex-col items-center justify-center py-20 text-center bg-white border border-outline-variant/30 rounded-2xl p-8 shadow-xs'
+    >
+      <div className='relative mb-5 flex items-center justify-center w-16 h-16 bg-surface rounded-2xl border border-outline-variant/20'>
+        <BookX size={32} className='text-on-surface-variant/40' strokeWidth={1.5} />
       </div>
-      <h3 className='text-xl font-semibold text-slate-800 mb-2'>{message}</h3>
-      {subMessage && <p className='text-slate-500 max-w-sm'>{subMessage}</p>}
-    </div>
+      <h3 className='text-base font-bold text-on-surface mb-1'>{message}</h3>
+      {subMessage && <p className='text-xs text-on-surface-variant/70 max-w-xs'>{subMessage}</p>}
+    </motion.div>
   );
 
   const formatTimeLeft = (deadlineStr: string) => {
@@ -78,134 +87,192 @@ export default function AssignmentsPage() {
   };
 
   const AssignmentList = ({ items }: { items: Assignment[] }) => {
+    const completedCount = items.filter(i => i.submissions && i.submissions.length > 0).length;
+    const progressPercent = items.length > 0 ? (completedCount / items.length) * 100 : 0;
+
     return (
-      <div className='space-y-3 mt-6'>
+      <div className='space-y-4'>
         {/* Header List */}
-        <div className='flex items-center justify-between px-2 mb-2'>
-          <h3 className='font-bold text-slate-800'>Bài tập ({items.length})</h3>
-          <div className='flex items-center gap-2 text-sm text-sky-500'>
-            <div className='w-1.5 h-1.5 rounded-full bg-sky-500'></div>
-            {items.filter(i => i.submissions?.length > 0).length}/{items.length} đã nộp
+        <div className='bg-white border border-outline-variant/30 rounded-2xl p-4 md:p-5 shadow-xs'>
+          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4'>
+            <div>
+              <h3 className='text-sm font-bold text-on-surface uppercase tracking-wider'>
+                Danh sách bài tập ({items.length})
+              </h3>
+              <p className='text-xs text-on-surface-variant/80 mt-0.5'>
+                Theo dõi và nộp bài trước thời hạn quy định
+              </p>
+            </div>
+            <div className='flex items-center gap-2 text-xs font-bold text-primary shrink-0'>
+              <CheckCircle2 size={16} className='text-primary' />
+              <span>Đã hoàn thành {completedCount}/{items.length} bài</span>
+            </div>
+          </div>
+          {/* Progress Bar */}
+          <div className='h-1.5 w-full bg-surface-container rounded-full overflow-hidden'>
+            <div 
+              className='h-full bg-primary rounded-full transition-all duration-500 ease-out' 
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
         </div>
-        <div className='h-1 w-full bg-sky-400 rounded-full mb-4'></div>
 
-        {items.map((item) => {
-          const isSubmitted = item.submissions?.length > 0;
-          const isOverdue = item.deadline && isPast(new Date(item.deadline)) && !isSubmitted;
+        <motion.div 
+          className='space-y-3'
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { transition: { staggerChildren: 0.05 } }
+          }}
+        >
+          {items.map((item) => {
+            const isSubmitted = item.submissions && item.submissions.length > 0;
+            const isOverdue = item.deadline && isPast(new Date(item.deadline)) && !isSubmitted;
 
-          return (
-            <Link key={item.id} href={`/assignments/${item.id}`}>
-              <div className='group flex items-center justify-between p-4 bg-white border border-slate-200 rounded-full hover:border-sky-300 hover:shadow-sm transition-all cursor-pointer mb-3'>
-                {/* Left Side: Dot and Title */}
-                <div className='flex items-center gap-4'>
-                  <div className='w-2 h-2 rounded-full bg-sky-500 shrink-0'></div>
-                  <h4 className='font-medium text-slate-800'>{item.title}</h4>
-                  <span className='text-sm text-slate-400 ml-2'> Lớp học: {item.classroom?.title}</span>
-                </div>
+            return (
+              <motion.div
+                key={item.id}
+                variants={{
+                  hidden: { opacity: 0, y: 12 },
+                  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } }
+                }}
+              >
+                <Link href={`/assignments/${item.id}`}>
+                  <div className='group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white border border-outline-variant/30 rounded-2xl hover:border-primary/50 hover:shadow-xs active:scale-[0.99] transition-all cursor-pointer gap-4'>
+                    {/* Left Side: Indicator, Title & Classroom */}
+                    <div className='flex items-start gap-3.5 min-w-0'>
+                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                        isSubmitted ? 'bg-green-500' : isOverdue ? 'bg-error' : 'bg-primary'
+                      }`} />
+                      <div className='min-w-0'>
+                        <h4 className='font-bold text-on-surface group-hover:text-primary transition-colors text-sm sm:text-base leading-snug truncate'>
+                          {item.title}
+                        </h4>
+                        <div className='flex items-center gap-2 mt-1 flex-wrap'>
+                          <span className='text-xs text-on-surface-variant/80'>
+                            Lớp học: <span className='font-semibold text-on-surface'>{item.classroom?.title}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Right Side: Badges & Time */}
-                <div className='flex items-center gap-4 text-sm'>
-                  {isSubmitted ? (
-                    <span className='px-4 py-1 rounded-full bg-sky-50 text-sky-600 font-medium text-xs border border-sky-100'>
-                      Đã nộp
-                    </span>
-                  ) : (
-                    <span className='px-4 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-xs border border-slate-200'>
-                      Chưa nộp
-                    </span>
-                  )}
+                    {/* Right Side: Badges & Time */}
+                    <div className='flex items-center justify-between sm:justify-end gap-5 shrink-0'>
+                      <div className='flex items-center gap-3'>
+                        {isSubmitted ? (
+                          <span className='px-3 py-1 rounded-lg bg-green-500/10 text-green-600 font-bold text-[10px] uppercase tracking-wider border border-green-500/20'>
+                            Đã nộp
+                          </span>
+                        ) : (
+                          <span className='px-3 py-1 rounded-lg bg-surface text-on-surface-variant/85 font-bold text-[10px] uppercase tracking-wider border border-outline-variant/20'>
+                            Chưa nộp
+                          </span>
+                        )}
 
-                  {item.deadline ? (
-                    <span className={`font-medium w-24 text-right ${isOverdue ? 'text-red-500' : 'text-orange-500'}`}>
-                      {formatTimeLeft(item.deadline)}
-                    </span>
-                  ) : (
-                    <span className='text-slate-400 w-24 text-right'>Không thời hạn</span>
-                  )}
+                        {item.deadline ? (
+                          <div className={`flex items-center gap-1.5 text-xs font-semibold ${
+                            isOverdue ? 'text-error' : 'text-orange-500'
+                          }`}>
+                            <Calendar size={13} />
+                            <span>{formatTimeLeft(item.deadline)}</span>
+                          </div>
+                        ) : (
+                          <span className='text-xs text-on-surface-variant/60 font-medium'>Không thời hạn</span>
+                        )}
+                      </div>
 
-                  <ChevronRight className='text-slate-300 group-hover:text-sky-500 transition-colors shrink-0' size={18} />
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+                      <ChevronRight 
+                        className='text-on-surface-variant/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 hidden sm:block' 
+                        size={18} 
+                      />
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
     );
   };
 
   return (
-    <div className='flex flex-col min-h-screen bg-slate-50 text-slate-800 w-full'>
+    <div className='flex flex-col min-h-screen bg-surface-container-lowest text-on-surface w-full pb-12'>
       {/* Header Banner */}
-      <div className='bg-gradient-to-r from-sky-600 to-indigo-600 px-6 py-4 text-white flex justify-between items-center'>
-        <div>
-          <h1 className='text-xl font-bold'>Bài tập của tôi</h1>
-          <p className='text-sky-100 text-sm mt-0.5 opacity-80'>
-            Quản lý tất cả bài tập từ các lớp học của bạn
+      <div className='px-6 md:px-12 py-6 border-b border-outline-variant/30 bg-white relative overflow-hidden'>
+        <div className='absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none' />
+        <div className='max-w-5xl mx-auto w-full relative z-10'>
+          <h1 className='text-2xl font-black text-on-surface tracking-tight'>Bài tập của tôi</h1>
+          <p className='text-xs sm:text-sm text-on-surface-variant/85 mt-1 max-w-2xl'>
+            Quản lý, theo dõi thời hạn và hoàn thành các bài kiểm tra, bài tập về nhà từ tất cả các lớp học của bạn.
           </p>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs Layout */}
       <Tabs defaultValue='upcoming' className='w-full flex-1 flex flex-col'>
         {/* Tabs Bar */}
-        <div className='sticky top-0 z-40 bg-white/80 backdrop-blur-md px-6 border-b border-slate-200 flex justify-start'>
-          <TabsList className='bg-transparent justify-start h-auto p-0 rounded-none flex gap-8'>
-            <TabsTrigger
-              value='upcoming'
-              className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-medium text-slate-500 data-[state=active]:text-sky-600 hover:text-sky-600 data-[state=active]:font-semibold transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-sky-600 after:opacity-0 data-[state=active]:after:opacity-100'
-            >
-              Bài tập sắp tới
-            </TabsTrigger>
-            <TabsTrigger
-              value='pastdue'
-              className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-medium text-slate-500 data-[state=active]:text-sky-600 hover:text-sky-600 data-[state=active]:font-semibold transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-sky-600 after:opacity-0 data-[state=active]:after:opacity-100'
-            >
-              Quá hạn
-            </TabsTrigger>
-            <TabsTrigger
-              value='completed'
-              className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-medium text-slate-500 data-[state=active]:text-sky-600 hover:text-sky-600 data-[state=active]:font-semibold transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-sky-600 after:opacity-0 data-[state=active]:after:opacity-100'
-            >
-              Đã nộp
-            </TabsTrigger>
-          </TabsList>
+        <div className='sticky top-0 z-40 bg-white/80 backdrop-blur-md px-6 md:px-12 border-b border-outline-variant/30 flex justify-start'>
+          <div className='max-w-5xl mx-auto w-full'>
+            <TabsList className='bg-transparent justify-start h-auto p-0 rounded-none flex gap-8'>
+              <TabsTrigger
+                value='upcoming'
+                className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-bold text-xs sm:text-sm text-on-surface-variant/70 data-[state=active]:text-primary hover:text-primary transition-all after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-[2px] after:bg-primary after:scale-x-0 data-[state=active]:after:scale-x-100 after:transition-transform after:duration-250 cursor-pointer'
+              >
+                Bài tập sắp tới
+              </TabsTrigger>
+              <TabsTrigger
+                value='pastdue'
+                className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-bold text-xs sm:text-sm text-on-surface-variant/70 data-[state=active]:text-primary hover:text-primary transition-all after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-[2px] after:bg-primary after:scale-x-0 data-[state=active]:after:scale-x-100 after:transition-transform after:duration-250 cursor-pointer'
+              >
+                Quá hạn
+              </TabsTrigger>
+              <TabsTrigger
+                value='completed'
+                className='relative data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none py-4 px-0 font-bold text-xs sm:text-sm text-on-surface-variant/70 data-[state=active]:text-primary hover:text-primary transition-all after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-[2px] after:bg-primary after:scale-x-0 data-[state=active]:after:scale-x-100 after:transition-transform after:duration-250 cursor-pointer'
+              >
+                Đã nộp
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className='p-6 lg:p-10 max-w-5xl mx-auto w-full'>
-          <TabsContent value='upcoming' className='mt-0'>
-            {upcoming.length > 0 ? (
-              <AssignmentList items={upcoming} />
-            ) : (
-              <EmptyState
-                message='Không có bài tập nào sắp tới.'
-                subMessage='Hãy truy cập vào từng lớp học để kiểm tra thêm.'
-              />
-            )}
-          </TabsContent>
+        {/* Content Section */}
+        <div className='p-6 md:p-8 lg:p-10 max-w-5xl mx-auto w-full flex-1'>
+          <AnimatePresence mode='wait'>
+            <TabsContent value='upcoming' className='mt-0 outline-hidden'>
+              {upcoming.length > 0 ? (
+                <AssignmentList items={upcoming} />
+              ) : (
+                <EmptyState
+                  message='Không có bài tập nào sắp tới.'
+                  subMessage='Hãy truy cập vào từng lớp học của bạn để kiểm tra thêm thông tin chi tiết.'
+                />
+              )}
+            </TabsContent>
 
-          <TabsContent value='pastdue' className='mt-0'>
-            {pastDue.length > 0 ? (
-              <AssignmentList items={pastDue} />
-            ) : (
-              <EmptyState
-                message='Không có bài tập nào quá hạn.'
-                subMessage='Tuyệt vời! Bạn đã hoàn thành đúng hạn tất cả các bài tập.'
-              />
-            )}
-          </TabsContent>
+            <TabsContent value='pastdue' className='mt-0 outline-hidden'>
+              {pastDue.length > 0 ? (
+                <AssignmentList items={pastDue} />
+              ) : (
+                <EmptyState
+                  message='Không có bài tập nào quá hạn.'
+                  subMessage='Tuyệt vời! Bạn đã hoàn thành đúng hạn tất cả các bài tập được giao.'
+                />
+              )}
+            </TabsContent>
 
-          <TabsContent value='completed' className='mt-0'>
-            {completed.length > 0 ? (
-              <AssignmentList items={completed} />
-            ) : (
-              <EmptyState
-                message='Chưa có bài tập nào được nộp.'
-                subMessage='Khi bạn nộp bài tập, chúng sẽ xuất hiện ở đây.'
-              />
-            )}
-          </TabsContent>
+            <TabsContent value='completed' className='mt-0 outline-hidden'>
+              {completed.length > 0 ? (
+                <AssignmentList items={completed} />
+              ) : (
+                <EmptyState
+                  message='Chưa có bài tập nào được nộp.'
+                  subMessage='Khi bạn hoàn thành và nộp bài tập, thông tin bài nộp sẽ hiển thị tại đây.'
+                />
+              )}
+            </TabsContent>
+          </AnimatePresence>
         </div>
       </Tabs>
     </div>

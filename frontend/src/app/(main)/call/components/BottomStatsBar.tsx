@@ -54,31 +54,31 @@ export default function BottomStatsBar() {
   };
 
   return (
-    <div className='flex flex-col gap-3 rounded-xl border border-white/10 bg-slate-900/95 p-3 text-slate-200 shadow-2xl sm:flex-row sm:items-center sm:justify-between'>
+    <div className='flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/90 p-3.5 text-slate-200 shadow-2xl sm:flex-row sm:items-center sm:justify-between backdrop-blur-md'>
       {/* Stats Section */}
-      <div className='no-scrollbar flex w-full min-w-0 gap-4 overflow-x-auto sm:w-auto sm:gap-6'>
+      <div className='no-scrollbar flex w-full min-w-0 gap-4 overflow-x-auto sm:w-auto sm:gap-6 items-center'>
         <div>
           <p className='text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-0.5'>
             Thời gian gọi
           </p>
-          <p className='text-lg font-bold text-white tabular-nums'>
+          <p className='text-base font-bold text-white tabular-nums'>
             {durationStr}
           </p>
         </div>
-        <div className='h-8 w-px shrink-0 self-center bg-slate-700'></div>
+        <div className='h-8 w-px shrink-0 self-center bg-white/10'></div>
         <div>
           <p className='text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-0.5'>
             Mạng
           </p>
-          <p className='text-lg font-bold text-emerald-400'>Tốt</p>
+          <p className='text-base font-bold text-green-400'>Ổn định</p>
         </div>
       </div>
 
       {/* Controls Section */}
-      <div className='flex max-w-full items-center gap-2 overflow-x-auto rounded-xl border border-slate-700 bg-slate-800 p-1.5'>
+      <div className='flex max-w-full items-center gap-2.5 overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/60 p-1.5'>
         <button
           onClick={toggleAudio}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${isMicOn ? 'bg-primary/20 text-sky-300 hover:bg-primary/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all cursor-pointer border-0 ${isMicOn ? 'bg-primary/20 text-primary-container hover:bg-primary/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
           title={isMicOn ? 'Tắt mic' : 'Bật mic'}
         >
           <span className='material-symbols-outlined text-[18px]'>
@@ -87,7 +87,7 @@ export default function BottomStatsBar() {
         </button>
         <button
           onClick={toggleVideo}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${isCamOn ? 'bg-primary/20 text-sky-300 hover:bg-primary/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all cursor-pointer border-0 ${isCamOn ? 'bg-primary/20 text-primary-container hover:bg-primary/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
           title={isCamOn ? 'Tắt camera' : 'Bật camera'}
         >
           <span className='material-symbols-outlined text-[18px]'>
@@ -97,11 +97,11 @@ export default function BottomStatsBar() {
         <button
           onClick={isSharingScreen ? stopScreenShare : startScreenShare}
           disabled={screenSharerId !== null && !isSharingScreen}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${isSharingScreen
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all cursor-pointer border-0 ${isSharingScreen
               ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 font-bold border border-amber-500/40'
               : screenSharerId !== null
-                ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-40'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                ? 'bg-slate-900 text-slate-700 cursor-not-allowed opacity-40'
+                : 'bg-white/10 text-slate-300 hover:bg-white/20'
             }`}
           title={
             isSharingScreen
@@ -116,7 +116,7 @@ export default function BottomStatsBar() {
           </span>
         </button>
         <button
-          className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-700 text-slate-300 transition-colors hover:bg-slate-600'
+          className='flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-slate-300 transition-colors hover:bg-white/15 cursor-pointer border-0'
           title='Cài đặt'
         >
           <span className='material-symbols-outlined text-[18px]'>
@@ -124,11 +124,11 @@ export default function BottomStatsBar() {
           </span>
         </button>
 
-        <div className='mx-1 h-6 w-px shrink-0 bg-slate-600'></div>
+        <div className='mx-1 h-6 w-px shrink-0 bg-white/10'></div>
 
         <button
           onClick={handleLeave}
-          className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-600 text-white shadow-md transition-all hover:bg-amber-500'
+          className='flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-600 text-white shadow-xs transition-all hover:bg-amber-500 cursor-pointer border-0 active:scale-[0.97]'
           title='Rời phòng cuộc gọi'
         >
           <span className='material-symbols-outlined text-[18px]'>
@@ -139,7 +139,7 @@ export default function BottomStatsBar() {
         {isHost && (
           <button
             onClick={handleEndCall}
-            className='flex shrink-0 items-center gap-1 rounded-lg border border-red-500 bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-md transition-all hover:bg-red-700 active:scale-95'
+            className='flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border-0 bg-red-600 px-4 text-xs font-bold text-white shadow-xs transition-all hover:bg-red-750 active:scale-[0.97] cursor-pointer'
             title='Kết thúc cuộc gọi cho tất cả mọi người'
           >
             <span className='material-symbols-outlined text-[16px]'>
@@ -151,13 +151,13 @@ export default function BottomStatsBar() {
       </div>
 
       {/* Invite Section */}
-      <div className='flex w-full items-center justify-end gap-3 sm:w-auto'>
+      <div className='flex w-full items-center justify-end gap-3 sm:w-auto shrink-0'>
         <button
           onClick={() => {
             navigator.clipboard.writeText(window.location.href);
             void appAlert('Đã sao chép đường dẫn cuộc gọi vào bộ nhớ tạm!');
           }}
-          className='flex shrink-0 items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-sky-500'
+          className='flex shrink-0 items-center gap-1.5 rounded-xl bg-primary hover:bg-primary-dim px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all active:scale-[0.98] cursor-pointer border-0'
         >
           <span className='material-symbols-outlined text-[16px]'>
             link

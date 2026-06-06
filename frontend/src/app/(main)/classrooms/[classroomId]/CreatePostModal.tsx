@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { useClassrooms } from '@/contexts/ClassroomContext';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export function CreatePostModal({
   onClose,
   onSubmit,
 }: CreatePostModalProps) {
+  const { classroom } = useClassrooms();
   const [newContent, setNewContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,6 +53,7 @@ export function CreatePostModal({
           onChange={setNewContent}
           placeholder='Nhập nội dung thông báo cho lớp học của bạn...'
           minHeight='220px'
+          members={classroom?.members?.map(m => m.user)}
         />
         <div className='mt-5 flex justify-end gap-3'>
           <button

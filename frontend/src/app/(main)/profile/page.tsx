@@ -54,18 +54,18 @@ export default function ProfilePage() {
     .toUpperCase();
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="p-4 sm:p-6 md:p-8 max-w-5xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-black text-[#252f43]">Hồ sơ cá nhân</h1>
-        <p className="text-sm text-[#525b72] mt-1">Quản lý thông tin tài khoản và khóa học của bạn</p>
+        <h1 className="text-xl sm:text-2xl font-black text-[#252f43]">Hồ sơ cá nhân</h1>
+        <p className="text-xs sm:text-sm text-[#525b72] mt-1">Quản lý thông tin tài khoản và khóa học của bạn</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left: Profile Card */}
         <div className="lg:col-span-1 space-y-6">
           {/* Avatar + Basic info */}
-          <div className="bg-white rounded-3xl border border-[#a3adc7]/20 shadow-sm p-8 flex flex-col items-center text-center space-y-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#a3adc7]/20 shadow-sm p-4 sm:p-6 md:p-8 flex flex-col items-center text-center space-y-4">
             <div className="relative">
               {(isEditing ? avatarUrl : user?.avatarUrl) ? (
                 <img
@@ -130,7 +130,7 @@ export default function ProfilePage() {
         {/* Right: Edit form + Courses */}
         <div className="lg:col-span-2 space-y-6">
           {/* Edit form */}
-          <div className="bg-white rounded-3xl border border-[#a3adc7]/20 shadow-sm p-8">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#a3adc7]/20 shadow-sm p-4 sm:p-6 md:p-8">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-black text-[#252f43]">Thông tin cá nhân</h3>
               {!isEditing ? (
@@ -220,7 +220,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Enrolled courses */}
-          <div className="bg-white rounded-3xl border border-[#a3adc7]/20 shadow-sm p-8">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#a3adc7]/20 shadow-sm p-4 sm:p-6 md:p-8">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-black text-[#252f43]">Khóa học đang học</h3>
               <Link href="/courses" className="text-sm font-semibold text-[#006382] hover:underline">Khám phá thêm</Link>

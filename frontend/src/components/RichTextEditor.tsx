@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 
 interface RichTextEditorProps {
   value: string; // Markdown format
@@ -9,9 +9,10 @@ interface RichTextEditorProps {
   className?: string;
   id?: string;
   minHeight?: string;
+  members?: Array<{ id: string; fullName?: string | null; email: string }>;
 }
 
-export function RichTextEditor({ value, onChange, placeholder = '', className = '', id, minHeight }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, placeholder = '', className = '', id, minHeight, members = [] }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
   const lastMarkdownRef = useRef<string | null>(null);
@@ -20,6 +21,11 @@ export function RichTextEditor({ value, onChange, placeholder = '', className = 
   const [isItalic, setIsItalic] = useState(false);
   const [isBulletList, setIsBulletList] = useState(false);
   const [isNumberedList, setIsNumberedList] = useState(false);
+
+  // Mention State
+  const [mentionSearch, setMentionSearch] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [mentionIndex, setMentionIndex] = useState(0);
 
   const updateActiveStates = () => {
     if (typeof document !== 'undefined') {
@@ -248,8 +254,111 @@ export function RichTextEditor({ value, onChange, placeholder = '', className = 
     }
   };
 
+  const insertMentionAtCursor = (name: string, idVal: string) => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    const node = range.startContainer;
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.nodeValue || '';
+      const cursorOffset = range.startOffset;
+      const lastAt = text.lastIndexOf('@', cursorOffset - 1);
+      if (lastAt !== -1) {
+        // Delete the `@searchQuery` part
+        node.nodeValue = text.slice(0, lastAt);
+        range.setStart(node, lastAt);
+        range.setEnd(node, cursorOffset);
+        range.deleteContents();
+      }
+    }
+    
+    const mentionText = idVal === 'all' ? '@all' : `@[${name}](${idVal})`;
+    const textNode = document.createTextNode(mentionText + ' ');
+    range.insertNode(textNode);
+    
+    range.setStartAfter(textNode);
+    range.setEndAfter(textNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    
+    handleInput();
+    setMentionSearch(null);
+    setSuggestions([]);
+  };
+
+  useEffect(() => {
+    if (mentionSearch === null) {
+      setSuggestions([]);
+      return;
+    }
+    const query = mentionSearch.toLowerCase();
+    const allOption = { id: 'all', name: 'Mọi người', email: 'all' };
+    const filteredMembers = members.map(m => ({
+      id: m.id,
+      name: m.fullName || m.email || 'User',
+      email: m.email
+    })).filter(m => 
+      m.name.toLowerCase().includes(query) || 
+      m.email.toLowerCase().includes(query)
+    );
+    
+    const list = query === '' || 'all'.includes(query) 
+      ? [allOption, ...filteredMembers] 
+      : filteredMembers;
+      
+    setSuggestions(list);
+    setMentionIndex(0);
+  }, [mentionSearch, members]);
+
+  const handleEditorKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    updateActiveStates();
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      setMentionSearch(null);
+      return;
+    }
+    
+    const range = selection.getRangeAt(0);
+    const node = range.startContainer;
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.nodeValue || '';
+      const offset = range.startOffset;
+      const lastAt = text.lastIndexOf('@', offset - 1);
+      if (lastAt !== -1 && (lastAt === 0 || text[lastAt - 1] === ' ' || text[lastAt - 1] === '\u00A0')) {
+        const query = text.slice(lastAt + 1, offset);
+        if (!query.includes(' ') && !query.includes('\n')) {
+          setMentionSearch(query);
+          return;
+        }
+      }
+    }
+    setMentionSearch(null);
+  };
+
+  const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (suggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex((prev) => (prev + 1) % suggestions.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const selected = suggestions[mentionIndex];
+        insertMentionAtCursor(selected.name, selected.id);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setMentionSearch(null);
+        setSuggestions([]);
+      }
+    }
+  };
+
   return (
-    <div className="border border-slate-200 rounded-md overflow-hidden bg-slate-50 transition-all focus-within:ring-2 focus-within:ring-sky-500/20">
+    <div className="border border-slate-200 rounded-md bg-slate-50 transition-all focus-within:ring-2 focus-within:ring-sky-500/20 relative">
       {/* Editor Scoped CSS Style Tag */}
       <style dangerouslySetInnerHTML={{ __html: `
         .rich-text-editor-content {
@@ -379,14 +488,38 @@ export function RichTextEditor({ value, onChange, placeholder = '', className = 
         id={id}
         contentEditable
         onInput={handleInput}
-        onKeyUp={updateActiveStates}
+        onKeyUp={handleEditorKeyUp}
+        onKeyDown={handleEditorKeyDown}
         onMouseUp={updateActiveStates}
         onFocus={updateActiveStates}
         onBlur={updateActiveStates}
         data-placeholder={placeholder}
         style={minHeight ? { minHeight } : undefined}
-        className={`rich-text-editor-content w-full p-2.5 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50/50 leading-snug overflow-y-auto resize-none ${className}`}
+        className={`rich-text-editor-content w-full p-2.5 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50/50 leading-snug overflow-y-auto resize-none rounded-b-md ${className}`}
       />
+
+      {/* Suggestion Dropdown */}
+      {suggestions.length > 0 && (
+        <div className="absolute left-4 bottom-full mb-1 w-64 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-lg z-50 p-1 flex flex-col gap-0.5">
+          {suggestions.map((suggestion, index) => (
+            <button
+              key={suggestion.id}
+              type="button"
+              onClick={() => insertMentionAtCursor(suggestion.name, suggestion.id)}
+              className={`w-full px-3 py-2 text-left text-xs rounded-md transition-colors flex flex-col gap-0.5 cursor-pointer ${
+                index === mentionIndex 
+                  ? 'bg-sky-50 text-sky-700 font-bold' 
+                  : 'hover:bg-slate-50 text-slate-600'
+              }`}
+            >
+              <span className="font-extrabold">{suggestion.name}</span>
+              {suggestion.id !== 'all' && (
+                <span className="text-[10px] text-slate-400 font-medium">{suggestion.email}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

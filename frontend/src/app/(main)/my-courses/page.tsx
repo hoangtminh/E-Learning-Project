@@ -39,7 +39,7 @@ function CourseCard({
     <div className='bg-white border border-slate-200 rounded-2xl overflow-hidden group flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative'>
       {/* Leave Course button */}
       {onLeave && (
-        <div className='absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity'>
+        <div className='absolute top-2 right-2 sm:top-3 sm:right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity'>
           <button
             type='button'
             onClick={(e) => {
@@ -47,20 +47,20 @@ function CourseCard({
               e.stopPropagation();
               onLeave(course.id);
             }}
-            className='bg-red-500/90 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-lg flex items-center justify-center transition-colors shadow-md text-xs font-bold gap-1 cursor-pointer border-0'
+            className='bg-red-500/90 hover:bg-red-600 text-white px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg flex items-center justify-center transition-colors shadow-md text-[10px] sm:text-xs font-bold gap-1 cursor-pointer border-0'
             title='Rời khóa học'
           >
-            <span className='material-symbols-outlined text-xs font-bold'>
+            <span className='material-symbols-outlined text-[10px] sm:text-xs font-bold'>
               logout
             </span>
-            Rời khóa
+            <span className='hidden xs:inline'>Rời khóa</span>
           </button>
         </div>
       )}
 
       <Link
         href={href}
-        className='relative h-40 overflow-hidden bg-slate-100 block'
+        className='relative h-24 sm:h-40 overflow-hidden bg-slate-100 block'
       >
         {course.thumbnailUrl ? (
           <img
@@ -69,40 +69,40 @@ function CourseCard({
             className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
           />
         ) : (
-          <div className='w-full h-full bg-sky-50 flex flex-col items-center justify-center gap-2 p-4 text-sky-500'>
-            <span className='material-symbols-outlined text-4xl'>
+          <div className='w-full h-full bg-sky-50 flex flex-col items-center justify-center gap-1 sm:gap-2 p-2 sm:p-4 text-sky-500'>
+            <span className='material-symbols-outlined text-xl sm:text-4xl'>
               menu_book
             </span>
-            <span className='text-xs font-bold uppercase tracking-wider text-center line-clamp-2'>
+            <span className='text-[8px] sm:text-xs font-bold uppercase tracking-wider text-center line-clamp-2 px-2 sm:px-4'>
               {course.title}
             </span>
           </div>
         )}
-        <div className='absolute top-3 left-3 px-2 py-1 bg-slate-900/70 backdrop-blur-md rounded flex items-center gap-1'>
-          <span className='text-white text-[10px] font-bold uppercase tracking-wider'>
+        <div className='absolute top-2 left-2 px-1.5 py-0.5 sm:top-3 sm:left-3 sm:px-2 sm:py-1 bg-slate-900/70 backdrop-blur-md rounded flex items-center gap-1'>
+          <span className='text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-wider'>
             {badge}
           </span>
         </div>
       </Link>
 
-      <div className='p-4 flex flex-col flex-1'>
+      <div className='p-2.5 sm:p-4 flex flex-col flex-1'>
         <Link href={href}>
-          <h3 className='font-bold text-slate-800 leading-snug group-hover:text-sky-600 transition-colors line-clamp-2 mb-2'>
+          <h3 className='font-bold text-slate-800 leading-snug group-hover:text-sky-600 transition-colors line-clamp-2 mb-1 sm:mb-2 text-xs sm:text-base'>
             {course.title}
           </h3>
         </Link>
-        <p className='text-slate-500 text-xs line-clamp-2 mb-4'>
+        <p className='text-slate-500 text-xs line-clamp-2 mb-4 hidden sm:block'>
           {stripHtml(course.description) || 'Chưa có mô tả cho khóa học này.'}
         </p>
 
         {/* Dynamic Progress Bar for Enrolled Courses */}
         {course.enrolledAt && course.progressPercent !== undefined && (
-          <div className="space-y-1.5 mb-4">
-            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+          <div className="space-y-1 sm:space-y-1.5 mb-3 sm:mb-4">
+            <div className="flex justify-between items-center text-[8px] sm:text-[10px] font-bold text-slate-500">
               <span>Tiến độ</span>
               <span>{course.progressPercent}%</span>
             </div>
-            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="w-full h-1 sm:h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-sky-500 rounded-full transition-all duration-300"
                 style={{ width: `${course.progressPercent}%` }}
@@ -111,26 +111,25 @@ function CourseCard({
           </div>
         )}
 
-        <div className='mt-auto flex items-center justify-between pt-4 border-t border-slate-100 gap-3'>
+        <div className='mt-auto flex items-center justify-between pt-2.5 sm:pt-4 border-t border-slate-100 gap-2 sm:gap-3'>
           <div className='min-w-0'>
-            <p className='text-xs text-slate-500 truncate'>
+            <p className='text-[10px] sm:text-xs text-slate-500 truncate'>
               {course.instructor?.fullName || 'Giảng viên'}
             </p>
             {course.enrolledAt && (
-              <p className='text-[11px] text-slate-400'>
-                Tham gia{' '}
+              <p className='text-[9px] sm:text-[11px] text-slate-400'>
                 {new Date(course.enrolledAt).toLocaleDateString('vi-VN')}
               </p>
             )}
             {course.visibility && !course.enrolledAt && (
-              <p className='text-[11px] text-slate-400 uppercase'>
+              <p className='text-[9px] sm:text-[11px] text-slate-400 uppercase'>
                 {course.visibility}
               </p>
             )}
           </div>
           <Link
             href={href}
-            className='px-4 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-bold hover:bg-sky-700 transition-all active:scale-95 shrink-0'
+            className='px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-lg bg-sky-600 text-white text-[10px] sm:text-xs font-bold hover:bg-sky-700 transition-all active:scale-95 shrink-0'
           >
             {actionLabel}
           </Link>
@@ -210,22 +209,22 @@ export default function MyCoursesPage() {
   };
 
   return (
-    <div className='space-y-10 pb-12 transition-all p-6 md:p-12'>
+    <div className='space-y-6 sm:space-y-10 pb-12 transition-all p-4 sm:p-6 md:p-12'>
       <div className='flex min-h-[92px] flex-col justify-between gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center'>
         <div className='min-w-0'>
-          <h1 className='text-3xl font-black text-slate-900'>
+          <h1 className='text-xl sm:text-3xl font-black text-slate-900'>
             Khóa học của tôi
           </h1>
-          <p className='text-slate-500 mt-1'>
+          <p className='text-slate-500 text-xs sm:text-sm mt-1'>
             Theo dõi khóa học đã tham gia và khóa học bạn đang quản lý.
           </p>
         </div>
         <Link
           href='/courses'
-          className='inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border-0 bg-sky-50 px-4 text-sm font-semibold text-sky-600 shadow-xs transition-colors hover:bg-sky-100'
+          className='inline-flex h-9 sm:h-10 shrink-0 items-center gap-1.5 rounded-lg border-0 bg-sky-50 px-4 text-xs sm:text-sm font-semibold text-sky-600 shadow-xs transition-colors hover:bg-sky-100'
         >
           Khám phá thêm
-          <ArrowRight className='size-4' />
+          <ArrowRight className='size-3.5 sm:size-4' />
         </Link>
       </div>
 
@@ -270,7 +269,7 @@ export default function MyCoursesPage() {
                 </Link>
               </div>
             ) : (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+              <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
                 {enrolledCourses.map((course) => (
                   <CourseCard
                     key={course.id}
@@ -303,7 +302,7 @@ export default function MyCoursesPage() {
                 </p>
               </div>
             ) : (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+              <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
                 {teachingCourses.map((course) => (
                   <CourseCard
                     key={course.id}

@@ -22,6 +22,52 @@ interface MessageItemProps {
   callStatus?: CallStatus;
 }
 
+const renderChatMessage = (text: string, isMeMessage: boolean) => {
+  if (!text) return '';
+  
+  // Split by mentions (e.g. @all or @[name](id))
+  const regex = /(@all|@\[.*?\]\(.*?\))/gi;
+  const parts = text.split(regex);
+  
+  return parts.map((part, index) => {
+    if (part.toLowerCase() === '@all') {
+      return (
+        <span
+          key={index}
+          className={
+            isMeMessage 
+              ? 'px-1.5 py-0.5 rounded font-extrabold text-[11px] inline-flex items-center gap-0.5 mx-0.5 bg-white/20 text-white border border-white/10' 
+              : 'px-1.5 py-0.5 rounded font-semibold text-[11px] inline-flex items-center gap-0.5 mx-0.5 bg-primary/10 text-primary border border-primary/20'
+          }
+        >
+          @all
+        </span>
+      );
+    }
+    
+    if (part.startsWith('@[') && part.includes('](') && part.endsWith(')')) {
+      const match = part.match(/@\[(.*?)\]\((.*?)\)/);
+      if (match) {
+        const [, label] = match;
+        return (
+          <span
+            key={index}
+            className={
+              isMeMessage 
+                ? 'px-1.5 py-0.5 rounded font-extrabold text-[11px] inline-flex items-center gap-0.5 mx-0.5 bg-white/20 text-white border border-white/10' 
+                : 'px-1.5 py-0.5 rounded font-semibold text-[11px] inline-flex items-center gap-0.5 mx-0.5 bg-primary/10 text-primary border border-primary/20'
+            }
+          >
+            @{label}
+          </span>
+        );
+      }
+    }
+    
+    return part;
+  });
+};
+
 export const MessageItem = React.memo(
   ({
     content,
@@ -79,9 +125,9 @@ export const MessageItem = React.memo(
           {/* Avatar space */}
           <div className={cn('w-9 h-9 shrink-0', isMe && 'hidden')}>
             {!isMe && showAvatar && (
-              <Avatar className='h-9 w-9 shadow-sm'>
+              <Avatar className='h-9 w-9 border border-outline-variant/30 shadow-xs'>
                 <AvatarImage src={avatarUrl} alt={senderName} />
-                <AvatarFallback className='bg-primary/10 text-primary font-bold'>
+                <AvatarFallback className='bg-primary/10 text-primary font-bold text-xs uppercase'>
                   {senderName?.[0]}
                 </AvatarFallback>
               </Avatar>
@@ -96,49 +142,53 @@ export const MessageItem = React.memo(
             )}
           >
             {!isMe && isFirstOfGroup && (
-              <span className='text-[11px] font-medium text-on-surface-variant/70 ml-1 mb-1'>
+              <span className='text-[10px] font-bold text-on-surface-variant/70 ml-1 mb-1 uppercase tracking-wider'>
                 {senderName}
               </span>
             )}
             <div className='flex items-center gap-2'>
               <div
                 className={cn(
-                  'p-4 rounded-3xl border shadow-md flex flex-col gap-4 min-w-[260px] max-w-[320px] transition-all duration-300 relative',
+                  'p-4.5 rounded-2xl border shadow-sm flex flex-col gap-4 min-w-[260px] max-w-[320px] transition-all duration-200 relative',
                   hasEnded || isCheckingCall
-                    ? 'bg-slate-100 text-slate-500 border-slate-200'
+                    ? 'bg-slate-50 text-slate-400 border-slate-200/40'
                     : isMe
-                      ? 'bg-linear-to-br from-primary/95 to-primary text-white border-primary/20 hover:shadow-xl hover:scale-[1.02]'
-                      : 'bg-linear-to-br from-surface-container-high to-surface-container border-outline-variant/30 text-on-surface hover:shadow-xl hover:scale-[1.02]',
+                      ? 'bg-primary text-white border-primary-dim/15 shadow-sm shadow-primary/5'
+                      : 'bg-white border-slate-200/50 text-on-surface',
                 )}
               >
                 <div className='flex items-center gap-3.5'>
                   <div
                     className={cn(
-                      'w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm relative overflow-hidden',
-                      hasEnded || isCheckingCall ? 'bg-slate-200' : isMe ? 'bg-white/20' : 'bg-primary/10',
+                      'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border relative overflow-hidden',
+                      hasEnded || isCheckingCall 
+                        ? 'bg-slate-200/50 border-slate-300/30' 
+                        : isMe 
+                          ? 'bg-white/10 border-white/10' 
+                          : 'bg-primary/10 border-primary/15',
                     )}
                   >
                     {canJoinCall && (
-                      <span className='absolute inset-0 bg-primary/5 animate-ping opacity-70 rounded-full' />
+                      <span className='absolute inset-0 bg-primary/10 animate-ping opacity-70 rounded-full' />
                     )}
                     <Video
-                      size={20}
-                      className={hasEnded || isCheckingCall ? 'text-slate-500' : isMe ? 'text-white' : 'text-primary'}
+                      size={18}
+                      className={hasEnded || isCheckingCall ? 'text-on-surface-variant/60' : isMe ? 'text-white' : 'text-primary'}
                     />
                   </div>
                   <div className='flex-1 min-w-0'>
                     <h4
                       className={cn(
-                        'text-sm font-bold truncate',
-                        hasEnded || isCheckingCall ? 'text-slate-700' : isMe ? 'text-white' : 'text-on-surface',
+                        'text-xs sm:text-sm font-bold truncate leading-snug',
+                        hasEnded || isCheckingCall ? 'text-on-surface-variant/90' : isMe ? 'text-white' : 'text-on-surface',
                       )}
                     >
                       {callTitle}
                     </h4>
                     <p
                       className={cn(
-                        'text-[10px] mt-0.5 font-medium flex items-center gap-1.5',
-                        hasEnded || isCheckingCall ? 'text-slate-500' : isMe ? 'text-white/80' : 'text-primary',
+                        'text-[9px] mt-0.5 font-bold uppercase tracking-wider flex items-center gap-1.5',
+                        hasEnded || isCheckingCall ? 'text-on-surface-variant/60' : isMe ? 'text-white/80' : 'text-primary',
                       )}
                     >
                       <span
@@ -156,13 +206,13 @@ export const MessageItem = React.memo(
                   <Button
                     onClick={() => window.open(`/call/${callId}`, '_blank')}
                     className={cn(
-                      'w-full py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md border',
+                      'w-full py-2 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] border shadow-xs h-9 cursor-pointer',
                       isMe
-                        ? 'bg-white text-primary hover:bg-white/95 hover:shadow-lg border-white/10'
-                        : 'bg-primary text-white hover:bg-primary-dim hover:shadow-lg border-primary/15',
+                        ? 'bg-white text-primary hover:bg-white/95 border-white/10'
+                        : 'bg-primary text-white hover:bg-primary-dim border-primary/15',
                     )}
                   >
-                    <Video size={14} />
+                    <Video size={12} />
                     Tham gia cuộc họp
                   </Button>
                 )}
@@ -170,7 +220,7 @@ export const MessageItem = React.memo(
                 {/* Time on hover */}
                 <div
                   className={cn(
-                    'absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] text-on-surface-variant/60 opacity-0 group-hover/msg:opacity-100 transition-opacity duration-200 pointer-events-none',
+                    'absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-medium text-on-surface-variant/60 opacity-0 group-hover/msg:opacity-100 transition-opacity duration-200 pointer-events-none',
                     isMe ? 'right-full mr-3' : 'left-full ml-3',
                   )}
                 >
@@ -195,9 +245,9 @@ export const MessageItem = React.memo(
         {/* Avatar space */}
         <div className={cn('w-9 h-9 shrink-0', isMe && 'hidden')}>
           {!isMe && showAvatar && (
-            <Avatar className='h-9 w-9 shadow-sm'>
+            <Avatar className='h-9 w-9 border border-outline-variant/30 shadow-xs'>
               <AvatarImage src={avatarUrl} alt={senderName} />
-              <AvatarFallback className='bg-primary/10 text-primary font-bold'>
+              <AvatarFallback className='bg-primary/10 text-primary font-bold text-xs uppercase'>
                 {senderName?.[0]}
               </AvatarFallback>
             </Avatar>
@@ -212,28 +262,27 @@ export const MessageItem = React.memo(
           )}
         >
           {!isMe && isFirstOfGroup && (
-            <span className='text-[11px] font-medium text-on-surface-variant/70 ml-1 mb-1'>
+            <span className='text-[10px] font-bold text-on-surface-variant/70 ml-1 mb-1 uppercase tracking-wider'>
               {senderName}
             </span>
           )}
           <div className='flex items-center gap-2'>
             <div
               className={cn(
-                'px-4 py-2.5 text-[0.95rem] leading-relaxed wrap-break-words shadow-sm relative',
+                'px-4 py-2.5 text-xs sm:text-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] relative shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all duration-200',
                 isMe
-                  ? 'bg-primary text-on-primary rounded-2xl rounded-tr-none shadow-md'
-                  : 'bg-surface-container-highest text-on-surface rounded-2xl rounded-tl-none shadow-sm',
+                  ? 'bg-primary text-white rounded-2xl rounded-tr-none border border-primary-dim/15 shadow-sm shadow-primary/5'
+                  : 'bg-white border border-slate-200/50 text-on-surface rounded-2xl rounded-tl-none',
                 status === 'error' &&
                   'bg-error text-white border-2 border-error-container',
               )}
             >
-              {content}
+              {renderChatMessage(content, isMe)}
 
               {/* Time on hover */}
-
               <div
                 className={cn(
-                  'absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] text-on-surface-variant/60 opacity-0 group-hover/msg:opacity-100 transition-opacity duration-200 pointer-events-none',
+                  'absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-medium text-on-surface-variant/60 opacity-0 group-hover/msg:opacity-100 transition-opacity duration-200 pointer-events-none',
                   isMe ? 'right-full mr-3' : 'left-full ml-3',
                 )}
               >
@@ -242,7 +291,7 @@ export const MessageItem = React.memo(
             </div>
           </div>
           {status === 'error' && (
-            <span className='text-[10px] text-error font-medium mt-1 mr-1'>
+            <span className='text-[10px] text-error font-semibold mt-1 mr-1'>
               Gửi lỗi. Vui lòng thử lại.
             </span>
           )}

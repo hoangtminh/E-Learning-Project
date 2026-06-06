@@ -8,16 +8,15 @@ import React, {
   useMemo,
 } from 'react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 import {
   Phone,
   Video,
-  MoreVertical,
-  Image as ImageIcon,
-  Smile,
-  Send,
   Loader2,
-  MoreHorizontal,
   Info,
+  Send,
+  Sparkles,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,6 +32,7 @@ import { callsApi, CallStatus, CallType } from '@/api/calls';
 import { toast } from 'sonner';
 
 export const ChatWindow = () => {
+  const router = useRouter();
   const {
     currentConversation,
     messages,
@@ -50,7 +50,16 @@ export const ChatWindow = () => {
   const [prevScrollHeight, setPrevScrollHeight] = useState(0);
   const [isStartingCall, setIsStartingCall] = useState(false);
   const [callStatuses, setCallStatuses] = useState<Record<string, CallStatus>>({});
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const callInvitationIds = useMemo(() => {
     const ids = new Set<string>();
@@ -133,7 +142,7 @@ export const ChatWindow = () => {
         await loadMoreMessages();
       }
     },
-    [hasMore, isLoadingMessages],
+    [hasMore, isLoadingMessages, loadMoreMessages],
   );
 
   const formatSeparatorTime = useCallback((dateStr: string) => {
@@ -177,66 +186,78 @@ export const ChatWindow = () => {
 
   if (!currentConversation) {
     return (
-      <div className='flex-1 flex items-center justify-center bg-background/50 text-on-surface-variant/50'>
-        <div className='text-center'>
-          <div className='w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <Send size={40} className='text-primary/20' />
+      <div className='flex-1 flex items-center justify-center bg-surface-container-lowest text-on-surface-variant/50 relative'>
+        <div className='absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none' />
+        <div className='text-center relative z-10'>
+          <div className='w-16 h-16 bg-surface rounded-2xl border border-outline-variant/30 flex items-center justify-center mx-auto mb-4'>
+            <Send size={28} className='text-primary/45' />
           </div>
-          <p className='text-lg font-medium'>
-            Chọn một cuộc trò chuyện để bắt đầu
-          </p>
+          <p className='text-base font-bold text-on-surface mb-1'>Chọn cuộc trò chuyện</p>
+          <p className='text-xs text-on-surface-variant/70'>Hãy chọn một cuộc hội thoại từ danh sách để bắt đầu trao đổi học tập.</p>
         </div>
       </div>
     );
   }
 
+  const conversationName = currentConversation.title ||
+    currentConversation.members.find(
+      (m) => m.userId !== user?.userId,
+    )?.user.fullName ||
+    'Trò chuyện';
+
   return (
-    <div className='flex-1 flex overflow-hidden'>
-      <div className='flex-2 flex flex-col bg-surface-container-low relative border-r border-outline-variant/10'>
+    <div className='flex-1 flex overflow-hidden w-full relative bg-[#f8fafc]'>
+      <div className='flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative border-r border-slate-200/50'>
         {/* Header */}
-        <div className='h-14 px-6 flex items-center justify-between border-b border-outline-variant/60 bg-white shadow-[0_0_30px_rgba(125,211,252,0.05)] z-10'>
-          <div className='flex items-center gap-3'>
-            <Avatar className='h-8 w-8 border border-outline-variant/20'>
+        <div className='h-14 px-4 sm:px-6 flex items-center justify-between border-b border-slate-100 bg-white relative z-20'>
+          <div className='flex items-center gap-2 sm:gap-3.5 min-w-0'>
+            {/* Back button on mobile */}
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => router.push('/chat')}
+              className='md:hidden text-slate-500 hover:text-primary hover:bg-slate-50 rounded-xl h-9 w-9 transition-colors mr-1 cursor-pointer border-0 bg-transparent shrink-0'
+              aria-label="Back to chat list"
+            >
+              <ArrowLeft className="size-5" />
+            </Button>
+
+            <Avatar className='h-9 w-9 border border-outline-variant/20 shrink-0'>
               <AvatarImage
                 src={
                   currentConversation.members.find(
                     (m) => m.userId !== user?.userId,
                   )?.user.avatarUrl || ''
                 }
-                alt={currentConversation.title || 'Chat'}
+                alt={conversationName}
               />
-              <AvatarFallback>
-                {(currentConversation.title ||
-                  currentConversation.members.find(
-                    (m) => m.userId !== user?.userId,
-                  )?.user.fullName)?.[0] || '?'}
+              <AvatarFallback className='bg-primary/10 text-primary font-bold text-xs uppercase'>
+                {conversationName[0] || '?'}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <div className='font-semibold text-on-surface text-sm'>
-                {currentConversation.title ||
-                  currentConversation.members.find(
-                    (m) => m.userId !== user?.userId,
-                  )?.user.fullName ||
-                  'Trò chuyện'}
+            <div className='min-w-0'>
+              <div className='font-bold text-on-surface text-xs sm:text-sm truncate leading-snug'>
+                {conversationName}
               </div>
-              <div className='text-[10px] text-green-600 font-medium'>
-                Đang hoạt động
+              <div className='text-[10px] text-green-600 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5'>
+                <span className='w-1 h-1 rounded-full bg-green-500 animate-pulse' />
+                <span>Đang hoạt động</span>
               </div>
             </div>
           </div>
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-2 shrink-0'>
             <Button
               variant='ghost'
               size='icon'
               onClick={handleStartCall}
               disabled={isStartingCall}
-              className='text-on-surface-variant bg-surface-container-low/70 hover:bg-surface-container-high rounded-xl h-9 w-9 transition-colors'
+              className='text-slate-400 hover:text-primary hover:bg-slate-50 rounded-xl h-9 w-9 transition-colors cursor-pointer border-0 bg-transparent'
+              title='Gọi âm thanh'
             >
               {isStartingCall ? (
-                <Loader2 className='size-4 animate-spin' />
+                <Loader2 className='size-4 animate-spin text-primary' />
               ) : (
-                <Phone size={18} />
+                <Phone size={16} />
               )}
             </Button>
             <Button
@@ -244,12 +265,13 @@ export const ChatWindow = () => {
               size='icon'
               onClick={handleStartCall}
               disabled={isStartingCall}
-              className='text-on-surface-variant bg-surface-container-low/70 hover:bg-surface-container-high rounded-xl h-9 w-9 transition-colors'
+              className='text-slate-400 hover:text-primary hover:bg-slate-50 rounded-xl h-9 w-9 transition-colors cursor-pointer border-0 bg-transparent'
+              title='Gọi video'
             >
               {isStartingCall ? (
-                <Loader2 className='size-4 animate-spin' />
+                <Loader2 className='size-4 animate-spin text-primary' />
               ) : (
-                <Video size={18} />
+                <Video size={16} />
               )}
             </Button>
             <Button
@@ -257,13 +279,14 @@ export const ChatWindow = () => {
               size='icon'
               onClick={() => setShowInfo(!showInfo)}
               className={cn(
-                'rounded-xl h-9 w-9 transition-all',
+                'rounded-xl h-9 w-9 transition-all cursor-pointer border-0',
                 showInfo
-                  ? 'bg-primary text-on-primary hover:bg-primary-dim shadow-xs'
-                  : 'text-on-surface-variant hover:bg-surface-container-high'
+                  ? 'bg-primary text-white hover:bg-primary-dim shadow-xs'
+                  : 'text-slate-400 hover:bg-slate-50 hover:text-primary bg-transparent'
               )}
+              title='Thông tin cuộc trò chuyện'
             >
-              <Info size={18} />
+              <Info size={16} />
             </Button>
           </div>
         </div>
@@ -275,34 +298,34 @@ export const ChatWindow = () => {
           onScrollCapture={handleScroll}
         >
           {isLoadingMessages && (
-            <div className='flex justify-center py-4'>
-              <Loader2 className='animate-spin text-primary' size={20} />
+            <div className='flex justify-center py-5'>
+              <Loader2 className='animate-spin text-primary' size={20} strokeWidth={2} />
             </div>
           )}
           {messageLoadingError && !isLoadingMessages && (
-            <div className='flex flex-col items-center py-6 px-4 bg-error-container/20 rounded-2xl border border-error/10 mx-6 mb-4'>
-              <p className='text-sm text-error font-medium mb-3'>
+            <div className='flex flex-col items-center py-6 px-4 bg-error/5 rounded-2xl border border-error/15 mx-6 mb-4'>
+              <p className='text-xs text-error font-bold uppercase tracking-wider mb-3'>
                 Không thể tải tin nhắn
               </p>
               <Button
                 variant='outline'
                 size='sm'
                 onClick={() => retryLoadMessages()}
-                className='border-error/20 text-error hover:bg-error/5 rounded-full px-6'
+                className='border-error/20 text-error hover:bg-error/5 rounded-xl px-5 py-1 text-xs cursor-pointer'
               >
                 Thử lại
               </Button>
             </div>
           )}
           {!hasMore && !messageLoadingError && messages.length > 0 && (
-            <div className='flex flex-col items-center pt-8'>
-              <div className='h-px w-full bg-linear-to-r from-transparent via-outline-variant to-transparent mb-4' />
-              <p className='text-[11px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/40 bg-surface px-4 py-1 rounded-full border border-outline-variant/30'>
-                Đã tải hết tin nhắn
+            <div className='flex flex-col items-center pt-8 mb-4'>
+              <div className='h-px w-full bg-slate-200/50 mb-4' />
+              <p className='text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-white px-3 py-1 rounded-lg border border-slate-200/40 shadow-2xs'>
+                Đầu cuộc hội thoại
               </p>
             </div>
           )}
-          <div className='flex flex-col-reverse gap-1 min-h-full'>
+          <div className='flex flex-col-reverse gap-1 min-h-full pb-4'>
             {[...messages].map((msg, index, reversedArray) => {
               const isMe = msg.senderId === user?.userId;
 
@@ -348,8 +371,8 @@ export const ChatWindow = () => {
                     callStatus={callId ? callStatuses[callId] : undefined}
                   />
                   {showTimeSeparator && msg.createdAt && (
-                    <div className='flex justify-center my-6'>
-                      <span className='px-3 py-1 rounded-full bg-surface-container text-[11px] font-medium text-on-surface-variant/70 border border-outline-variant/20 shadow-sm'>
+                    <div className='flex justify-center my-5'>
+                      <span className='px-3 py-1 rounded-lg bg-white text-[10px] font-bold text-slate-400 border border-slate-200/40 shadow-2xs'>
                         {formatSeparatorTime(msg.createdAt)}
                       </span>
                     </div>
@@ -361,8 +384,14 @@ export const ChatWindow = () => {
           <div className='pt-2'></div>
         </ScrollArea>
 
-        {/* Footer */}
-        <ChatInput onSend={sendMessage} />
+        {/* Footer Input Bar */}
+        <ChatInput
+          onSend={sendMessage}
+          members={currentConversation?.members?.map((m) => ({
+            id: m.user.id,
+            name: m.user.fullName || 'User',
+          }))}
+        />
       </div>
 
       {/* Chat Info Sidebar */}
@@ -370,10 +399,13 @@ export const ChatWindow = () => {
         {showInfo && (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 288, opacity: 1 }}
+            animate={{ width: isMobile ? '100%' : 300, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="h-full flex-shrink-0 overflow-hidden"
+            className={cn(
+              "h-full flex-shrink-0 overflow-hidden relative border-l border-outline-variant/20 bg-white",
+              isMobile ? "absolute inset-y-0 right-0 w-full z-30" : "z-10"
+            )}
           >
             <ChatInfo onClose={() => setShowInfo(false)} />
           </motion.div>

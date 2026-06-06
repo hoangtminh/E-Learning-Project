@@ -39,6 +39,10 @@ export default function PostItem({ post }: PostItemProps) {
 
   const isAuthor =
     user?.userId === post?.authorId || user?.id === post?.authorId;
+
+  const canEdit = isAuthor;
+  const canDelete = isAuthor || classroom?.role === 'owner' || classroom?.role === 'admin';
+  
   const isEdited =
     post?.updatedAt &&
     post?.createdAt &&
@@ -142,32 +146,39 @@ export default function PostItem({ post }: PostItemProps) {
           </div>
         </div>
 
-        {isAuthor && !isSystemPost && (
+        {(canEdit || canDelete) && !isSystemPost && (
           <div className='relative'>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className='p-1 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors'
+              className='p-1 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors relative z-20'
             >
               <MoreHorizontal size={15} />
             </button>
             {showMenu && (
-              <div className='absolute right-0 mt-1.5 w-32 bg-white rounded-md shadow-md border border-slate-200 z-10 py-1 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100'>
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setShowMenu(false);
-                  }}
-                  className='w-full px-3.5 py-2 text-left text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2'
-                >
-                  <Edit2 size={13} className='text-slate-400' /> Chỉnh sửa
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className='w-full px-3.5 py-2 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2'
-                >
-                  <Trash2 size={13} className='text-red-400' /> Xóa
-                </button>
-              </div>
+              <>
+                <div className='fixed inset-0 z-10' onClick={() => setShowMenu(false)} />
+                <div className='absolute right-0 mt-1.5 w-32 bg-white rounded-md shadow-md border border-slate-200 z-20 py-1 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100'>
+                  {canEdit && (
+                    <button
+                      onClick={() => {
+                        setIsEditing(true);
+                        setShowMenu(false);
+                      }}
+                      className='w-full px-3.5 py-2 text-left text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2'
+                    >
+                      <Edit2 size={13} className='text-slate-400' /> Chỉnh sửa
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={handleDelete}
+                      className='w-full px-3.5 py-2 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2'
+                    >
+                      <Trash2 size={13} className='text-red-400' /> Xóa
+                    </button>
+                  )}
+                </div>
+              </>
             )}
           </div>
         )}
@@ -180,6 +191,7 @@ export default function PostItem({ post }: PostItemProps) {
             value={editContent}
             onChange={setEditContent}
             placeholder='Nhập nội dung chỉnh sửa...'
+            members={classroom?.members?.map(m => m.user)}
           />
           <div className='flex justify-end gap-2 mt-2.5'>
             <Button

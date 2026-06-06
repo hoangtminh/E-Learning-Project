@@ -21,6 +21,19 @@ export default function PostList() {
     }
   }, [classroom, fetchPosts]);
 
+  useEffect(() => {
+    const handleRefresh = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (classroom && customEvent.detail?.classroomId === classroom.id) {
+        fetchPosts(classroom.id);
+      }
+    };
+    window.addEventListener('classroom:refresh-posts', handleRefresh);
+    return () => {
+      window.removeEventListener('classroom:refresh-posts', handleRefresh);
+    };
+  }, [classroom, fetchPosts]);
+
   const prevPostsLengthRef = useRef(posts.length);
 
   useEffect(() => {

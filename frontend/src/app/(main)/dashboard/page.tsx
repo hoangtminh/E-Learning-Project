@@ -37,11 +37,11 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#006382] to-[#0091aa] p-8 text-white shadow-xl shadow-[#006382]/20">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#006382] to-[#0091aa] p-6 sm:p-8 text-white shadow-xl shadow-[#006382]/20">
         <div className="relative z-10">
-          <h1 className="text-3xl font-black mb-2 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black mb-2 tracking-tight">
             Chào mừng trở lại, {user?.fullName || 'Học viên'}! 👋
           </h1>
           <p className="text-white/80 max-w-xl text-sm leading-relaxed">

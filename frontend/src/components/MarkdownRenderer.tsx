@@ -15,24 +15,48 @@ export function MarkdownRenderer({ content, className = '' }: { content: string;
     const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`|\[.*?\]\(.*?\))/g;
     const parts = text.split(regex);
     
-    return parts.map((part, index) => {
+    const splitByMentions = (txt: string, keyPrefix: string): React.ReactNode[] => {
+      if (!txt) return [txt];
+      const subRegex = /(@all)/gi;
+      const subParts = txt.split(subRegex);
+      return subParts.map((subPart, subIndex) => {
+        if (subPart.toLowerCase() === '@all') {
+          return (
+            <span key={`${keyPrefix}-all-${subIndex}`} className="px-1.5 py-0.5 bg-sky-100 text-sky-700 font-extrabold rounded text-[11px] inline-flex items-center gap-0.5 mx-0.5 border border-sky-200">
+              @all
+            </span>
+          );
+        }
+        return subPart;
+      });
+    };
+
+    return parts.flatMap<React.ReactNode>((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="font-extrabold text-slate-900">{part.slice(2, -2)}</strong>;
+        return [<strong key={index} className="font-extrabold text-slate-900">{part.slice(2, -2)}</strong>];
       }
       if (part.startsWith('*') && part.endsWith('*')) {
-        return <em key={index} className="italic text-slate-800">{part.slice(1, -1)}</em>;
+        return [<em key={index} className="italic text-slate-800">{part.slice(1, -1)}</em>];
       }
       if (part.startsWith('`') && part.endsWith('`')) {
-        return <code key={index} className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded font-mono text-xs text-rose-600">{part.slice(1, -1)}</code>;
+        return [<code key={index} className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded font-mono text-xs text-rose-600">{part.slice(1, -1)}</code>];
       }
       if (part.startsWith('[') && part.includes('](') && part.endsWith(')')) {
         const match = part.match(/\[(.*?)\]\((.*?)\)/);
         if (match) {
           const [, label, url] = match;
-          return <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="text-sky-650 hover:underline font-extrabold text-sky-650">{label}</a>;
+          const isUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/') || url.startsWith('mailto:');
+          if (!isUrl) {
+            return [
+              <span key={index} className="px-1.5 py-0.5 bg-sky-100 text-sky-700 font-extrabold rounded text-[11px] inline-flex items-center gap-0.5 mx-0.5 border border-sky-200">
+                @{label}
+              </span>
+            ];
+          }
+          return [<a key={index} href={url} target="_blank" rel="noopener noreferrer" className="text-sky-650 hover:underline font-extrabold text-sky-650">{label}</a>];
         }
       }
-      return part;
+      return splitByMentions(part, `txt-${index}`);
     });
   };
 

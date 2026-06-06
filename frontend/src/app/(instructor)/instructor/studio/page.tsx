@@ -117,26 +117,26 @@ export default function InstructorStudioPage() {
   return (
     <div className="min-h-full bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-5">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sm:py-5">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-              <span className="material-symbols-outlined text-sky-600 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <span className="material-symbols-outlined text-sky-600 text-2xl sm:text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
               Instructor Studio
             </h1>
-            <p className="text-slate-500 text-sm mt-1">Quản lý khóa học của bạn</p>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1">Quản lý khóa học của bạn</p>
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all shadow-sm"
+            className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-xs sm:text-sm hover:bg-sky-600 transition-all shadow-sm"
           >
-            <span className="material-symbols-outlined text-lg">add</span>
+            <span className="material-symbols-outlined text-base sm:text-lg">add</span>
             Tạo khóa học mới
           </button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Create Form Modal */}
         {showForm && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">

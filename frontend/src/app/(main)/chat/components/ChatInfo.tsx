@@ -6,15 +6,39 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { UserPlus, LogOut, Info, Settings, Shield, X } from 'lucide-react';
+import { UserPlus, LogOut, Info, Settings, Shield, X, Bell, BellOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { appConfirm } from '@/components/ui/app-dialog-provider';
+import { toast } from 'sonner';
 
 export const ChatInfo = ({ onClose }: { onClose: () => void }) => {
-  const { currentConversation, removeMember } = useChat();
+  const { currentConversation, removeMember, toggleChatNotifications } = useChat();
   const { user } = useAuth();
+  const [isTogglingNotifications, setIsTogglingNotifications] = React.useState(false);
 
   if (!currentConversation) return null;
+
+  const currentMember = currentConversation.members.find(
+    (m) => m.userId === user?.userId,
+  );
+  const notificationsEnabled = currentMember?.notificationsEnabled ?? true;
+
+  const handleToggleNotifications = async () => {
+    if (!currentConversation) return;
+    setIsTogglingNotifications(true);
+    try {
+      await toggleChatNotifications(currentConversation.id, !notificationsEnabled);
+      toast.success(
+        !notificationsEnabled
+          ? 'Đã bật thông báo cuộc trò chuyện này!'
+          : 'Đã tắt thông báo cuộc trò chuyện này!',
+      );
+    } catch (e: any) {
+      toast.error(e.message || 'Lỗi cập nhật thông báo');
+    } finally {
+      setIsTogglingNotifications(false);
+    }
+  };
 
   const otherMembers = currentConversation.members.filter(
     (m) => m.userId !== user?.userId,
@@ -72,6 +96,24 @@ export const ChatInfo = ({ onClose }: { onClose: () => void }) => {
 
           {/* Actions Quick Access */}
           <div className='flex justify-center gap-4 mb-8'>
+            <Button
+              variant='outline'
+              size='icon'
+              disabled={isTogglingNotifications}
+              onClick={handleToggleNotifications}
+              className={`rounded-xl size-11 border-outline-variant/50 transition-all duration-200 ${
+                notificationsEnabled
+                  ? 'hover:bg-primary-container/20 hover:text-primary hover:border-primary/20 text-primary border-primary/20 bg-primary-container/5'
+                  : 'hover:bg-surface-container-high text-on-surface-variant'
+              }`}
+              title={notificationsEnabled ? 'Tắt thông báo trò chuyện' : 'Bật thông báo trò chuyện'}
+            >
+              {notificationsEnabled ? (
+                <Bell className='size-5 text-sky-600' />
+              ) : (
+                <BellOff className='size-5 text-slate-400' />
+              )}
+            </Button>
             <Button
               variant='outline'
               size='icon'

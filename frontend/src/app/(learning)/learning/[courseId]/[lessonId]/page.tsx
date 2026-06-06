@@ -9,6 +9,7 @@ import { checkEnrollment } from '@/api/enrollment';
 import { SectionWithLessons, LessonItem } from '@/api/instructor';
 import { getCourseProgress, saveLessonProgress, UserProgress } from '@/api/progress';
 import { useProgress } from '@/hooks/useProgress';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -38,6 +39,17 @@ export default function LearningLessonPage() {
   const playerRef = useRef<any>(null);
   const textContainerRef = useRef<HTMLDivElement>(null);
   const textSentinelRef = useRef<HTMLDivElement>(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024); // 1024px matches lg breakpoint
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchAll();
@@ -218,14 +230,25 @@ export default function LearningLessonPage() {
   return (
     <div className="min-h-full bg-[#0f1524] text-white flex flex-col">
       {/* Top bar - chỉ back + progress */}
-      <header className="bg-[#161d2e] border-b border-white/10 px-4 py-3 flex items-center justify-between shrink-0">
-        <Link
-          href={`/learning/${courseId}`}
-          className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm"
-        >
-          <span className="material-symbols-outlined text-lg">arrow_back</span>
-          <span className="hidden sm:inline">Danh sách bài</span>
-        </Link>
+      <header className="bg-[#161d2e] border-b border-white/10 px-4 py-3 flex items-center justify-between shrink-0 gap-3">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/learning/${courseId}`}
+            className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm"
+          >
+            <span className="material-symbols-outlined text-lg">arrow_back</span>
+            <span className="hidden sm:inline">Danh sách bài</span>
+          </Link>
+
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden flex items-center gap-1 text-slate-400 hover:text-white transition-colors text-xs border border-white/10 bg-white/5 hover:bg-white/10 rounded-lg px-2.5 py-1.5 cursor-pointer shrink-0"
+            aria-label="Toggle lesson syllabus"
+          >
+            <span className="material-symbols-outlined text-[16px]">menu</span>
+            <span>Nội dung</span>
+          </button>
+        </div>
 
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <span>{currentIndex + 1}/{totalLessons}</span>
@@ -302,7 +325,7 @@ export default function LearningLessonPage() {
                 })()}
               </div>
             ) : currentLesson?.type === 'text' || currentLesson?.body ? (
-              <div ref={textContainerRef} className="absolute inset-0 overflow-y-auto p-8 bg-[#1a2235]">
+              <div ref={textContainerRef} className="absolute inset-0 overflow-y-auto p-4 sm:p-8 bg-[#1a2235]">
                 <div className="max-w-3xl mx-auto prose prose-invert prose-sm">
                   <h2>{currentLesson.title}</h2>
                   <div dangerouslySetInnerHTML={{ __html: currentLesson.body || '<p class="text-slate-400">Nội dung trống.</p>' }} />
@@ -471,6 +494,105 @@ export default function LearningLessonPage() {
           </div>
         </aside>
       </div>
+
+      {/* Mobile Syllabus Drawer */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="fixed inset-0 bg-black z-40 lg:hidden backdrop-blur-xs"
+            />
+            {/* Drawer */}
+            <motion.aside
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="fixed right-0 top-0 bottom-0 w-80 bg-[#161d2e] z-50 lg:hidden border-l border-white/10 flex flex-col overflow-hidden shadow-2xl"
+            >
+              <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
+                <div>
+                  <h2 className="text-sm font-bold text-white">Nội dung khóa học</h2>
+                  <p className="text-[11px] text-slate-500 mt-0.5">{totalLessons} bài học</p>
+                </div>
+                <button
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border-0 bg-transparent cursor-pointer"
+                  aria-label="Close outline drawer"
+                >
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto divide-y divide-white/5">
+                {sections.map((section: any, sIdx: number) => (
+                  <div key={section.id}>
+                    <button
+                      onClick={() => toggleSection(section.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors border-0 bg-transparent cursor-pointer"
+                    >
+                      <span className={`material-symbols-outlined text-slate-500 text-sm transition-transform ${expandedSections.has(section.id) ? 'rotate-90' : ''}`}>
+                        chevron_right
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-300 truncate">
+                          Phần {sIdx + 1}: {section.title || 'Chưa đặt tên'}
+                        </p>
+                        <p className="text-[10px] text-slate-500">{section.lessons?.length || 0} bài</p>
+                      </div>
+                    </button>
+
+                    {expandedSections.has(section.id) && (
+                      <div className="pb-2">
+                        {(section.lessons || []).map((lesson: any) => {
+                          const isActive = lesson.id === lessonId;
+                          const progress = progresses.find((p) => p.lessonId === lesson.id);
+                          const isCompleted = progress?.isCompleted ?? false;
+                          return (
+                            <div
+                              key={lesson.id}
+                              className={`flex items-center justify-between px-6 py-2 text-sm transition-colors border-l-2 ${isActive
+                                  ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500'
+                                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border-transparent'
+                                }`}
+                            >
+                              <Link
+                                href={`/learning/${courseId}/${lesson.id}`}
+                                className="flex items-center gap-3 flex-1 min-w-0"
+                                onClick={() => setIsMobileSidebarOpen(false)}
+                              >
+                                <span className="material-symbols-outlined text-base shrink-0" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                                  {lesson.type === 'video' ? 'play_circle' : lesson.type === 'quiz' ? 'quiz' : 'article'}
+                                </span>
+                                <span className="truncate text-xs">{lesson.title}</span>
+                              </Link>
+
+                              <span
+                                className={`p-1 flex items-center justify-center shrink-0 ml-2 ${isCompleted ? 'text-emerald-400' : 'text-slate-600'
+                                  }`}
+                                title={isCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành'}
+                              >
+                                <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: isCompleted ? "'FILL' 1" : "'FILL' 0" }}>
+                                  {isCompleted ? 'check_circle' : 'radio_button_unchecked'}
+                                </span>
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

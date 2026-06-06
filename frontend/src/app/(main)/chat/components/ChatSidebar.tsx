@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Plus, Loader2 } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConversationItem } from './ConversationItem';
 import { useChat } from '@/contexts/ChatContext';
-
 import { CreateChatDialog } from './CreateChatDialog';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -40,33 +39,34 @@ export const ChatSidebar = () => {
     getDisplayTitle(c).toLowerCase().includes(search.toLowerCase()),
   );
 
-  console.log(conversations);
-
   return (
-    <div className='flex-1 h-full glass-panel border-r border-outline-variant/10 flex flex-col overflow-hidden'>
-      <div className='p-4 border-b border-outline-variant/10 flex flex-col gap-3'>
+    <div className='flex-1 h-full bg-white border-r border-outline-variant/30 flex flex-col overflow-hidden'>
+      <div className='p-4.5 border-b border-outline-variant/20 flex flex-col gap-3.5'>
         <div className='flex items-center justify-between'>
-          <h3 className='font-semibold text-on-surface text-base'>Cuộc hội thoại</h3>
+          <h3 className='font-black text-on-surface text-sm sm:text-base uppercase tracking-wider'>
+            Hội thoại
+          </h3>
           <CreateChatDialog />
         </div>
         <div className='relative w-full'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 size-4' />
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 size-4' />
           <Input
-            placeholder='Tìm kiếm cuộc trò chuyện...'
-            className='w-full pl-9 bg-surface-container-lowest border-outline-variant rounded-xl h-8 text-sm focus-visible:ring-primary/20'
+            placeholder='Tìm kiếm trò chuyện...'
+            className='w-full pl-9 bg-surface-container-lowest border-outline-variant/40 rounded-xl h-9 text-xs focus-visible:ring-primary/20 focus:bg-white transition-colors'
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setSearch(setSearch => setSearch = e.target.value)}
           />
         </div>
       </div>
 
-      <ScrollArea className='flex-1 px-1.5'>
+      <ScrollArea className='flex-1 px-2 py-2.5'>
         {isLoading ? (
-          <div className='flex justify-center py-8'>
-            <Loader2 className='animate-spin text-primary/50' size={24} />
+          <div className='flex flex-col items-center justify-center py-10 gap-2'>
+            <Loader2 className='size-5 animate-spin text-primary' />
+            <p className='text-[10px] text-on-surface-variant/60 font-bold uppercase tracking-wider'>Đang tải...</p>
           </div>
         ) : filteredConversations.length > 0 ? (
-          <div className='p-2 space-y-1.5'>
+          <div className='space-y-1'>
             {filteredConversations.map((conv) => (
               <ConversationItem
                 key={conv.id}
@@ -82,7 +82,7 @@ export const ChatSidebar = () => {
           </div>
         ) : (
           <div className='flex flex-col items-center justify-center py-12 px-4 text-center'>
-            <p className='text-sm text-on-surface-variant/50'>
+            <p className='text-xs text-on-surface-variant/60 font-medium'>
               {search
                 ? 'Không tìm thấy cuộc trò chuyện nào'
                 : 'Chưa có cuộc trò chuyện nào'}

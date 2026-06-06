@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Security } from '@hugeicons/core-free-icons';
-import { Video } from 'lucide-react';
+import { Video, Bell, BellOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { StartCallModal } from './StartCallModal';
 import { callsApi, CallType } from '@/api/calls';
@@ -29,11 +29,35 @@ export default function ClassroomLayout({
   const { classroomId } = useParams();
   const pathname = usePathname();
   const router = useRouter();
-  const { classroom, loadingClassroom, fetchClassroom } = useClassrooms();
+  const { classroom, loadingClassroom, fetchClassroom, toggleClassroomNotifications } = useClassrooms();
   const { createPost } = usePosts();
   const { user } = useAuth();
   const [isConfirmCallOpen, setIsConfirmCallOpen] = useState(false);
   const [isStartingCall, setIsStartingCall] = useState(false);
+  const [isTogglingNotifications, setIsTogglingNotifications] = useState(false);
+
+  const currentUserId = user?.userId || user?.id;
+  const currentMember = classroom?.members?.find(
+    (m) => m.userId === currentUserId,
+  );
+  const notificationsEnabled = currentMember?.notificationsEnabled ?? true;
+
+  const handleToggleNotifications = async () => {
+    if (!classroom?.id) return;
+    setIsTogglingNotifications(true);
+    try {
+      await toggleClassroomNotifications(classroom.id, !notificationsEnabled);
+      toast.success(
+        !notificationsEnabled
+          ? 'Đã bật thông báo cho lớp học này!'
+          : 'Đã tắt thông báo cho lớp học này!',
+      );
+    } catch (e: any) {
+      toast.error(e.message || 'Lỗi cập nhật thông báo');
+    } finally {
+      setIsTogglingNotifications(false);
+    }
+  };
 
   useEffect(() => {
     if (classroomId) fetchClassroom(classroomId as string);
@@ -52,11 +76,7 @@ export default function ClassroomLayout({
       </div>
     );
 
-  const currentUserId = user?.userId || user?.id;
   const isOwner = !!currentUserId && currentUserId === classroom.ownerId;
-  const currentMember = classroom.members?.find(
-    (m) => m.userId === currentUserId,
-  );
   const isOwnerOrAdmin =
     isOwner ||
     currentMember?.role === 'admin' ||
@@ -189,6 +209,28 @@ export default function ClassroomLayout({
 
             {/* Actions */}
             <div className='flex items-center justify-end gap-1.5 md:gap-2 shrink-0'>
+              {currentMember && (
+                <Button
+                  variant='outline'
+                  disabled={isTogglingNotifications}
+                  onClick={handleToggleNotifications}
+                  className={`flex items-center justify-center rounded-md text-xs md:text-sm font-bold shadow-sm h-8 md:h-9 w-8 md:w-auto px-0 md:px-3.5 transition-all ${
+                    notificationsEnabled
+                      ? 'text-sky-600 border-sky-200 hover:bg-sky-50'
+                      : 'text-slate-500 border-slate-200 hover:bg-slate-50'
+                  }`}
+                  title={notificationsEnabled ? 'Tắt thông báo lớp học' : 'Bật thông báo lớp học'}
+                >
+                  {notificationsEnabled ? (
+                    <Bell size={14} className='md:mr-2 text-sky-500' />
+                  ) : (
+                    <BellOff size={14} className='md:mr-2 text-slate-400' />
+                  )}
+                  <span className='hidden md:inline'>
+                    {notificationsEnabled ? 'Thông báo: Bật' : 'Thông báo: Tắt'}
+                  </span>
+                </Button>
+              )}
               {isOwnerOrAdmin && (
                 <Button
                   variant='outline'

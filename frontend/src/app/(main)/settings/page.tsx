@@ -61,14 +61,14 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black text-[#252f43]">Cài đặt</h1>
-        <p className="text-sm text-[#525b72] mt-1">Quản lý tài khoản và tuỳ chỉnh trải nghiệm học tập của bạn</p>
+        <h1 className="text-xl sm:text-2xl font-black text-[#252f43]">Cài đặt</h1>
+        <p className="text-xs sm:text-sm text-[#525b72] mt-1">Quản lý tài khoản và tuỳ chỉnh trải nghiệm học tập của bạn</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 sm:gap-8">
         {/* Sidebar tabs */}
         <div className="md:col-span-1">
           <nav className="bg-white rounded-2xl border border-[#a3adc7]/20 shadow-sm p-2 space-y-1">
@@ -96,7 +96,7 @@ export default function SettingsPage() {
 
           {/* ── Account Tab ── */}
           {activeTab === 'account' && (
-            <div className="bg-white rounded-3xl border border-[#a3adc7]/20 shadow-sm p-8 space-y-6">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#a3adc7]/20 shadow-sm p-4 sm:p-6 md:p-8 space-y-6">
               <h2 className="text-lg font-black text-[#252f43]">Thông tin tài khoản</h2>
 
               {accountMsg && (
@@ -162,7 +162,7 @@ export default function SettingsPage() {
 
           {/* ── Security Tab ── */}
           {activeTab === 'security' && (
-            <div className="bg-white rounded-3xl border border-[#a3adc7]/20 shadow-sm p-8 space-y-6">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#a3adc7]/20 shadow-sm p-4 sm:p-6 md:p-8 space-y-6">
               <h2 className="text-lg font-black text-[#252f43]">Đổi mật khẩu</h2>
               <p className="text-sm text-[#525b72]">Để bảo vệ tài khoản, hãy sử dụng mật khẩu mạnh và không chia sẻ với ai.</p>
 
@@ -269,7 +269,7 @@ export default function SettingsPage() {
 
           {/* ── Notifications Tab ── */}
           {activeTab === 'notifications' && (
-            <div className="bg-white rounded-3xl border border-[#a3adc7]/20 shadow-sm p-8 space-y-6">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#a3adc7]/20 shadow-sm p-4 sm:p-6 md:p-8 space-y-6">
               <h2 className="text-lg font-black text-[#252f43]">Cài đặt thông báo</h2>
               <p className="text-sm text-[#525b72]">Chọn cách bạn muốn nhận thông báo từ nền tảng.</p>
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { callsApi, Call, CallType, CallStatus } from '@/api/calls';
+import { motion } from 'framer-motion';
 
 type SearchedUser = {
   id: string;
@@ -11,6 +12,7 @@ type SearchedUser = {
   avatarUrl: string | null;
   role: string;
 };
+
 import {
   Search,
   PhoneCall,
@@ -22,6 +24,7 @@ import {
   AlertCircle,
   PhoneOff,
   VideoOff,
+  Plus,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -160,20 +163,19 @@ export default function CallPage() {
   };
 
   return (
-    <main className='flex min-h-full flex-1 overflow-y-auto bg-slate-50 p-4 text-slate-900 sm:p-6'>
-      <div className='mx-auto flex w-full max-w-7xl flex-col gap-5'>
+    <main className='flex-1 overflow-y-auto bg-surface-container-lowest p-6 md:p-12 text-on-surface w-full pb-16'>
+      <div className='max-w-5xl mx-auto flex flex-col gap-6 relative'>
+        <div className='absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none' />
+
         {/* Header Block */}
-        <div className='flex flex-col items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center'>
-          <div className='space-y-1.5 z-10'>
-            <h1 className='text-2xl font-bold text-slate-900 flex items-center gap-3 tracking-tight'>
-              <Video className='size-9 text-primary animate-pulse shrink-0' />
+        <div className='flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-outline-variant/30 pb-6 relative z-10'>
+          <div className='space-y-1'>
+            <h1 className='text-2xl font-black text-on-surface flex items-center gap-3 tracking-tight'>
+              <Video className='size-7 text-primary shrink-0' />
               Cuộc họp & Cuộc gọi
             </h1>
-            <p className='text-sm text-slate-600 max-w-3xl'>
-              Khởi tạo cuộc họp tức thì (Private / Public), tìm kiếm kết nối
-              video 1:1, và quản lý lịch sử cuộc gọi. Các tính năng cuộc họp lớp
-              hoặc nhóm được tạo trực tiếp ngay trong lớp học hoặc kênh chat
-              tương ứng.
+            <p className='text-xs sm:text-sm text-on-surface-variant/85 max-w-2xl leading-relaxed'>
+              Khởi tạo cuộc họp tức thì, kết nối video 1:1, và quản lý lịch sử cuộc gọi. Các tính năng cuộc họp lớp hoặc nhóm được tạo trực tiếp ngay trong lớp học hoặc kênh chat tương ứng.
             </p>
           </div>
           <Button
@@ -181,349 +183,369 @@ export default function CallPage() {
             size='icon'
             onClick={loadCallsData}
             disabled={loading}
-            className='rounded-lg bg-surface hover:bg-primary/10 hover:text-primary transition-all shadow-sm z-10'
+            className='rounded-xl border-outline-variant/40 hover:bg-primary/5 hover:text-primary active:scale-[0.98] transition-all self-start md:self-center shrink-0 w-10 h-10 shadow-xs'
             title='Làm mới dữ liệu'
           >
-            <RefreshCw className={`size-5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
 
         {error && (
-          <div className='bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3.5 rounded-lg text-sm font-medium flex items-center gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200'>
-            <AlertCircle className='size-5 shrink-0' />
+          <div className='bg-error/10 border border-error/20 text-error px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200 z-10'>
+            <AlertCircle className='size-4.5 shrink-0' />
             <span>{error}</span>
           </div>
         )}
 
         {/* Dashboard Content split in two columns */}
-        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 items-start'>
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative z-10'>
           {/* LEFT: Search User & Custom call creations */}
           <div className='lg:col-span-5 space-y-6'>
             {/* Instant Custom Call Creator Card */}
-            <Card className='rounded-xl border-outline-variant bg-surface-container-lowest shadow-sm'>
-              <CardHeader className='pb-4 border-b border-outline-variant'>
-                <CardTitle className='text-lg font-bold flex items-center gap-2'>
-                  <Video className='size-5 text-primary' />
-                  Tạo cuộc họp nhanh
-                </CardTitle>
-                <CardDescription>
-                  Tạo cuộc họp Private hoặc Public tức thì và nhận đường dẫn
-                  chia sẻ.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='pt-6 space-y-4'>
-                <div className='space-y-2'>
-                  <label className='text-xs font-semibold text-on-surface-variant/80'>
-                    Tiêu đề cuộc họp
-                  </label>
-                  <Input
-                    type='text'
-                    placeholder='Ví dụ: Thảo luận bài tập nhóm...'
-                    value={newCallTitle}
-                    onChange={(e) => setNewCallTitle(e.target.value)}
-                    className='rounded-xl border-outline-variant focus-visible:ring-primary/20 h-10 text-sm'
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <label className='text-xs font-semibold text-on-surface-variant/80'>
-                    Chế độ bảo mật
-                  </label>
-                  <div className='grid grid-cols-2 gap-2.5'>
-                    <button
-                      type='button'
-                      onClick={() => setNewCallType(CallType.PRIVATE)}
-                      className={`p-3 rounded-lg border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                        newCallType === CallType.PRIVATE
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-outline-variant bg-surface hover:bg-surface-variant/10 text-on-surface-variant'
-                      }`}
-                    >
-                      <span>Riêng tư (Private)</span>
-                      <span className='text-[9px] font-normal opacity-70'>
-                        Chủ phòng duyệt vào
-                      </span>
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => setNewCallType(CallType.PUBLIC)}
-                      className={`p-3 rounded-lg border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                        newCallType === CallType.PUBLIC
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-outline-variant bg-surface hover:bg-surface-variant/10 text-on-surface-variant'
-                      }`}
-                    >
-                      <span>Công khai (Public)</span>
-                      <span className='text-[9px] font-normal opacity-70'>
-                        Vào tự do bằng link
-                      </span>
-                    </button>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              <Card className='rounded-2xl border-outline-variant/30 bg-white shadow-xs overflow-hidden'>
+                <CardHeader className='pb-4 border-b border-outline-variant/20'>
+                  <CardTitle className='text-sm font-bold uppercase tracking-wider text-on-surface flex items-center gap-2'>
+                    <Plus className='size-4 text-primary' />
+                    Tạo cuộc họp nhanh
+                  </CardTitle>
+                  <CardDescription className='text-xs text-on-surface-variant/75 mt-1'>
+                    Tạo cuộc họp Private hoặc Public tức thì và nhận đường dẫn chia sẻ.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='pt-5 space-y-4'>
+                  <div className='space-y-1.5'>
+                    <label className='text-xs font-bold text-on-surface-variant/80'>
+                      Tiêu đề cuộc họp
+                    </label>
+                    <Input
+                      type='text'
+                      placeholder='Ví dụ: Thảo luận bài tập nhóm...'
+                      value={newCallTitle}
+                      onChange={(e) => setNewCallTitle(e.target.value)}
+                      className='rounded-xl border-outline-variant/40 focus-visible:ring-primary/20 h-10 text-xs'
+                    />
                   </div>
-                </div>
 
-                <Button
-                  onClick={handleCreateMeeting}
-                  disabled={creating}
-                  className='w-full rounded-xl bg-primary hover:bg-primary-dim text-white font-bold h-10 mt-2 shadow-sm text-sm active:scale-95 transition-all'
-                >
-                  {creating ? 'Đang khởi tạo...' : 'Tạo cuộc họp'}
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className='rounded-xl border-outline-variant bg-surface-container-lowest shadow-sm'>
-              <CardHeader className='pb-4 border-b border-outline-variant'>
-                <CardTitle className='text-lg font-bold flex items-center gap-2'>
-                  <PhoneCall className='size-5 text-primary' />
-                  Bắt đầu cuộc gọi mới
-                </CardTitle>
-                <CardDescription>
-                  Nhập tên hoặc email để tìm kiếm và gọi video trực tiếp cho
-                  thành viên khác.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='pt-6 space-y-4'>
-                <div className='relative'>
-                  <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 size-4' />
-                  <Input
-                    type='text'
-                    placeholder='Tìm tên hoặc email...'
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className='pl-9 rounded-lg bg-surface border-outline-variant focus-visible:ring-primary/20 h-11'
-                  />
-                </div>
-
-                <ScrollArea className='h-[260px] pr-2'>
-                  {searching ? (
-                    <div className='flex flex-col items-center justify-center py-16 gap-3'>
-                      <div className='w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin'></div>
-                      <p className='text-xs text-on-surface-variant/70 font-medium'>
-                        Đang tìm kiếm...
-                      </p>
+                  <div className='space-y-1.5'>
+                    <label className='text-xs font-bold text-on-surface-variant/80'>
+                      Chế độ bảo mật
+                    </label>
+                    <div className='grid grid-cols-2 gap-2.5'>
+                      <button
+                        type='button'
+                        onClick={() => setNewCallType(CallType.PRIVATE)}
+                        className={`p-3 rounded-xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
+                          newCallType === CallType.PRIVATE
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-outline-variant/30 bg-surface hover:bg-outline-variant/10 text-on-surface-variant'
+                        }`}
+                      >
+                        <span>Riêng tư (Private)</span>
+                        <span className='text-[9px] font-normal opacity-70'>
+                          Chủ phòng duyệt vào
+                        </span>
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => setNewCallType(CallType.PUBLIC)}
+                        className={`p-3 rounded-xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
+                          newCallType === CallType.PUBLIC
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-outline-variant/30 bg-surface hover:bg-outline-variant/10 text-on-surface-variant'
+                        }`}
+                      >
+                        <span>Công khai (Public)</span>
+                        <span className='text-[9px] font-normal opacity-70'>
+                          Vào tự do bằng link
+                        </span>
+                      </button>
                     </div>
-                  ) : searchQuery.trim() === '' ? (
-                    <div className='flex flex-col items-center justify-center py-16 text-center text-on-surface-variant/50 px-4'>
-                      <User className='size-12 mb-3 text-on-surface-variant/20' />
-                      <h4 className='font-bold text-sm text-on-surface/75'>
-                        Chưa có thông tin tìm kiếm
-                      </h4>
-                      <p className='text-xs max-w-[200px] mt-1'>
-                        Hãy gõ tên hoặc email người dùng ở trên để liên hệ.
-                      </p>
-                    </div>
-                  ) : searchedUsers.length === 0 ? (
-                    <div className='flex flex-col items-center justify-center py-16 text-center text-on-surface-variant/50 px-4'>
-                      <VideoOff className='size-12 mb-3 text-on-surface-variant/20' />
-                      <h4 className='font-bold text-sm text-on-surface/75'>
-                        Không tìm thấy kết quả
-                      </h4>
-                      <p className='text-xs max-w-[200px] mt-1'>
-                        Thành viên này không tồn tại hoặc thông tin chưa chính
-                        xác.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className='space-y-2.5'>
-                      {searchedUsers.map((user) => (
-                        <div
-                          key={user.id}
-                          className='flex items-center justify-between p-3 rounded-lg border border-outline/10 bg-surface/50 hover:bg-primary/5 hover:border-primary/20 transition-all group'
-                        >
-                          <div className='flex items-center gap-3 min-w-0'>
-                            <Avatar className='size-10 border border-outline-variant shrink-0'>
-                              <AvatarImage
-                                src={user.avatarUrl || ''}
-                                alt={user.fullName || ''}
-                              />
-                              <AvatarFallback className='bg-primary/10 text-primary font-bold text-xs uppercase'>
-                                {(user.fullName || user.email).substring(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className='min-w-0'>
-                              <h4 className='font-bold text-sm text-on-surface truncate group-hover:text-primary transition-colors'>
-                                {user.fullName || 'Người dùng'}
-                              </h4>
-                              <p className='text-xs text-on-surface-variant/70 truncate'>
-                                {user.email}
-                              </p>
-                            </div>
-                          </div>
+                  </div>
 
-                          <Button
-                            onClick={() => handleCreateDirectCall(user)}
-                            disabled={creating}
-                            size='sm'
-                            className='rounded-xl bg-primary hover:bg-primary-dim text-white font-semibold flex items-center gap-1.5 shrink-0 active:scale-95 shadow-sm transition-all'
+                  <Button
+                    onClick={handleCreateMeeting}
+                    disabled={creating}
+                    className='w-full rounded-xl bg-primary hover:bg-primary-dim text-white font-bold h-10 mt-2 shadow-xs text-xs active:scale-[0.98] transition-all'
+                  >
+                    {creating ? 'Đang khởi tạo...' : 'Tạo cuộc họp'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Calling User Search Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.05 }}
+            >
+              <Card className='rounded-2xl border-outline-variant/30 bg-white shadow-xs overflow-hidden'>
+                <CardHeader className='pb-4 border-b border-outline-variant/20'>
+                  <CardTitle className='text-sm font-bold uppercase tracking-wider text-on-surface flex items-center gap-2'>
+                    <PhoneCall className='size-4 text-primary' />
+                    Bắt đầu cuộc gọi mới
+                  </CardTitle>
+                  <CardDescription className='text-xs text-on-surface-variant/75 mt-1'>
+                    Nhập tên hoặc email để tìm kiếm và gọi video trực tiếp cho thành viên khác.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='pt-5 space-y-4'>
+                  <div className='relative'>
+                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 size-4' />
+                    <Input
+                      type='text'
+                      placeholder='Tìm tên hoặc email...'
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className='pl-9 rounded-xl bg-surface border-outline-variant/40 focus-visible:ring-primary/20 h-10 text-xs'
+                    />
+                  </div>
+
+                  <ScrollArea className='h-[240px] pr-1'>
+                    {searching ? (
+                      <div className='flex flex-col items-center justify-center py-14 gap-2'>
+                        <RefreshCw className='size-6 animate-spin text-primary' />
+                        <p className='text-[10px] text-on-surface-variant/70 font-bold uppercase tracking-wider'>
+                          Đang tìm kiếm...
+                        </p>
+                      </div>
+                    ) : searchQuery.trim() === '' ? (
+                      <div className='flex flex-col items-center justify-center py-12 text-center text-on-surface-variant/50 px-4'>
+                        <User className='size-10 mb-2 text-on-surface-variant/30' />
+                        <h4 className='font-bold text-xs text-on-surface/85'>
+                          Chưa có thông tin tìm kiếm
+                        </h4>
+                        <p className='text-[10px] max-w-[200px] mt-1 text-on-surface-variant/70'>
+                          Hãy gõ tên hoặc email thành viên ở trên để kết nối cuộc gọi.
+                        </p>
+                      </div>
+                    ) : searchedUsers.length === 0 ? (
+                      <div className='flex flex-col items-center justify-center py-12 text-center text-on-surface-variant/50 px-4'>
+                        <VideoOff className='size-10 mb-2 text-on-surface-variant/30' />
+                        <h4 className='font-bold text-xs text-on-surface/85'>
+                          Không tìm thấy kết quả
+                        </h4>
+                        <p className='text-[10px] max-w-[200px] mt-1 text-on-surface-variant/70'>
+                          Thành viên này không tồn tại hoặc thông tin tìm kiếm chưa chính xác.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className='space-y-2'>
+                        {searchedUsers.map((user) => (
+                          <div
+                            key={user.id}
+                            className='flex items-center justify-between p-3 rounded-xl border border-outline-variant/20 bg-surface/50 hover:bg-primary/5 hover:border-primary/30 transition-all group'
                           >
-                            <PhoneCall className='size-3.5' />
-                            Gọi ngay
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                            <div className='flex items-center gap-3.5 min-w-0'>
+                              <Avatar className='size-9 border border-outline-variant/30 shrink-0'>
+                                <AvatarImage
+                                  src={user.avatarUrl || ''}
+                                  alt={user.fullName || ''}
+                                />
+                                <AvatarFallback className='bg-primary/10 text-primary font-bold text-xs uppercase'>
+                                  {(user.fullName || user.email).substring(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className='min-w-0'>
+                                <h4 className='font-bold text-xs text-on-surface truncate group-hover:text-primary transition-colors'>
+                                  {user.fullName || 'Người dùng'}
+                                </h4>
+                                <p className='text-[10px] text-on-surface-variant/75 truncate'>
+                                  {user.email}
+                                </p>
+                              </div>
+                            </div>
+
+                            <Button
+                              onClick={() => handleCreateDirectCall(user)}
+                              disabled={creating}
+                              size='sm'
+                              className='rounded-lg bg-primary hover:bg-primary-dim text-white font-bold text-[10px] h-8 flex items-center gap-1 shrink-0 active:scale-[0.97] transition-all shadow-xs'
+                            >
+                              <PhoneCall className='size-3' />
+                              Gọi ngay
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
 
           {/* RIGHT: Ongoing & History list */}
           <div className='lg:col-span-7 space-y-6'>
             {/* Ongoing Calls Card */}
-            <Card className='rounded-xl border-outline-variant bg-surface-container-lowest shadow-sm'>
-              <CardHeader className='pb-4 border-b border-outline-variant flex flex-row items-center justify-between'>
-                <div>
-                  <CardTitle className='text-lg font-bold flex items-center gap-2'>
-                    <span className='flex size-2.5 rounded-full bg-emerald-500 animate-pulse'></span>
-                    Cuộc gọi đang trực tuyến ({ongoingCalls.length})
-                  </CardTitle>
-                  <CardDescription>
-                    Danh sách các kết nối video đang trực tuyến của bạn.
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                {ongoingCalls.length === 0 ? (
-                  <div className='flex flex-col items-center justify-center py-12 text-center text-on-surface-variant/40'>
-                    <PhoneOff className='size-10 mb-2' />
-                    <p className='text-sm font-medium'>
-                      Chưa có cuộc gọi trực tuyến nào
-                    </p>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.1 }}
+            >
+              <Card className='rounded-2xl border-outline-variant/30 bg-white shadow-xs overflow-hidden'>
+                <CardHeader className='pb-4 border-b border-outline-variant/20 flex flex-row items-center justify-between'>
+                  <div>
+                    <CardTitle className='text-sm font-bold uppercase tracking-wider text-on-surface flex items-center gap-2'>
+                      <span className='flex size-2 rounded-full bg-green-500 animate-pulse'></span>
+                      Cuộc gọi trực tuyến ({ongoingCalls.length})
+                    </CardTitle>
+                    <CardDescription className='text-xs text-on-surface-variant/75 mt-1'>
+                      Danh sách các kết nối video đang trực tuyến của bạn.
+                    </CardDescription>
                   </div>
-                ) : (
-                  <div className='space-y-3'>
-                    {ongoingCalls.map((call) => (
-                      <div
-                        key={call.id}
-                        className='flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all gap-4'
-                      >
-                        <div className='space-y-1'>
-                          <div className='flex items-center gap-2 flex-wrap'>
-                            <h3 className='font-bold text-on-surface text-sm md:text-base'>
-                              {call.title || 'Cuộc gọi 1:1'}
-                            </h3>
-                            <Badge
-                              variant='outline'
-                              className='bg-emerald-500/10 border-emerald-500/30 text-emerald-600 font-semibold px-2 py-0.5 text-[10px] rounded-full uppercase tracking-wider shrink-0'
-                            >
-                              Trực tuyến
-                            </Badge>
-                          </div>
-                          <p className='text-xs text-on-surface-variant/80 flex items-center gap-1.5'>
-                            <User className='size-3.5 text-primary' />
-                            <span>
-                              Chủ phòng:{' '}
-                              {call.creator?.fullName || 'Người dùng'}
-                            </span>
-                          </p>
-                          <p className='text-xs text-on-surface-variant/60 flex items-center gap-1.5'>
-                            <Clock className='size-3.5 text-primary' />
-                            <span>
-                              Bắt đầu:{' '}
-                              {call.startedAt
-                                ? new Date(call.startedAt).toLocaleString()
-                                : 'Vừa xong'}
-                            </span>
-                          </p>
-                        </div>
-
-                        <Button
-                          onClick={() => handleJoinCall(call.id)}
-                          className='rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-600/10 active:scale-95 transition-all self-end md:self-center'
-                        >
-                          <Video className='size-4' />
-                          Tham gia
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* History Calls Card */}
-            <Card className='rounded-xl border-outline-variant bg-surface-container-lowest shadow-sm'>
-              <CardHeader className='pb-4 border-b border-outline-variant'>
-                <CardTitle className='text-lg font-bold flex items-center gap-2'>
-                  <History className='size-5 text-primary' />
-                  Lịch sử cuộc gọi
-                </CardTitle>
-                <CardDescription>
-                  Tổng quan lịch sử các cuộc gọi gần nhất của bạn.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                {historyCalls.length === 0 ? (
-                  <div className='flex flex-col items-center justify-center py-12 text-center text-on-surface-variant/40'>
-                    <History className='size-10 mb-2' />
-                    <p className='text-sm font-medium'>
-                      Chưa có lịch sử cuộc gọi
-                    </p>
-                  </div>
-                ) : (
-                  <ScrollArea className='h-[260px] pr-2'>
+                </CardHeader>
+                <CardContent className='pt-5'>
+                  {ongoingCalls.length === 0 ? (
+                    <div className='flex flex-col items-center justify-center py-10 text-center text-on-surface-variant/40'>
+                      <PhoneOff className='size-9 mb-2 text-on-surface-variant/20' />
+                      <p className='text-xs font-bold text-on-surface-variant/75'>
+                        Chưa có cuộc gọi trực tuyến nào
+                      </p>
+                    </div>
+                  ) : (
                     <div className='space-y-3'>
-                      {historyCalls.map((call) => (
+                      {ongoingCalls.map((call) => (
                         <div
                           key={call.id}
-                          className='flex items-center justify-between p-4 rounded-lg border border-outline/10 bg-surface/30 hover:bg-surface-variant/10 transition-all gap-4'
+                          className='flex flex-col md:flex-row md:items-center justify-between p-4.5 rounded-xl border border-green-500/20 bg-[#EDF3EC] hover:bg-[#e4eedf] transition-all gap-4'
                         >
-                          <div className='space-y-1.5 min-w-0'>
-                            <h3 className='font-bold text-on-surface text-sm truncate'>
-                              {call.title || 'Cuộc gọi 1:1'}
-                            </h3>
-                            <div className='flex items-center gap-3 text-xs text-on-surface-variant/70 flex-wrap'>
-                              <span className='flex items-center gap-1'>
-                                <User className='size-3.5 text-on-surface-variant/40' />
-                                <span className='truncate'>
-                                  {call.creator?.fullName || 'Người dùng'}
-                                </span>
-                              </span>
-                              <span className='flex items-center gap-1'>
-                                <Clock className='size-3.5 text-on-surface-variant/40' />
-                                <span>
-                                  {call.startedAt
-                                    ? new Date(
-                                        call.startedAt,
-                                      ).toLocaleDateString()
-                                    : 'N/A'}
-                                </span>
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className='flex flex-col items-end gap-1.5 shrink-0'>
-                            {call.status === CallStatus.ENDED ? (
-                              <Badge
-                                variant='secondary'
-                                className='rounded-full px-2 py-0.5 text-[10px] uppercase font-semibold text-on-surface-variant/80 bg-surface-variant border-transparent shrink-0'
-                              >
-                                Đã kết thúc
-                              </Badge>
-                            ) : (
+                          <div className='space-y-1 min-w-0'>
+                            <div className='flex items-center gap-2.5 flex-wrap'>
+                              <h3 className='font-bold text-[#346538] text-sm truncate'>
+                                {call.title || 'Cuộc gọi 1:1'}
+                              </h3>
                               <Badge
                                 variant='outline'
-                                className='bg-emerald-500/10 border-emerald-500/30 text-emerald-600 font-semibold px-2 py-0.5 text-[10px] rounded-full uppercase tracking-wider shrink-0 animate-pulse'
+                                className='bg-green-500/10 border-green-500/25 text-[#346538] font-bold px-2 py-0.5 text-[9px] rounded-md uppercase tracking-wider shrink-0'
                               >
                                 Trực tuyến
                               </Badge>
-                            )}
-                            <span className='text-[10px] text-on-surface-variant/50'>
-                              {call.startedAt && call.endedAt
-                                ? `${Math.ceil((new Date(call.endedAt).getTime() - new Date(call.startedAt).getTime()) / 60000)} phút`
-                                : call.status === CallStatus.ONGOING
-                                  ? 'Đang gọi...'
-                                  : 'N/A'}
-                            </span>
+                            </div>
+                            <p className='text-[11px] text-[#346538]/85 flex items-center gap-1.5'>
+                              <User className='size-3 text-[#346538]/70' />
+                              <span>
+                                Chủ phòng:{' '}
+                                <span className='font-bold'>{call.creator?.fullName || 'Người dùng'}</span>
+                              </span>
+                            </p>
+                            <p className='text-[11px] text-[#346538]/70 flex items-center gap-1.5'>
+                              <Clock className='size-3 text-[#346538]/60' />
+                              <span>
+                                Bắt đầu:{' '}
+                                {call.startedAt
+                                  ? new Date(call.startedAt).toLocaleString('vi-VN')
+                                  : 'Vừa xong'}
+                              </span>
+                            </p>
                           </div>
+
+                          <Button
+                            onClick={() => handleJoinCall(call.id)}
+                            className='rounded-xl bg-[#346538] hover:bg-[#2c552f] text-white font-bold text-xs h-9 flex items-center gap-1.5 shadow-xs active:scale-[0.97] transition-all self-end md:self-center shrink-0 border-0'
+                          >
+                            <Video className='size-3.5' />
+                            Tham gia
+                          </Button>
                         </div>
                       ))}
                     </div>
-                  </ScrollArea>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* History Calls Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.15 }}
+            >
+              <Card className='rounded-2xl border-outline-variant/30 bg-white shadow-xs overflow-hidden'>
+                <CardHeader className='pb-4 border-b border-outline-variant/20'>
+                  <CardTitle className='text-sm font-bold uppercase tracking-wider text-on-surface flex items-center gap-2'>
+                    <History className='size-4 text-primary' />
+                    Lịch sử cuộc gọi
+                  </CardTitle>
+                  <CardDescription className='text-xs text-on-surface-variant/75 mt-1'>
+                    Tổng quan lịch sử các cuộc gọi gần nhất của bạn.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='pt-5'>
+                  {historyCalls.length === 0 ? (
+                    <div className='flex flex-col items-center justify-center py-10 text-center text-on-surface-variant/40'>
+                      <History className='size-9 mb-2 text-on-surface-variant/20' />
+                      <p className='text-xs font-bold text-on-surface-variant/75'>
+                        Chưa có lịch sử cuộc gọi
+                      </p>
+                    </div>
+                  ) : (
+                    <ScrollArea className='h-[250px] pr-1'>
+                      <div className='space-y-2.5'>
+                        {historyCalls.map((call) => (
+                          <div
+                            key={call.id}
+                            className='flex items-center justify-between p-3.5 rounded-xl border border-outline-variant/20 bg-surface/30 hover:bg-outline-variant/5 transition-all gap-4'
+                          >
+                            <div className='space-y-1 min-w-0'>
+                              <h3 className='font-bold text-on-surface text-xs sm:text-sm truncate'>
+                                {call.title || 'Cuộc gọi 1:1'}
+                              </h3>
+                              <div className='flex items-center gap-3 text-[10px] text-on-surface-variant/70 flex-wrap'>
+                                <span className='flex items-center gap-1'>
+                                  <User className='size-3 text-on-surface-variant/40' />
+                                  <span className='truncate font-medium'>
+                                    {call.creator?.fullName || 'Người dùng'}
+                                  </span>
+                                </span>
+                                <span className='flex items-center gap-1'>
+                                  <Clock className='size-3 text-on-surface-variant/40' />
+                                  <span>
+                                    {call.startedAt
+                                      ? new Date(call.startedAt).toLocaleDateString('vi-VN')
+                                      : 'N/A'}
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className='flex flex-col items-end gap-1 shrink-0'>
+                              {call.status === CallStatus.ENDED ? (
+                                <Badge
+                                  variant='secondary'
+                                  className='rounded-md px-2 py-0.5 text-[9px] uppercase font-bold text-on-surface-variant/80 bg-surface border-transparent shrink-0'
+                                >
+                                  Đã kết thúc
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant='outline'
+                                  className='bg-green-500/10 border-green-500/25 text-[#346538] font-bold px-2 py-0.5 text-[9px] rounded-md uppercase tracking-wider shrink-0 animate-pulse'
+                                >
+                                  Trực tuyến
+                                </Badge>
+                              )}
+                              <span className='text-[9px] text-on-surface-variant/60 font-medium'>
+                                {call.startedAt && call.endedAt
+                                  ? `${Math.ceil((new Date(call.endedAt).getTime() - new Date(call.startedAt).getTime()) / 60000)} phút`
+                                  : call.status === CallStatus.ONGOING
+                                    ? 'Đang gọi...'
+                                    : 'N/A'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </div>
