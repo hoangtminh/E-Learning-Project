@@ -136,7 +136,7 @@ export class CoursesService {
           totalTextSec += finalDurationSec;
         } else if (l.type === 'quiz') {
           // Look up quiz duration in map (default to 15 minutes = 900 seconds)
-          const quizMin = l.contentUrl ? (quizDurationMap.get(l.contentUrl) || 15) : 15;
+          const quizMin = (l.contentUrl ? quizDurationMap.get(l.contentUrl) : 15) ?? 15;
           finalDurationSec = quizMin * 60;
           totalQuizSec += finalDurationSec;
         }
