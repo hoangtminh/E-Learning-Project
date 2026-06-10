@@ -384,46 +384,6 @@ export default function LearningLessonPage() {
               </span>
             )}
           </div>
-
-          {/* Bottom tabs */}
-          <div className="border-t border-white/10 px-6">
-            <div className="flex gap-6 pt-1">
-              {[
-                { id: 'discuss' as const, label: 'Thảo luận', icon: 'forum' },
-                { id: 'notes' as const, label: 'Ghi chú', icon: 'edit_note' },
-                { id: 'resources' as const, label: 'Tài nguyên', icon: 'folder' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
-                    }`}
-                >
-                  <span className="material-symbols-outlined text-base">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            <div className="py-6 text-sm text-slate-400">
-              {activeTab === 'discuss' && (
-                <div className="space-y-3">
-                  <p>Khu vực thảo luận — sẽ tích hợp Socket.io chat trong phiên bản tiếp theo.</p>
-                </div>
-              )}
-              {activeTab === 'notes' && (
-                <div className="space-y-3">
-                  <p>Ghi chú cá nhân — liên kết với timestamp video. Tính năng đang phát triển.</p>
-                </div>
-              )}
-              {activeTab === 'resources' && (
-                <div className="space-y-3">
-                  <p>Tài liệu đính kèm bài giảng. Tính năng đang phát triển.</p>
-                </div>
-              )}
-            </div>
-          </div>
         </main>
 
         {/* Sidebar — Lesson list */}

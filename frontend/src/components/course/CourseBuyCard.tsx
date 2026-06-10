@@ -216,8 +216,7 @@ export function CourseBuyCard({
     try {
       if (course.price > 0) {
         const res = await paymentApi.createPaymentUrl(courseId);
-        console.log(res)
-        if (res.paymentUrl) {
+          if (res.paymentUrl) {
           window.location.href = res.paymentUrl;
         } else {
           void appAlert('Không thể tạo giao dịch thanh toán. Vui lòng thử lại.');

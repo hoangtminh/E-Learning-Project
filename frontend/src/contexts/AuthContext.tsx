@@ -11,9 +11,8 @@ import {
   login as apiLogin,
   register as apiRegister,
   getUser as apiGetUser,
-  setTokenCookie,
-  removeTokenCookie,
-  getTokenCookie,
+  refreshTokenApi,
+  apiLogout,
 } from '@/api/auth';
 import { setAuthToken } from '@/api/client';
 
@@ -29,6 +28,7 @@ export interface User {
 type LoginCredentials = {
   email: string;
   password: string;
+  rememberMe?: boolean;
 };
 
 type RegisterData = LoginCredentials & {
@@ -42,35 +42,18 @@ type AuthUserLike = Partial<User> & {
   avatar?: string | null;
 };
 
-type JwtPayload = {
-  sub?: string;
-  email?: string;
-  fullName?: string | null;
-};
-
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   getUser: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const decodeJwtPayload = (token: string): JwtPayload | null => {
-  try {
-    const [, payload] = token.split(".");
-    if (!payload) return null;
-
-    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
-  } catch {
-    return null;
-  }
-};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -80,8 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userVal) {
       setUser({
         ...userVal,
-        userId: userVal.id || userVal.userId || "",
-        email: userVal.email || "",
+        userId: userVal.id || userVal.userId || '',
+        email: userVal.email || '',
         fullName: userVal.fullName || userVal.fullname || null,
         avatarUrl: userVal.avatarUrl || userVal.avatar || userVal.imageUrl || null,
       });
@@ -94,50 +77,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => (prev ? { ...prev, ...data } : prev));
   };
 
-  const logout = () => {
-    removeTokenCookie();
+  /**
+   * Clears local state and asks the backend to revoke the refresh token.
+   * The backend also clears the HttpOnly cookie via Set-Cookie.
+   */
+  const logout = async () => {
     setAuthToken(null);
     setMappedUser(null);
+    await apiLogout(); // Revoke DB token + clear httpOnly cookie
     window.location.href = '/login';
   };
 
   const getUser = async () => {
-    const token = getTokenCookie();
-    if (!token) {
+    const res = await apiGetUser();
+
+    if (res.success && res.data) {
+      setMappedUser(res.data);
+      return;
+    }
+
+    if (res.status === 401 || res.status === 403) {
+      // Access token missing/expired — try silent refresh
+      const refreshed = await refreshTokenApi();
+      if (refreshed?.accessToken) {
+        setAuthToken(refreshed.accessToken);
+        const retryRes = await apiGetUser();
+        if (retryRes.success && retryRes.data) {
+          setMappedUser(retryRes.data);
+          return;
+        }
+      }
+
+      // Refresh also failed — user must log in again
+      setAuthToken(null);
       setMappedUser(null);
       return;
     }
 
-    setAuthToken(token);
-
-    const tokenPayload = decodeJwtPayload(token);
-    if (!user && tokenPayload?.sub && tokenPayload?.email) {
-      setMappedUser({
-        id: tokenPayload.sub,
-        email: tokenPayload.email,
-        fullName: tokenPayload.fullName || null,
-      });
-    }
-
-    try {
-      const res = await apiGetUser();
-      if (res.success && res.data) {
-        setMappedUser(res.data);
-        return;
-      }
-
-      if (res.status === 401 || res.status === 403) {
-        removeTokenCookie();
-        setAuthToken(null);
-        setMappedUser(null);
-        window.location.href = "/login";
-        return;
-      }
-
-      console.warn("Could not refresh current user; keeping existing session.", res.error);
-    } catch (err) {
-      console.error("Failed to refresh current user; keeping existing session:", err);
-    }
+    console.warn('Could not fetch current user; keeping existing session.', res.error);
   };
 
   useEffect(() => {
@@ -151,9 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (credentials: LoginCredentials) => {
     const result = await apiLogin(credentials);
     if (result.success && result.data) {
-      setTokenCookie(result.data.accessToken);
+      // Store access token in memory only
       setAuthToken(result.data.accessToken);
-      setMappedUser(result?.data?.user);
+      setMappedUser(result.data.user);
     } else {
       throw new Error(result.error || 'Login failed');
     }
@@ -162,7 +139,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterData) => {
     const result = await apiRegister(data);
     if (result.success && result.data) {
-      setTokenCookie(result.data.accessToken);
       setAuthToken(result.data.accessToken);
       setMappedUser(result.data.user);
     } else {

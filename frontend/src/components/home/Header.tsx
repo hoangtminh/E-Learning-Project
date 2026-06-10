@@ -85,7 +85,7 @@ export function Header() {
               <Button
                 variant='ghost'
                 className='text-slate-600 hover:text-red-600 hover:bg-red-50 font-semibold'
-                onClick={logout}
+                onClick={() => void logout()}
               >
                 Đăng xuất
               </Button>
@@ -179,7 +179,7 @@ export function Header() {
                     className='w-full text-slate-600 hover:text-red-600 hover:bg-red-50 font-semibold justify-center py-5'
                     onClick={() => {
                       setIsMobileMenuOpen(false);
-                      logout();
+                      void logout();
                     }}
                   >
                     Đăng xuất

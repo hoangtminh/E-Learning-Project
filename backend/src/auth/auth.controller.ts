@@ -6,13 +6,19 @@ import {
   Request,
   UseGuards,
   Req,
+  Res,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { Public } from '../common/decorators/public.decorator';
+import { ConfigService } from '@nestjs/config';
 
 type AuthenticatedRequest = Request & {
   user: {
@@ -22,24 +28,112 @@ type AuthenticatedRequest = Request & {
   };
 };
 
+type RefreshRequest = Request & {
+  user: {
+    userId: string;
+    email: string;
+    fullName: string | null;
+    rawToken: string;
+    rememberMe?: boolean;
+  };
+};
+
+// 7 days in milliseconds — must match JWT_REFRESH_EXPIRES
+const REFRESH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private config: ConfigService,
+  ) {}
 
-  @Public() // Mark this endpoint as public
-  @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  private setRefreshCookie(res: Response, token: string, rememberMe?: boolean) {
+    if (!rememberMe) {
+      return;
+    }
+    const isProduction = this.config.get('NODE_ENV') === 'production';
+    res.cookie('refresh_token', token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
+      maxAge: REFRESH_COOKIE_MAX_AGE_MS,
+      path: '/auth', // Only sent to /auth/* routes
+    });
   }
 
-  @Public() // Mark this endpoint as public
+  private clearRefreshCookie(res: Response) {
+    res.clearCookie('refresh_token', { path: '/auth' });
+  }
+
+  @Public()
+  @Post('register')
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.register(dto);
+    this.setRefreshCookie(res, result.refreshToken, false);
+
+    // Never expose the refresh token in the response body
+    const { refreshToken: _, ...safeResult } = result;
+    return safeResult;
+  }
+
+  @Public()
+  @HttpCode(HttpStatus.OK)
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.login(dto);
+    this.setRefreshCookie(res, result.refreshToken, result.rememberMe);
+
+    const { refreshToken: _, rememberMe: __, ...safeResult } = result;
+    return safeResult;
+  }
+
+  /**
+   * Silent refresh endpoint.
+   * Protected by JwtRefreshGuard (reads HttpOnly cookie).
+   * Returns a new accessToken and rotates the refresh token cookie.
+   */
+  @Public()
+  @UseGuards(JwtRefreshGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('refresh')
+  async refresh(
+    @Req() req: RefreshRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { userId, rawToken, rememberMe } = req.user;
+    const tokens = await this.authService.refresh(userId, rawToken, rememberMe);
+
+    this.setRefreshCookie(res, tokens.refreshToken, rememberMe);
+
+    return { accessToken: tokens.accessToken };
+  }
+
+  /**
+   * Logout: revokes the current refresh token in DB and clears the cookie.
+   */
+  @Public()
+  @UseGuards(JwtRefreshGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  async logout(
+    @Req() req: RefreshRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { userId, rawToken } = req.user;
+    await this.authService.logout(userId, rawToken);
+    this.clearRefreshCookie(res);
+    return { message: 'Logged out successfully' };
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('me') // Endpoint for getUser() in frontend
+  @Get('me')
   getMe(@Request() req) {
     return this.authService.getMe(req.user.userId);
   }

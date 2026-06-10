@@ -111,7 +111,7 @@ const MainSidebar = memo(({ isOpen, onClose }: { isOpen?: boolean; onClose?: () 
           {/* Collapse toggle (desktop only) */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute -right-3.5 top-6 bg-[#006382] border-2 border-[#0a0e1a] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md hover:bg-[#0091aa] z-50 transition-colors hidden md:flex"
+            className="absolute -right-3.5 top-3.5 bg-[#006382] border-2 border-[#0a0e1a] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md hover:bg-[#0091aa] z-50 transition-colors hidden md:flex"
           >
             <span className="material-symbols-outlined text-[16px]">
               {isCollapsed ? 'chevron_right' : 'chevron_left'}

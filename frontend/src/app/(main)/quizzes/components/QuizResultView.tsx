@@ -48,8 +48,6 @@ export function QuizResultView({ quizId, submissionId }: QuizResultViewProps) {
     };
     loadData();
   }, [quizId, submissionId, fetchQuiz, getSubmissionDetails]);
-  console.log('quiz', quiz);
-  console.log('result', result);
 
   if (loading) {
     return (

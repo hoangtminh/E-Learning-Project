@@ -103,7 +103,6 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
 
   const handleAddQuiz = async (data: any) => {
     try {
-      console.log(data);
       const res = await createQuiz(data);
       if (res.success && res.data) {
         setCreatedQuizzes((prev) => [res.data!, ...prev]);
@@ -157,7 +156,6 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
 
   const handleSubmitQuiz = async (id: string, data: SubmitQuizDto) => {
     try {
-      console.log(data, id);
       const res = await submitQuiz(id, data);
       if (res.success && res.data) {
         return res.data;

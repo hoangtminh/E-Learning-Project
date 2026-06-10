@@ -3,10 +3,10 @@ import { apiPost, apiGet } from './client';
 export type AuthResponse = {
   accessToken: string;
   user: {
-    userId: string;
+    id: string;
     email: string;
-    fullname: string | null;
-    imageUrl: string | null | undefined;
+    fullName: string | null;
+    role?: string;
   };
 };
 
@@ -15,31 +15,55 @@ export async function register(payload: {
   password: string;
   fullName: string;
 }) {
-  return apiPost<AuthResponse>('/auth/register', payload);
+  return apiPost<AuthResponse>('/auth/register', payload, { credentials: 'include' });
 }
 
-export async function login(payload: { email: string; password: string }) {
-  return apiPost<AuthResponse>('/auth/login', payload);
+export async function login(payload: { email: string; password: string; rememberMe?: boolean }) {
+  return apiPost<AuthResponse>('/auth/login', payload, { credentials: 'include' });
 }
 
 export async function getUser() {
-  return apiGet<AuthResponse['user']>('/auth/me'); // Replace '/auth/me' with your actual endpoint
+  return apiGet<AuthResponse['user']>('/auth/me');
 }
 
-export const setTokenCookie = (token: string) => {
-  // Set cookie to expire in 7 days (604800 seconds)
-  document.cookie = `access_token=${token}; path=/; max-age=604800; SameSite=Lax`;
-};
+/**
+ * Calls POST /auth/refresh with credentials (sends the httpOnly refresh_token cookie).
+ * Returns a new accessToken. The backend simultaneously rotates the refresh token cookie.
+ */
+export async function refreshTokenApi(): Promise<{ accessToken: string } | null> {
+  try {
+    const res = await fetch(
+      (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080') + '/auth/refresh',
+      {
+        method: 'POST',
+        credentials: 'include', // Sends the HttpOnly refresh_token cookie
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
 
-export const removeTokenCookie = () => {
-  document.cookie =
-    'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-};
+    if (!res.ok) return null;
 
-export const getTokenCookie = () => {
-  if (typeof document === 'undefined') return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; access_token=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-  return null;
-};
+    const data = await res.json();
+    return data as { accessToken: string };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Calls POST /auth/logout — backend revokes the refresh token in DB and clears the cookie.
+ */
+export async function apiLogout(): Promise<void> {
+  try {
+    await fetch(
+      (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080') + '/auth/logout',
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  } catch {
+    // Silently ignore — we clear local state regardless
+  }
+}

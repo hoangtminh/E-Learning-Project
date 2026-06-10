@@ -243,39 +243,6 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            <div className='relative flex items-center'>
-              <div className='grow border-t border-slate-200'></div>
-              <span className='shrink mx-4 text-sm text-slate-400'>
-                Hoặc đăng ký bằng
-              </span>
-              <div className='grow border-t border-slate-200'></div>
-            </div>
-
-            <div className='grid grid-cols-2 gap-4'>
-              <Button
-                variant='outline'
-                className='flex items-center justify-center gap-2 h-12 border-slate-200 rounded-xl hover:bg-slate-50 transition-colors'
-              >
-                <img
-                  alt='Google'
-                  className='w-5 h-5'
-                  src='https://lh3.googleusercontent.com/aida-public/AB6AXuBmfr16wEzDkmSIS5eSpqk1N_YoMByzvNWyaodaBrmKhuuIz4pXPx9iT62lUWI1Ixr-ZIbyXStNgx5MCkiIbSlFx2JgnIAGLhSnhy6nm3h8-2BGwWVEg2IHmhZfbI2gqDbYHql3Qa9kda7o6-DDjsmkgs_gQzI3hjR7RE5AKrjeZZz8_I1Dvqm4_DlkM3A1xAbLH2CqLzFY6-e5WY6kS18jzMxIOtJOKSrzKtcV_O9KH_j5SDA9AtBL4Xv_G1riA0N8f1OfIyVslM-B'
-                />
-                <span className='text-sm font-medium'>Google</span>
-              </Button>
-              <Button
-                variant='outline'
-                className='flex items-center justify-center gap-2 h-12 border-slate-200 rounded-xl hover:bg-slate-50 transition-colors'
-              >
-                <img
-                  alt='LinkedIn'
-                  className='w-5 h-5'
-                  src='https://lh3.googleusercontent.com/aida-public/AB6AXuBVW3kp7wW26rPpIEtgMfSvywcDcuKPWIA4jeM4jnUvPJYILwIZQIcCx9O9rz1L6lakvTzGewus48nspPc3mui-YYHgkZRMMXXfk-gaNWiRaKYg9RcINIg1tWa2tBdtshurPgbMcYjXajTnTon0wjWeCWQlN8UUNB3X7NGEse7u4ORkOro7zD4d9MIyYC7fnSturB6rPQnoTIQBMVYAv8K4WxrEnW4PD3RJdateEPN_HcubBxq4K4sVmj34kCwE2_3958KNGnQxtubs'
-                />
-                <span className='text-sm font-medium'>LinkedIn</span>
-              </Button>
-            </div>
-
             <p className='text-center text-slate-500'>
               Đã có tài khoản?{' '}
               <Link

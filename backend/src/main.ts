@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { configDotenv } from 'dotenv';
+import cookieParser = require('cookie-parser');
 
 configDotenv();
 
@@ -11,6 +12,9 @@ async function bootstrap() {
   // Trust the reverse proxy chain (Cloudflare Tunnel → Traefik → app)
   // so Express reads X-Forwarded-For / CF-Connecting-IP correctly.
   app.getHttpAdapter().getInstance().set('trust proxy', true);
+
+  // Parse cookies — required for the refresh_token HttpOnly cookie
+  app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({

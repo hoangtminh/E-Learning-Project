@@ -172,7 +172,6 @@ export default function CourseEditorPage() {
         payload.contentUrl = newLessonUrl.trim(); // store quizId in contentUrl
       }
       const res = await createLesson(sectionId, payload);
-      console.log(res)
       if (res.success && res.data) {
         setSections((prev) =>
           prev.map((s) =>

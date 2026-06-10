@@ -313,8 +313,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     if (!chatSocket.connected) chatSocket.connect();
 
     const handleNewMessage = (message: Message) => {
-      console.log('Received new message:', message);
-
       // 1. If it's for the current conversation, update messages list
       if (
         currentConversation &&

@@ -9,6 +9,7 @@ import { ArrowRight, Lock, Mail } from 'lucide-react';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
@@ -19,7 +20,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login({ email, password });
+      await login({ email, password, rememberMe });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -86,12 +87,6 @@ export default function LoginPage() {
                   >
                     Password
                   </label>
-                  <Link
-                    className='text-xs font-medium text-sky-600 hover:text-sky-700 transition-colors'
-                    href='#'
-                  >
-                    Forgot Password?
-                  </Link>
                 </div>
                 <div className='relative'>
                   <span className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg'>
@@ -118,6 +113,8 @@ export default function LoginPage() {
                 <input
                   id='remember'
                   type='checkbox'
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className='w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-600'
                 />
                 <label className='text-xs text-slate-500' htmlFor='remember'>
@@ -136,48 +133,6 @@ export default function LoginPage() {
                 {!isSubmitting && <ArrowRight className='w-4 h-4' />}
               </button>
             </form>
-
-            <div className='mt-4'>
-              <div className='relative mb-4'>
-                <div className='absolute inset-0 flex items-center'>
-                  <div className='w-full border-t border-slate-200'></div>
-                </div>
-                <div className='relative flex justify-center text-xs uppercase'>
-                  <span className='bg-slate-50 px-4 text-slate-500 font-medium'>
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-              <div className='grid grid-cols-2 gap-4'>
-                <button
-                  type='button'
-                  className='flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-lg hover:bg-sky-50 transition-colors'
-                >
-                  <img
-                    alt='Google'
-                    className='w-5 h-5'
-                    src='https://lh3.googleusercontent.com/aida-public/AB6AXuBAcSQrRSpNczi7aKTsugGKQ_nFYn8f5xwnLfsvvkVRAj-xbZr9nqxBAnNeKG4oVxAIolWs0UrcogEfYqwtl3WZfDEKfQ7zBTXAWDKMpP1nlam0uFJBjesnwXSAig7Mf8Ru_U1xTtiWn5nH3Jv4hSBCY8GNOqc3UKfdnCoe_dbUVgueQGPlYAYwC-fyjLB4JagPjV4kUiKRAxv3o2BBZeYEcSGVuj2ph6GxVZ_-yKn3dF_rhg-PzteH5GH4UpbKZmkb8aCyi37-aHpc'
-                  />
-                  <span className='text-sm font-medium text-slate-900'>
-                    Google
-                  </span>
-                </button>
-                <button
-                  type='button'
-                  className='flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-lg hover:bg-sky-50 transition-colors'
-                >
-                  <img
-                    alt='Facebook'
-                    className='w-5 h-5'
-                    src='https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg' // Assuming a local Facebook icon or a CDN link
-                  />
-                  <span className='text-sm font-medium text-slate-900'>
-                    Facebook
-                  </span>
-                </button>
-              </div>
-            </div>
-
             <p className='mt-10 text-center text-sm text-slate-500'>
               Don't have an account?{' '}
               <Link

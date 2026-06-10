@@ -184,7 +184,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <span>Về trang chủ</span>
                   </Link>
                   <hr className="border-slate-100" />
-                  <button onClick={() => { logout(); setMenuOpen(false); }}
+                  <button onClick={() => { void logout(); setMenuOpen(false); }}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium cursor-pointer text-left focus:outline-none">
                     <LogOut className="w-4 h-4 text-red-500 shrink-0" />
                     <span>Đăng xuất</span>
