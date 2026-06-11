@@ -78,6 +78,12 @@ export function getCourse(id: string) {
   return apiGet<CourseDetail>(`/courses/${id}`);
 }
 
+export function getLessonVideoUrl(courseId: string, lessonId: string) {
+  return apiGet<{ url: string; expiresIn: number | null }>(
+    `/courses/${courseId}/lessons/${lessonId}/video-url`,
+  );
+}
+
 export function createCourse(data: {
   title: string;
   slug: string;

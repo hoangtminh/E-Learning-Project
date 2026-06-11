@@ -15,6 +15,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { LessonsService } from '../lessons/lessons.service';
 
 type AuthenticatedRequest = Request & {
   user: {
@@ -24,9 +25,20 @@ type AuthenticatedRequest = Request & {
   };
 };
 
+type OptionalAuthRequest = Request & {
+  user?: {
+    userId: string;
+    email: string;
+    fullName: string | null;
+  } | null;
+};
+
 @Controller('courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(
+    private readonly coursesService: CoursesService,
+    private readonly lessonsService: LessonsService,
+  ) {}
 
   @Roles('instructor', 'admin')
   @Post()
@@ -59,8 +71,8 @@ export class CoursesController {
 
   @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.coursesService.findOne(id);
+  findOne(@Param('id') id: string, @Req() req: OptionalAuthRequest) {
+    return this.coursesService.findOne(id, req.user?.userId);
   }
 
   @Roles('instructor', 'admin')
@@ -103,6 +115,19 @@ export class CoursesController {
     @Param('courseId') courseId: string,
   ) {
     return this.coursesService.unenrollCourse(req.user.userId, courseId);
+  }
+
+  @Get(':courseId/lessons/:lessonId/video-url')
+  getLessonVideoUrl(
+    @Req() req: AuthenticatedRequest,
+    @Param('courseId') courseId: string,
+    @Param('lessonId') lessonId: string,
+  ) {
+    return this.lessonsService.getPresignedVideoUrl(
+      courseId,
+      lessonId,
+      req.user!.userId,
+    );
   }
 
   @Post(':courseId/lessons/:lessonId/progress')

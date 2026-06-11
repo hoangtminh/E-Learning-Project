@@ -8,6 +8,7 @@ import {
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { isExternalVideoUrl, isS3LessonContent } from '../lessons/lesson-media.util';
 
 @Injectable()
 export class CoursesService {
@@ -61,7 +62,7 @@ export class CoursesService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const course = await this.prisma.course.findFirst({
       where: {
         OR: [
@@ -90,6 +91,10 @@ export class CoursesService {
     if (!course) {
       throw new NotFoundException(`Course with ID ${id} not found`);
     }
+
+    const canAccessContent = userId
+      ? await this.canAccessLessonContent(userId, course.id, course.instructorId)
+      : false;
 
     // Dynamic duration calculation
     let totalVideoSec = 0;
@@ -140,10 +145,10 @@ export class CoursesService {
           finalDurationSec = quizMin * 60;
           totalQuizSec += finalDurationSec;
         }
-        return {
-          ...l,
-          durationSec: finalDurationSec,
-        };
+        return this.sanitizeLessonForViewer(
+          { ...l, durationSec: finalDurationSec },
+          canAccessContent,
+        );
       }),
     }));
 
@@ -426,6 +431,44 @@ export class CoursesService {
 
     const firstLesson = firstSection?.lessons?.[0];
     return { lessonId: firstLesson?.id ?? null };
+  }
+
+  private async canAccessLessonContent(
+    userId: string,
+    courseId: string,
+    instructorId: string,
+  ): Promise<boolean> {
+    if (instructorId === userId) {
+      return true;
+    }
+    const member = await this.prisma.courseMember.findUnique({
+      where: { courseId_userId: { courseId, userId } },
+    });
+    return !!member;
+  }
+
+  private sanitizeLessonForViewer<T extends { type: string | null; contentUrl: string | null; body: string | null }>(
+    lesson: T,
+    canAccessContent: boolean,
+  ): T {
+    if (!canAccessContent) {
+      return {
+        ...lesson,
+        contentUrl: lesson.type === 'video' ? null : lesson.contentUrl,
+        body: lesson.type === 'text' ? null : lesson.body,
+      };
+    }
+
+    if (
+      lesson.type === 'video' &&
+      lesson.contentUrl &&
+      isS3LessonContent(lesson.contentUrl) &&
+      !isExternalVideoUrl(lesson.contentUrl)
+    ) {
+      return { ...lesson, contentUrl: null };
+    }
+
+    return lesson;
   }
 }
 
