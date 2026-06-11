@@ -572,8 +572,8 @@ export default function CourseEditorPage() {
                                               setEditUploadProgress(0);
                                               const result = await uploadLessonFile(file, (p) => setEditUploadProgress(p));
                                               setEditUploadingFile(false);
-                                              if (result.success && result.publicUrl) {
-                                                setEditLessonUrl(result.publicUrl);
+                                              if (result.success && result.s3Key) {
+                                                setEditLessonUrl(result.s3Key);
                                               } else {
                                                 alert('Upload thất bại: ' + (result.error || 'Lỗi không xác định'));
                                               }
@@ -634,8 +634,8 @@ export default function CourseEditorPage() {
                                               setEditUploadProgress(0);
                                               const result = await uploadLessonFile(file, (p) => setEditUploadProgress(p));
                                               setEditUploadingFile(false);
-                                              if (result.success && result.publicUrl) {
-                                                setEditLessonUrl(result.publicUrl);
+                                              if (result.success && result.s3Key) {
+                                                setEditLessonUrl(result.s3Key);
                                                 setEditLessonBody('File đã upload: ' + file.name);
                                               } else {
                                                 alert('Upload thất bại: ' + (result.error || 'Lỗi không xác định'));
@@ -777,8 +777,8 @@ export default function CourseEditorPage() {
                                         setUploadProgress(0);
                                         const result = await uploadLessonFile(file, (p) => setUploadProgress(p));
                                         setUploadingFile(false);
-                                        if (result.success && result.publicUrl) {
-                                          setNewLessonUrl(result.publicUrl);
+                                        if (result.success && result.s3Key) {
+                                          setNewLessonUrl(result.s3Key);
                                         } else {
                                           alert('Upload thất bại: ' + (result.error || 'Lỗi không xác định'));
                                         }
@@ -839,8 +839,8 @@ export default function CourseEditorPage() {
                                         setUploadProgress(0);
                                         const result = await uploadLessonFile(file, (p) => setUploadProgress(p));
                                         setUploadingFile(false);
-                                        if (result.success && result.publicUrl) {
-                                          setNewLessonUrl(result.publicUrl);
+                                        if (result.success && result.s3Key) {
+                                          setNewLessonUrl(result.s3Key);
                                           setNewLessonBody('File đã upload: ' + file.name);
                                         } else {
                                           alert('Upload thất bại: ' + (result.error || 'Lỗi không xác định'));

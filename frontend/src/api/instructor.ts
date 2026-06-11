@@ -71,27 +71,26 @@ export const deleteLesson = (lessonId: string) =>
 // ── Lesson File Upload (S3) ────────────────────────────────────────────────
 
 export const getLessonUploadUrl = (filename: string, mimeType: string) =>
-  apiPost<{ uploadUrl: string; s3Key: string; publicUrl: string }>(
+  apiPost<{ uploadUrl: string; s3Key: string }>(
     '/lessons/presigned-upload',
     { filename, mimeType },
   );
 
 /**
  * Upload a file directly to S3 using a presigned URL.
- * Returns the public URL of the uploaded file.
+ * Returns the S3 object key to store in lesson contentUrl.
  */
 export async function uploadLessonFile(
   file: File,
   onProgress?: (percent: number) => void,
-): Promise<{ success: boolean; publicUrl?: string; error?: string }> {
+): Promise<{ success: boolean; s3Key?: string; error?: string }> {
   try {
-    // Step 1: Get presigned URL from backend
     const res = await getLessonUploadUrl(file.name, file.type);
     if (!res.success || !res.data) {
       return { success: false, error: res.error || 'Không lấy được URL upload' };
     }
 
-    const { uploadUrl, publicUrl } = res.data;
+    const { uploadUrl, s3Key } = res.data;
 
     // Step 2: Upload file directly to S3 using XMLHttpRequest for progress tracking
     await new Promise<void>((resolve, reject) => {
@@ -117,7 +116,7 @@ export async function uploadLessonFile(
       xhr.send(file);
     });
 
-    return { success: true, publicUrl };
+    return { success: true, s3Key };
   } catch (err: any) {
     return { success: false, error: err.message || 'Upload thất bại' };
   }
