@@ -1,10 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as crypto from 'crypto';
+import {
+  extractS3Key,
+  isExternalVideoUrl,
+} from './lesson-media.util';
 
 @Injectable()
 export class LessonsService {
@@ -34,10 +43,64 @@ export class LessonsService {
 
     const url = await getSignedUrl(this.s3Client, command, { expiresIn: 900 });
 
-    // The public URL to access the file after upload
-    const publicUrl = `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'ap-southeast-1'}.amazonaws.com/${s3Key}`;
+    return { uploadUrl: url, s3Key };
+  }
 
-    return { uploadUrl: url, s3Key, publicUrl };
+  async getPresignedVideoUrl(courseId: string, lessonId: string, userId: string) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: { section: { select: { courseId: true } } },
+    });
+
+    if (!lesson || lesson.section.courseId !== courseId) {
+      throw new NotFoundException(`Lesson with ID ${lessonId} not found`);
+    }
+
+    if (lesson.type !== 'video') {
+      throw new BadRequestException('This lesson is not a video');
+    }
+
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      select: { instructorId: true },
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    const isInstructor = course.instructorId === userId;
+    if (!isInstructor) {
+      const member = await this.prisma.courseMember.findUnique({
+        where: { courseId_userId: { courseId, userId } },
+      });
+      if (!member) {
+        throw new ForbiddenException('You must be enrolled to watch this video');
+      }
+    }
+
+    const contentUrl = lesson.contentUrl;
+    if (!contentUrl) {
+      throw new NotFoundException('This lesson has no video content');
+    }
+
+    if (isExternalVideoUrl(contentUrl)) {
+      return { url: contentUrl, expiresIn: null };
+    }
+
+    const s3Key = extractS3Key(contentUrl);
+    if (!s3Key) {
+      throw new BadRequestException('Unsupported video content URL');
+    }
+
+    const expiresIn = 3600;
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: s3Key,
+    });
+    const url = await getSignedUrl(this.s3Client, command, { expiresIn });
+
+    return { url, expiresIn };
   }
 
   async create(sectionId: string, dto: CreateLessonDto) {
