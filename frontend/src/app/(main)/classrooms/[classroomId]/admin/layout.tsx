@@ -71,7 +71,7 @@ export default function AdminLayout({
   }
 
   const adminTabs = [
-    { name: 'Quản lý khóa học', path: `/classrooms/${classroom?.id || classroomId}/admin/courses`, icon: 'menu_book' },
+
     { name: 'Quản lý bài tập', path: `/classrooms/${classroom?.id || classroomId}/admin/tasks`, icon: 'assignment' },
     { name: 'Quản lý tài nguyên', path: `/classrooms/${classroom?.id || classroomId}/admin/files`, icon: 'folder' },
     { name: 'Quản lý thành viên', path: `/classrooms/${classroom?.id || classroomId}/admin/members`, icon: 'group' },

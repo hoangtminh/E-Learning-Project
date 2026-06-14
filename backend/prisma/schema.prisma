@@ -6,10 +6,8 @@ generator client {
 
 datasource db {
   provider     = "mysql"
-  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
-
 
 // --- ENUMS ---
 
@@ -110,15 +108,15 @@ model User {
   quizMemberships QuizMembership[]
   quizSubmissions QuizSubmission[]
 
-  uploadedFiles ClassroomFile[]
-  classroomPosts      ClassroomPost[]        @relation("PostAuthor")
+  uploadedFiles         ClassroomFile[]
+  classroomPosts        ClassroomPost[]        @relation("PostAuthor")
   classroomPostComments ClassroomPostComment[] @relation("PostCommentAuthor")
-  
-  notifications         Notification[]         @relation("UserNotification")
-  triggeredNotifications Notification[]       @relation("NotificationCreator")
-  transactions  Transaction[]
-  logs          SystemLog[]
-  refreshTokens RefreshToken[]
+
+  notifications          Notification[] @relation("UserNotification")
+  triggeredNotifications Notification[] @relation("NotificationCreator")
+  transactions           Transaction[]
+  logs                   SystemLog[]
+  refreshTokens          RefreshToken[]
 
   @@map("users")
 }
@@ -132,16 +130,16 @@ enum LogLevel {
 }
 
 model SystemLog {
-  id           String    @id @default(cuid())
-  userId       String?   @map("user_id")
-  action       String
-  details      String?   @db.Text
-  level        LogLevel  @default(info)
-  ipAddress    String?   @map("ip_address")
-  userAgent    String?   @map("user_agent") @db.VarChar(500)
-  targetId     String?   @map("target_id")
-  targetType   String?   @map("target_type")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  action     String
+  details    String?  @db.Text
+  level      LogLevel @default(info)
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent") @db.VarChar(500)
+  targetId   String?  @map("target_id")
+  targetType String?  @map("target_type")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -161,16 +159,16 @@ model Classroom {
   ownerId     String   @map("owner_id")
 
   // Relations
-  owner         User                    @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  owner         User                   @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   members       ClassroomMember[]
   joinRequests  ClassroomJoinRequest[]
   conversations Conversation[]
   tasks         ClassroomTask[]
-  linkedCourses ClassroomLinkedCourse[]
-  notes         Note[]
-  calls         Call[]
-  files         ClassroomFile[]
-  posts         ClassroomPost[]
+
+  notes Note[]
+  calls Call[]
+  files ClassroomFile[]
+  posts ClassroomPost[]
 
   @@index([ownerId])
   @@map("classrooms")
@@ -218,11 +216,11 @@ model Course {
   createdAt    DateTime         @default(now()) @map("created_at")
 
   // Relations
-  instructor   User                    @relation("CourseInstructor", fields: [instructorId], references: [id])
-  sections     Section[]
-  members      CourseMember[]
-  invites      CourseInvitation[]
-  classrooms   ClassroomLinkedCourse[]
+  instructor User               @relation("CourseInstructor", fields: [instructorId], references: [id])
+  sections   Section[]
+  members    CourseMember[]
+  invites    CourseInvitation[]
+
   progresses   UserProgress[]
   notes        Note[]
   transactions Transaction[]
@@ -416,19 +414,6 @@ model ClassroomFile {
   @@map("classroom_files")
 }
 
-model ClassroomLinkedCourse {
-  classroomId String   @map("classroom_id")
-  courseId    String   @map("course_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  @@id([classroomId, courseId])
-  @@index([courseId])
-  @@map("classroom_linked_courses")
-}
-
 model Note {
   id             String   @id @default(cuid())
   userId         String   @map("user_id")
@@ -454,17 +439,17 @@ model Note {
 }
 
 model Call {
-  id               String       @id @default(cuid())
-  creatorId        String       @map("creator_id")
-  title            String?      @db.VarChar(255)
-  classroomId      String?      @map("classroom_id")
-  conversationId   String?      @map("conversation_id")
-  status           CallStatus   @default(ongoing)
-  type             CallType     @default(public)
-  participantCount Int          @default(0) @map("participant_count")
-  createdAt        DateTime     @default(now()) @map("created_at")
-  startedAt        DateTime?    @map("started_at")
-  endedAt          DateTime?    @map("ended_at")
+  id               String     @id @default(cuid())
+  creatorId        String     @map("creator_id")
+  title            String?    @db.VarChar(255)
+  classroomId      String?    @map("classroom_id")
+  conversationId   String?    @map("conversation_id")
+  status           CallStatus @default(ongoing)
+  type             CallType   @default(public)
+  participantCount Int        @default(0) @map("participant_count")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  startedAt        DateTime?  @map("started_at")
+  endedAt          DateTime?  @map("ended_at")
 
   creator      User          @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   classroom    Classroom?    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
@@ -605,15 +590,15 @@ model ClassroomPost {
 }
 
 model ClassroomPostComment {
-  id          String   @id @default(cuid())
-  postId      String   @map("post_id")
-  authorId    String   @map("author_id")
-  content     String   @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  authorId  String   @map("author_id")
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  post        ClassroomPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author      User          @relation("PostCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  post   ClassroomPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User          @relation("PostCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([postId])
   @@index([authorId])
@@ -637,7 +622,6 @@ model Notification {
   @@index([creatorId])
   @@map("notifications")
 }
-
 
 enum TransactionStatus {
   pending

@@ -95,11 +95,7 @@ export default function ClassroomLayout({
       path: `/classrooms/${classroomId}/info`,
       exact: false,
     },
-    {
-      name: 'Khóa học',
-      path: `/classrooms/${classroomId}/courses`,
-      exact: false,
-    },
+
   ];
 
   const mobileVisibleTabs = tabs.slice(0, 3);

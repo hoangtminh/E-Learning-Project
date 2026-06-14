@@ -124,18 +124,7 @@ export class ClassroomsService {
         owner: {
           select: { id: true, fullName: true, avatarUrl: true, email: true },
         },
-        linkedCourses: {
-          include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
-                description: true,
-                thumbnailUrl: true,
-              },
-            },
-          },
-        },
+
       },
     });
 
@@ -195,12 +184,7 @@ export class ClassroomsService {
       throw new ForbiddenException(`Only the owner can delete this classroom`);
     }
 
-    // 1. Find all linked courses
-    const linkedCourses = await this.prisma.classroomLinkedCourse.findMany({
-      where: { classroomId: id },
-      select: { courseId: true },
-    });
-    const courseIds = linkedCourses.map((lc) => lc.courseId);
+
 
     const classroomToDelete = await this.prisma.classroom.findUnique({
       where: { id },
@@ -257,22 +241,7 @@ export class ClassroomsService {
         where: { classroomId: id },
       });
 
-      // G. Delete Linked Courses relations
-      await tx.classroomLinkedCourse.deleteMany({
-        where: { classroomId: id },
-      });
 
-      // H. Delete the Linked Courses themselves
-      if (courseIds.length > 0) {
-        for (const courseId of courseIds) {
-          try {
-            await tx.userProgress.deleteMany({ where: { courseId } });
-            await tx.course.delete({ where: { id: courseId } });
-          } catch (err) {
-            console.error(`Failed to delete course ${courseId} inside transaction:`, err);
-          }
-        }
-      }
 
       // I. Delete Notes
       await tx.note.deleteMany({
@@ -391,87 +360,7 @@ export class ClassroomsService {
     }));
   }
 
-  async assignCourseToClass(courseId: string, classId: string, userId: string) {
-    // 1. Lấy thông tin user thực hiện
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
 
-    const isAdmin = user?.role === GlobalRole.admin;
-
-    // 2. Lấy thông tin khóa học
-    const course = await this.prisma.course.findUnique({
-      where: { id: courseId },
-    });
-
-    if (!course) {
-      throw new NotFoundException('Không tìm thấy khóa học');
-    }
-
-    // 3. Logic kiểm tra quyền nghiệp vụ (Business Logic)
-    let hasCourseAccess = false;
-
-    if (isAdmin) {
-      // Điều kiện 4: userId là Admin (có quyền gắn mọi loại khóa học)
-      hasCourseAccess = true;
-    } else if (course.visibility === 'public') {
-      // Điều kiện 1: Khóa học là public
-      hasCourseAccess = true;
-    } else if (
-      course.visibility === 'private' &&
-      course.instructorId === userId
-    ) {
-      // Điều kiện 2: Khóa học là private nhưng userId chính là instructor_id
-      hasCourseAccess = true;
-    } else if (course.visibility === 'sale') {
-      // Điều kiện 3: Khóa học là sale nhưng userId đã mua khóa học này
-      const membership = await this.prisma.courseMember.findUnique({
-        where: {
-          courseId_userId: { courseId, userId },
-        },
-      });
-      if (membership) {
-        hasCourseAccess = true;
-      }
-    }
-
-    if (!hasCourseAccess) {
-      throw new ForbiddenException(
-        'Bạn không có quyền gắn khóa học này vào lớp (Khóa học private của người khác, hoặc khóa học đang bán mà bạn chưa mua).',
-      );
-    }
-
-    // 4. Kiểm tra xem đã gắn chưa
-    const existing = await this.prisma.classroomLinkedCourse.findUnique({
-      where: { classroomId_courseId: { classroomId: classId, courseId } },
-    });
-
-    if (existing) {
-      throw new ConflictException('Khóa học này đã được gắn vào lớp từ trước.');
-    }
-
-    // 5. Gắn khóa học vào lớp
-    return this.prisma.classroomLinkedCourse.create({
-      data: { classroomId: classId, courseId },
-    });
-  }
-
-  async unlinkCourse(userId: string, classroomId: string, courseId: string) {
-    // Logic của Guard (AssignCourseGuard) đã đảm bảo người gọi là Admin hoặc Owner.
-    // Ở đây chỉ cần thực hiện việc tháo gỡ.
-    const linkedCourse = await this.prisma.classroomLinkedCourse.findUnique({
-      where: { classroomId_courseId: { classroomId, courseId } },
-    });
-
-    if (!linkedCourse)
-      throw new NotFoundException(
-        'Không tìm thấy liên kết khóa học trong lớp này.',
-      );
-
-    return this.prisma.classroomLinkedCourse.delete({
-      where: { classroomId_courseId: { classroomId, courseId } },
-    });
-  }
 
   // --- POSTS ---
   async getPosts(classroomId: string, userId: string) {
