@@ -12,13 +12,13 @@ export default function ClassroomDetailPage() {
       {/* Page Header */}
       <div className='flex justify-between items-center mb-4 md:mb-6'>
         <div>
-          <h2 className='text-lg sm:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2'>
-            <span className='material-symbols-outlined text-sky-600' style={{ fontVariationSettings: "'FILL' 1" }}>
+          <h2 className='text-xl sm:text-2xl font-black text-on-surface tracking-tight flex items-center gap-2'>
+            <span className='material-symbols-outlined text-primary' style={{ fontVariationSettings: "'FILL' 1" }}>
               forum
             </span>
             Bảng tin lớp học
           </h2>
-          <p className='text-slate-500 text-xs sm:text-sm mt-1'>
+          <p className='text-on-surface-variant/85 text-xs sm:text-sm mt-1 max-w-2xl'>
             Cập nhật tin tức và thông báo mới nhất từ giáo viên và các thành viên khác.
           </p>
         </div>

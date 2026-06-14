@@ -118,7 +118,7 @@ export default function LoginPage() {
                   className='w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-600'
                 />
                 <label className='text-xs text-slate-500' htmlFor='remember'>
-                  Remember me for 30 days
+                  Remember me for 7 days
                 </label>
               </div>
 

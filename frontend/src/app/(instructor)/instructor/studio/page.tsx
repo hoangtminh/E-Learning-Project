@@ -10,6 +10,8 @@ import {
 import { createCourse, deleteCourse } from '@/api/courses';
 import { stripHtml } from '@/lib/utils';
 import { appAlert, appConfirm } from '@/components/ui/app-dialog-provider';
+import { Plus, X, Lock, PlayCircle, Trash2, Library, Users, ListVideo, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function InstructorStudioPage() {
   const { user } = useAuth();
@@ -46,7 +48,6 @@ export default function InstructorStudioPage() {
     const parsedPrice = parseFloat(price.replace(/,/g, ''));
     const finalPrice = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 0;
 
-    // Nếu nhập giá > 0 mà chọn public → tự đổi sang sale
     const finalVisibility =
       finalPrice > 0 && visibility === 'public' ? 'sale' : visibility;
 
@@ -99,14 +100,14 @@ export default function InstructorStudioPage() {
 
   if (!user || (user.role !== 'instructor' && user.role !== 'admin')) {
     return (
-      <div className="min-h-full flex items-center justify-center bg-slate-50">
-        <div className="text-center space-y-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md">
-          <span className="material-symbols-outlined text-5xl text-slate-300">lock</span>
-          <h1 className="text-xl font-bold text-slate-800">Không có quyền truy cập</h1>
-          <p className="text-slate-500 text-sm">
+      <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest text-on-surface">
+        <div className="text-center space-y-4 bg-white rounded-2xl shadow-xs border border-outline-variant/30 p-8 max-w-md">
+          <Lock className="size-12 text-on-surface-variant/40 mx-auto" />
+          <h1 className="text-xl font-bold text-on-surface">Không có quyền truy cập</h1>
+          <p className="text-on-surface-variant/70 text-sm">
             Khu vực này dành cho giảng viên. Liên hệ admin để được cấp quyền instructor.
           </p>
-          <Link href="/dashboard" className="inline-block px-4 py-2 bg-sky-500 text-white rounded-lg text-sm font-semibold hover:bg-sky-600 transition-colors">
+          <Link href="/dashboard" className="inline-block px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dim transition-colors shadow-xs active:scale-95">
             Về Dashboard
           </Link>
         </div>
@@ -115,215 +116,254 @@ export default function InstructorStudioPage() {
   }
 
   return (
-    <div className="min-h-full bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sm:py-5">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+    <div className='pb-16 transition-all p-4 sm:p-6 md:p-12 space-y-6 sm:space-y-8 bg-surface-container-lowest min-h-screen text-on-surface relative'>
+      <div className='absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none' />
+
+      <div className='max-w-6xl mx-auto w-full space-y-6 sm:space-y-8 relative z-10'>
+        {/* Title section */}
+        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/30 pb-6 relative z-10'>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-3">
-              <span className="material-symbols-outlined text-sky-600 text-2xl sm:text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+            <h1 className='text-xl sm:text-2xl font-black text-on-surface tracking-tight flex items-center gap-2'>
+              <span className='material-symbols-outlined text-primary' style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
               Instructor Studio
             </h1>
-            <p className="text-slate-500 text-xs sm:text-sm mt-1">Quản lý khóa học của bạn</p>
+            <p className='text-xs sm:text-sm text-on-surface-variant/85 mt-1 max-w-2xl'>
+              Quản lý khóa học của bạn
+            </p>
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-xs sm:text-sm hover:bg-sky-600 transition-all shadow-sm"
+            className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border-0 bg-primary px-4 text-xs font-bold text-white shadow-xs hover:bg-primary-dim transition-all active:scale-[0.98] self-start sm:self-center"
           >
-            <span className="material-symbols-outlined text-base sm:text-lg">add</span>
+            <Plus className="size-3.5" />
             Tạo khóa học mới
           </button>
         </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Create Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-800">Tạo khóa học mới</h2>
-                <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Tên khóa học <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
-                    placeholder="Ví dụ: Lập trình Web với React"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Mô tả</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800 resize-none"
-                    placeholder="Mô tả ngắn gọn về khóa học..."
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Chế độ hiển thị</label>
-                  <select
-                    value={visibility}
-                    onChange={(e) => setVisibility(e.target.value as 'public' | 'private' | 'sale')}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
-                  >
-                    <option value="public">Công khai miễn phí — ai cũng truy cập được</option>
-                    <option value="sale">Công khai có phí — yêu cầu thanh toán</option>
-                    <option value="private">Riêng tư — chỉ qua lời mời</option>
-                  </select>
+        <AnimatePresence>
+          {showForm && (
+            <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5 border border-outline-variant/30"
+              >
+                <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3.5 mb-4">
+                  <h2 className="text-sm sm:text-base font-black text-on-surface uppercase tracking-wider flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">school</span>
+                    Tạo khóa học mới
+                  </h2>
+                  <button onClick={() => setShowForm(false)} className="text-on-surface-variant/60 hover:text-on-surface cursor-pointer border-0 bg-transparent">
+                    <X size={18} />
+                  </button>
                 </div>
 
-                {/* Ô nhập giá — hiện khi chọn "Có phí" hoặc public (để tùy chọn) */}
-                {(visibility === 'sale' || visibility === 'public') && (
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Giá khóa học
-                      {visibility === 'sale' && <span className="text-red-500"> *</span>}
-                      <span className="text-slate-400 font-normal ml-1">(VNĐ)</span>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                      Tên khóa học <span className="text-error">*</span>
                     </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        step="1000"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        className="w-full px-4 py-2.5 pr-16 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
-                        placeholder={visibility === 'sale' ? 'Ví dụ: 299000' : '0 = miễn phí'}
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">VNĐ</span>
-                    </div>
-                    {visibility === 'public' && price && parseFloat(price) > 0 && (
-                      <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">info</span>
-                        Khóa học sẽ được đặt thành <strong>Có phí</strong> do có nhập giá
-                      </p>
-                    )}
-                    {price && parseFloat(price) > 0 && (
-                      <p className="text-xs text-slate-400 mt-1">
-                        ≈ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(price))}
-                      </p>
-                    )}
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full px-4 py-2 text-xs sm:text-sm border border-outline-variant/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface h-10 bg-slate-50 focus:bg-white transition-colors"
+                      placeholder="Ví dụ: Lập trình Web với React"
+                    />
                   </div>
-                )}
-              </div>
+                  <div>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Mô tả</label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full px-4 py-2 border border-outline-variant/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface resize-none bg-slate-50 focus:bg-white transition-colors text-xs sm:text-sm"
+                      placeholder="Mô tả ngắn gọn về khóa học..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Chế độ hiển thị</label>
+                    <select
+                      value={visibility}
+                      onChange={(e) => setVisibility(e.target.value as 'public' | 'private' | 'sale')}
+                      className="w-full px-4 py-2 border border-outline-variant/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface h-10 bg-slate-50 focus:bg-white transition-colors text-xs sm:text-sm"
+                    >
+                      <option value="public">Công khai miễn phí — ai cũng truy cập được</option>
+                      <option value="sale">Công khai có phí — yêu cầu thanh toán</option>
+                      <option value="private">Riêng tư — chỉ qua lời mời</option>
+                    </select>
+                  </div>
 
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-slate-600 hover:text-slate-800 text-sm font-medium"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleCreate}
-                  disabled={!title.trim() || isSubmitting}
-                  className="px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Đang tạo...' : 'Tạo khóa học'}
-                </button>
-              </div>
+                  {/* Ô nhập giá — hiện khi chọn "Có phí" hoặc public (để tùy chọn) */}
+                  {(visibility === 'sale' || visibility === 'public') && (
+                    <div>
+                      <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                        Giá khóa học
+                        {visibility === 'sale' && <span className="text-error"> *</span>}
+                        <span className="text-on-surface-variant/60 font-normal normal-case ml-1">(VNĐ)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1000"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          className="w-full px-4 py-2 pr-16 border border-outline-variant/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface h-10 bg-slate-50 focus:bg-white transition-colors text-xs sm:text-sm"
+                          placeholder={visibility === 'sale' ? 'Ví dụ: 299000' : '0 = miễn phí'}
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-xs font-bold pointer-events-none">VNĐ</span>
+                      </div>
+                      {visibility === 'public' && price && parseFloat(price) > 0 && (
+                        <p className="text-[10px] sm:text-xs text-orange-600 mt-1.5 flex items-center gap-1 font-semibold">
+                          <span className="material-symbols-outlined text-[14px]">info</span>
+                          Khóa học sẽ được đặt thành Có phí do có nhập giá
+                        </p>
+                      )}
+                      {price && parseFloat(price) > 0 && (
+                        <p className="text-[10px] sm:text-xs text-on-surface-variant/70 mt-1.5 font-semibold">
+                          ≈ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(price))}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => setShowForm(false)}
+                    className="px-4 py-2 text-on-surface-variant/70 hover:text-on-surface text-xs font-bold cursor-pointer bg-transparent border-0"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleCreate}
+                    disabled={!title.trim() || isSubmitting}
+                    className="px-5 py-2 bg-primary text-white rounded-xl font-bold text-xs hover:bg-primary-dim transition-all shadow-xs disabled:opacity-50 cursor-pointer active:scale-95"
+                  >
+                    {isSubmitting ? 'Đang tạo...' : 'Tạo khóa học'}
+                  </button>
+                </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Course list */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 relative z-10">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-40 sm:h-64 bg-slate-100 animate-pulse rounded-2xl border border-outline-variant/25"
+              />
+            ))}
           </div>
         ) : courses.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300 space-y-4">
-            <span className="material-symbols-outlined text-5xl text-slate-300">library_books</span>
-            <h3 className="text-lg font-semibold text-slate-700">Chưa có khóa học nào</h3>
-            <p className="text-slate-500 text-sm">Bắt đầu tạo khóa học đầu tiên của bạn ngay!</p>
+          <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-outline-variant/40 relative z-10">
+            <Library className="size-8 text-on-surface-variant/35 mx-auto mb-3" />
+            <h3 className="text-sm text-on-surface-variant font-bold mb-1">Chưa có khóa học nào</h3>
+            <p className="text-xs text-on-surface-variant/70 mb-4">Bắt đầu tạo khóa học đầu tiên của bạn ngay!</p>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 text-primary rounded-xl text-xs font-bold hover:bg-primary/20 transition-all border-0 cursor-pointer active:scale-95"
             >
-              <span className="material-symbols-outlined text-lg">add</span>
+              <Plus className="size-3.5" />
               Tạo khóa học
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 relative z-10"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              visible: { transition: { staggerChildren: 0.05 } }
+            }}
+          >
             {courses.map((course) => (
-              <div key={course?.id} className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-sky-200 transition-all">
+              <motion.div 
+                key={course?.id} 
+                className="group bg-white rounded-2xl border border-outline-variant/30 flex flex-col hover:shadow-xs hover:border-primary/45 transition-all duration-300 relative h-full overflow-hidden"
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } }
+                }}
+              >
                 <Link
                   href={`/instructor/studio/${course?.id}`}
-                  className="block h-full"
+                  className="relative h-24 sm:h-36 overflow-hidden bg-slate-100 block"
                 >
-                  <div className="h-36 bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center relative">
-                    {course?.thumbnailUrl ? (
-                      <img src={course?.thumbnailUrl} alt={course?.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="material-symbols-outlined text-white/40 text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        play_circle
-                      </span>
-                    )}
-                    <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                  {course?.thumbnailUrl ? (
+                    <img src={course?.thumbnailUrl} alt={course?.title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/30 group-hover:scale-[1.03] transition-transform duration-500">
+                      <PlayCircle className="size-12 text-primary/40" />
+                    </div>
+                  )}
+                  <div className={`absolute top-2 left-2 sm:top-3 sm:left-3 px-1.5 py-0.5 sm:px-2.5 sm:py-1 backdrop-blur-md rounded-md sm:rounded-lg flex items-center gap-1 border border-white/10 ${
                       course.visibility === 'public'
-                        ? 'bg-green-100 text-green-700'
+                        ? 'bg-green-500/70'
                         : course.visibility === 'sale'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-amber-100 text-amber-700'
+                          ? 'bg-primary/70'
+                          : 'bg-orange-500/70'
                     }`}>
+                    <span className="text-white text-[8px] sm:text-[9px] font-bold uppercase tracking-wider">
                       {course.visibility === 'public' ? 'Miễn phí'
                         : course.visibility === 'sale' ? 'Có phí'
                         : 'Riêng tư'}
                     </span>
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors line-clamp-2">
+                </Link>
+                
+                <div className="p-2.5 sm:p-4.5 flex flex-col flex-1">
+                  <Link href={`/instructor/studio/${course?.id}`}>
+                    <h3 className="font-bold text-on-surface leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-1 sm:mb-1.5 h-8 sm:h-10 text-xs sm:text-base">
                       {course?.title}
                     </h3>
-                    <p className="text-slate-500 text-sm mt-1 line-clamp-2">
-                      {course?.description ? stripHtml(course.description) : 'Chưa có mô tả'}
-                    </p>
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-4 text-xs text-slate-400">
-                        <span className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">list</span>
-                          {course?._count.sections} phần
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">group</span>
-                          {course?._count.members} học viên
-                        </span>
-                      </div>
-                      {Number(course?.price) > 0 && (
-                        <span className="text-xs font-bold text-blue-600">
-                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(course.price))}
-                        </span>
-                      )}
+                  </Link>
+                  <p className="hidden sm:block text-on-surface-variant/80 text-xs line-clamp-2 mb-4 h-8 leading-relaxed">
+                    {course?.description ? stripHtml(course.description) : 'Chưa có mô tả'}
+                  </p>
+                  
+                  <div className="mt-auto flex items-center justify-between pt-2.5 sm:pt-4.5 border-t border-outline-variant/20 gap-2 sm:gap-3">
+                    <div className="flex items-center gap-3 text-xs text-on-surface-variant/70 font-semibold">
+                      <span className="flex items-center gap-1">
+                        <ListVideo className="size-3.5" />
+                        {course?._count.sections}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="size-3.5" />
+                        {course?._count.members}
+                      </span>
                     </div>
+                    {Number(course?.price) > 0 && (
+                      <span className="text-[10px] sm:text-xs font-black text-primary">
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(course.price))}
+                      </span>
+                    )}
                   </div>
-                </Link>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleDeleteCourse(course?.id);
-                  }}
-                  className="absolute top-3 left-3 p-1.5 bg-red-100 text-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-200 shadow-sm"
-                  title="Xóa khóa học"
-                >
-                  <span className="material-symbols-outlined text-[16px] leading-none">delete</span>
-                </button>
-              </div>
+                </div>
+
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteCourse(course?.id);
+                    }}
+                    className="bg-error hover:bg-error/90 text-white px-2 py-1.5 rounded-lg flex items-center justify-center transition-colors shadow-md text-[10px] sm:text-xs font-bold gap-1 cursor-pointer border-0 active:scale-95"
+                    title="Xóa khóa học"
+                  >
+                    <Trash2 className="size-3 sm:size-3.5" />
+                    <span className="hidden xs:inline">Xóa</span>
+                  </button>
+                </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

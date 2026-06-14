@@ -280,66 +280,67 @@ export default function CourseEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-full">
-        <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-surface-container-lowest">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!course) {
     return (
-      <div className="flex items-center justify-center min-h-full">
-        <p className="text-slate-500">Không tìm thấy khóa học</p>
+      <div className="flex items-center justify-center min-h-screen bg-surface-container-lowest">
+        <p className="text-on-surface-variant/70 font-semibold">Không tìm thấy khóa học</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+    <div className="pb-16 transition-all p-4 sm:p-6 md:p-12 space-y-6 sm:space-y-8 bg-surface-container-lowest min-h-screen text-on-surface relative">
+      <div className='absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none' />
+      
+      <div className='max-w-5xl mx-auto w-full space-y-6 sm:space-y-8 relative z-10'>
+        {/* Header */}
+        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/30 pb-6'>
           <div className="flex items-center gap-3">
             <Link
               href="/instructor/studio"
-              className="flex items-center gap-1 text-slate-500 hover:text-sky-600 transition-colors text-sm"
+              className="flex items-center gap-1 text-on-surface-variant/70 hover:text-primary transition-colors text-sm font-semibold"
             >
               <span className="material-symbols-outlined text-lg">arrow_back</span>
               Studio
             </Link>
-            <span className="text-slate-300">/</span>
-            <h1 className="font-bold text-slate-800 truncate max-w-md">{course.title}</h1>
+            <span className="text-outline-variant/50">/</span>
+            <h1 className="text-xl sm:text-2xl font-black text-on-surface tracking-tight truncate max-w-md">{course.title}</h1>
           </div>
           <Link
             href={`/courses/${courseId}`}
-            className="text-sm text-sky-600 hover:underline font-medium"
+            className="text-xs font-bold bg-primary/10 text-primary px-4 py-2 rounded-xl hover:bg-primary/20 transition-colors flex items-center gap-1"
           >
-            Xem trang khóa học →
+            Xem trang học
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </Link>
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
         {/* Course Info */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-2xl border border-outline-variant/30 shadow-xs p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-slate-700 flex items-center gap-2">
-              <span className="material-symbols-outlined text-sky-500">info</span>
+            <h2 className="font-bold text-on-surface-variant flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">info</span>
               Thông tin khóa học
             </h2>
             {!editingTitle ? (
               <button
                 onClick={() => setEditingTitle(true)}
-                className="text-sm text-sky-600 hover:underline font-medium"
+                className="text-sm text-primary hover:underline font-medium"
               >
                 Chỉnh sửa
               </button>
             ) : (
               <div className="flex gap-2">
-                <button onClick={handleUpdateCourse} className="text-sm px-3 py-1 bg-sky-500 text-white rounded-lg font-medium">
+                <button onClick={handleUpdateCourse} className="text-sm px-3 py-1 bg-primary/50 text-white rounded-lg font-medium">
                   Lưu
                 </button>
-                <button onClick={() => setEditingTitle(false)} className="text-sm text-slate-500 hover:text-slate-700">
+                <button onClick={() => setEditingTitle(false)} className="text-sm text-on-surface-variant/70 hover:text-on-surface-variant">
                   Hủy
                 </button>
               </div>
@@ -348,30 +349,30 @@ export default function CourseEditorPage() {
           {editingTitle ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Tên khóa học</label>
+                <label className="block text-xs font-semibold text-on-surface-variant/70 mb-1">Tên khóa học</label>
                 <input
                   value={titleInput}
                   onChange={(e) => setTitleInput(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-4 py-2 border border-outline-variant/50 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div className="bg-white">
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Mô tả</label>
+                <label className="block text-xs font-semibold text-on-surface-variant/70 mb-1">Mô tả</label>
                 <ReactQuill 
                   theme="snow" 
                   value={descInput} 
                   onChange={setDescInput} 
                   placeholder="Mô tả khóa học (tổng quan)..."
-                  className="rounded-xl border border-slate-300 overflow-hidden"
+                  className="rounded-xl border border-outline-variant/50 overflow-hidden"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1">Chế độ hiển thị</label>
+                  <label className="block text-xs font-semibold text-on-surface-variant/70 mb-1">Chế độ hiển thị</label>
                   <select
                     value={visibilityInput}
                     onChange={(e) => setVisibilityInput(e.target.value as 'public' | 'private' | 'sale')}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3 py-2 border border-outline-variant/50 rounded-xl text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="public">Công khai miễn phí</option>
                     <option value="sale">Công khai có phí</option>
@@ -380,7 +381,7 @@ export default function CourseEditorPage() {
                 </div>
                 {(visibilityInput === 'sale' || visibilityInput === 'public') && (
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">
+                    <label className="block text-xs font-semibold text-on-surface-variant/70 mb-1">
                       Giá (VNĐ){visibilityInput === 'sale' && <span className="text-red-400"> *</span>}
                     </label>
                     <div className="relative">
@@ -390,13 +391,13 @@ export default function CourseEditorPage() {
                         step="1000"
                         value={priceInput}
                         onChange={(e) => setPriceInput(e.target.value)}
-                        className="w-full px-3 py-2 pr-14 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full px-3 py-2 pr-14 border border-outline-variant/50 rounded-xl text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                         placeholder={visibilityInput === 'sale' ? '299000' : '0 = miễn phí'}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none">VNĐ</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-xs pointer-events-none">VNĐ</span>
                     </div>
                     {priceInput && parseFloat(priceInput) > 0 && (
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-on-surface-variant/50 mt-1">
                         {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(priceInput))}
                       </p>
                     )}
@@ -406,15 +407,15 @@ export default function CourseEditorPage() {
             </div>
           ) : (
             <div>
-              <h3 className="text-lg font-semibold text-slate-800">{course.title}</h3>
-              <div className="text-slate-500 text-sm mt-1 prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1" dangerouslySetInnerHTML={{ __html: course.description || 'Chưa có mô tả' }} />
+              <h3 className="text-lg font-semibold text-on-surface">{course.title}</h3>
+              <div className="text-on-surface-variant/70 text-sm mt-1 prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1" dangerouslySetInnerHTML={{ __html: course.description || 'Chưa có mô tả' }} />
               <div className="flex flex-wrap gap-3 mt-3">
                 <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
                   course.visibility === 'public'
                     ? 'bg-green-100 text-green-700'
                     : course.visibility === 'sale'
                       ? 'bg-blue-100 text-blue-700'
-                      : 'bg-slate-100 text-slate-600'
+                      : 'bg-surface-container-low text-on-surface-variant/80'
                 }`}>
                   {course.visibility === 'public' ? '🌐 Công khai miễn phí'
                     : course.visibility === 'sale' ? '💰 Có phí'
@@ -425,38 +426,38 @@ export default function CourseEditorPage() {
                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(course.price))}
                   </span>
                 )}
-                <span className="text-xs text-slate-400">{course._count?.sections ?? 0} phần học</span>
-                <span className="text-xs text-slate-400">{course._count?.members ?? 0} học viên</span>
+                <span className="text-xs text-on-surface-variant/50">{course._count?.sections ?? 0} phần học</span>
+                <span className="text-xs text-on-surface-variant/50">{course._count?.members ?? 0} học viên</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Sections & Lessons */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="font-bold text-slate-700 flex items-center gap-2">
-              <span className="material-symbols-outlined text-sky-500">playlist_add</span>
+        <div className="bg-white rounded-2xl border border-outline-variant/30 shadow-xs overflow-hidden">
+          <div className="p-6 border-b border-outline-variant/20 flex items-center justify-between">
+            <h2 className="font-bold text-on-surface-variant flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">playlist_add</span>
               Nội dung khóa học ({sections.length} phần)
             </h2>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-outline-variant/20">
             {sections.map((section, sIdx) => (
               <div key={section.id}>
                 {/* Section header */}
-                <div className="flex items-center gap-3 px-6 py-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                <div className="flex items-center gap-3 px-6 py-4 bg-surface-container-lowest/50 hover:bg-surface-container-lowest transition-colors">
                   <button onClick={() => toggleSection(section.id)} className="shrink-0">
-                    <span className={`material-symbols-outlined text-slate-400 transition-transform ${expandedSections.has(section.id) ? 'rotate-90' : ''}`}>
+                    <span className={`material-symbols-outlined text-on-surface-variant/50 transition-transform ${expandedSections.has(section.id) ? 'rotate-90' : ''}`}>
                       chevron_right
                     </span>
                   </button>
-                  <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 text-xs font-bold flex items-center justify-center shrink-0">
+                  <span className="w-7 h-7 rounded-lg bg-primary/10 text-sky-700 text-xs font-bold flex items-center justify-center shrink-0">
                     {sIdx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-800 text-sm">{section.title || 'Chưa đặt tên'}</h3>
-                    <p className="text-xs text-slate-400">{section.lessons.length} bài học</p>
+                    <h3 className="font-semibold text-on-surface text-sm">{section.title || 'Chưa đặt tên'}</h3>
+                    <p className="text-xs text-on-surface-variant/50">{section.lessons.length} bài học</p>
                   </div>
                   <button
                     onClick={() => handleDeleteSection(section.id)}
@@ -474,12 +475,12 @@ export default function CourseEditorPage() {
                       const t = typeLabels[lesson.type] || typeLabels.text;
                       const isEditingThis = editingLessonId === lesson.id;
                       return (
-                        <div key={lesson.id} className="space-y-3 p-3 rounded-xl border border-slate-100 hover:border-sky-200 transition-colors bg-white">
+                        <div key={lesson.id} className="space-y-3 p-3 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-colors bg-white">
                           <div className="flex items-center gap-3">
                             <span className={`material-symbols-outlined text-lg ${t.color}`}>{t.icon}</span>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-700 truncate">{lesson.title}</p>
-                              <p className="text-[11px] text-slate-400">
+                              <p className="text-sm font-medium text-on-surface-variant truncate">{lesson.title}</p>
+                              <p className="text-[11px] text-on-surface-variant/50">
                                 {t.label}
                                 {lesson.contentUrl && ' · URL đã gắn'}
                                 {lesson.durationSec && ` · ${Math.floor(lesson.durationSec / 60)}m`}
@@ -488,7 +489,7 @@ export default function CourseEditorPage() {
                             <div className="flex items-center gap-1.5">
                               <button
                                 onClick={() => startEditingLesson(lesson)}
-                                className="text-slate-300 hover:text-sky-600 transition-colors p-1"
+                                className="text-slate-300 hover:text-primary transition-colors p-1"
                                 title="Chỉnh sửa bài học"
                               >
                                 <span className="material-symbols-outlined text-base">edit</span>
@@ -504,13 +505,13 @@ export default function CourseEditorPage() {
                           </div>
 
                           {isEditingThis && (
-                            <div className="p-4 border border-sky-200 rounded-xl bg-sky-50/20 space-y-3 mt-2">
+                            <div className="p-4 border border-primary/30 rounded-xl bg-primary/5/20 space-y-3 mt-2">
                               <div>
-                                <label className="block text-xs font-semibold text-slate-500 mb-1">Tên bài học</label>
+                                <label className="block text-xs font-semibold text-on-surface-variant/70 mb-1">Tên bài học</label>
                                 <input
                                   value={editLessonTitle}
                                   onChange={(e) => setEditLessonTitle(e.target.value)}
-                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                  className="w-full px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                                   placeholder="Tên bài học..."
                                 />
                               </div>
@@ -518,7 +519,7 @@ export default function CourseEditorPage() {
                                 <select
                                   value={editLessonType}
                                   onChange={(e) => { setEditLessonType(e.target.value); setEditLessonUrl(''); setEditLessonBody(''); }}
-                                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 shrink-0"
+                                  className="px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0"
                                 >
                                   <option value="video">Video</option>
                                   <option value="text">Văn bản</option>
@@ -540,7 +541,7 @@ export default function CourseEditorPage() {
                                       <input
                                         value={editLessonUrl}
                                         onChange={(e) => setEditLessonUrl(e.target.value)}
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                        className="w-full px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                                         placeholder="Dán URL video (YouTube, Vimeo...)"
                                       />
                                     ) : (
@@ -579,11 +580,11 @@ export default function CourseEditorPage() {
                                               }
                                             }
                                           }}
-                                          className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                                          className="w-full px-3 py-1.5 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/5 file:text-sky-700 hover:file:bg-primary/10"
                                         />
                                         {editUploadingFile && (
                                           <div className="mt-2">
-                                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                            <div className="flex items-center justify-between text-xs text-on-surface-variant/70 mb-1">
                                               <span>Đang upload...</span>
                                               <span>{editUploadProgress}%</span>
                                             </div>
@@ -617,7 +618,7 @@ export default function CourseEditorPage() {
                                       <textarea
                                         value={editLessonBody}
                                         onChange={(e) => setEditLessonBody(e.target.value)}
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+                                        className="w-full px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                                         placeholder="Nhập nội dung văn bản bài học..."
                                         rows={4}
                                       />
@@ -642,11 +643,11 @@ export default function CourseEditorPage() {
                                               }
                                             }
                                           }}
-                                          className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                                          className="w-full px-3 py-1.5 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/5 file:text-sky-700 hover:file:bg-primary/10"
                                         />
                                         {editUploadingFile && (
                                           <div className="mt-2">
-                                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                            <div className="flex items-center justify-between text-xs text-on-surface-variant/70 mb-1">
                                               <span>Đang upload...</span>
                                               <span>{editUploadProgress}%</span>
                                             </div>
@@ -676,7 +677,7 @@ export default function CourseEditorPage() {
                                       <select
                                         value={editLessonUrl}
                                         onChange={(e) => setEditLessonUrl(e.target.value)}
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                        className="w-full px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                                       >
                                         <option value="">-- Chọn bài Quiz --</option>
                                         {availableQuizzes.map(q => (
@@ -692,13 +693,13 @@ export default function CourseEditorPage() {
                                 <button
                                   onClick={() => handleUpdateLesson(section.id, lesson.id)}
                                   disabled={!editLessonTitle.trim()}
-                                  className="px-4 py-1.5 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 disabled:opacity-50"
+                                  className="px-4 py-1.5 bg-primary/50 text-white rounded-lg text-sm font-medium hover:bg-primary-dim disabled:opacity-50"
                                 >
                                   Cập nhật
                                 </button>
                                 <button
                                   onClick={() => { setEditingLessonId(null); }}
-                                  className="px-4 py-1.5 text-slate-500 text-sm"
+                                  className="px-4 py-1.5 text-on-surface-variant/70 text-sm"
                                 >
                                   Hủy
                                 </button>
@@ -711,11 +712,11 @@ export default function CourseEditorPage() {
 
                     {/* Add lesson form */}
                     {addingLessonTo === section.id ? (
-                      <div className="p-4 border border-sky-200 rounded-xl bg-sky-50/30 space-y-3">
+                      <div className="p-4 border border-primary/30 rounded-xl bg-primary/5/30 space-y-3">
                         <input
                           value={newLessonTitle}
                           onChange={(e) => setNewLessonTitle(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          className="w-full px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                           placeholder="Tên bài học..."
                           autoFocus
                         />
@@ -723,7 +724,7 @@ export default function CourseEditorPage() {
                           <select
                             value={newLessonType}
                             onChange={(e) => { setNewLessonType(e.target.value); setNewLessonUrl(''); setNewLessonBody(''); }}
-                            className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 shrink-0"
+                            className="px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0"
                           >
                             <option value="video">Video</option>
                             <option value="text">Văn bản</option>
@@ -745,7 +746,7 @@ export default function CourseEditorPage() {
                                 <input
                                   value={newLessonUrl}
                                   onChange={(e) => setNewLessonUrl(e.target.value)}
-                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                  className="w-full px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                                   placeholder="Dán URL video (YouTube, Vimeo...)"
                                 />
                               ) : (
@@ -784,11 +785,11 @@ export default function CourseEditorPage() {
                                         }
                                       }
                                     }}
-                                    className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                                    className="w-full px-3 py-1.5 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/5 file:text-sky-700 hover:file:bg-primary/10"
                                   />
                                   {uploadingFile && (
                                     <div className="mt-2">
-                                      <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                      <div className="flex items-center justify-between text-xs text-on-surface-variant/70 mb-1">
                                         <span>Đang upload...</span>
                                         <span>{uploadProgress}%</span>
                                       </div>
@@ -822,7 +823,7 @@ export default function CourseEditorPage() {
                                 <textarea
                                   value={newLessonBody}
                                   onChange={(e) => setNewLessonBody(e.target.value)}
-                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+                                  className="w-full px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                                   placeholder="Nhập nội dung văn bản bài học..."
                                   rows={4}
                                 />
@@ -847,11 +848,11 @@ export default function CourseEditorPage() {
                                         }
                                       }
                                     }}
-                                    className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                                    className="w-full px-3 py-1.5 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/5 file:text-sky-700 hover:file:bg-primary/10"
                                   />
                                   {uploadingFile && (
                                     <div className="mt-2">
-                                      <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                      <div className="flex items-center justify-between text-xs text-on-surface-variant/70 mb-1">
                                         <span>Đang upload...</span>
                                         <span>{uploadProgress}%</span>
                                       </div>
@@ -881,7 +882,7 @@ export default function CourseEditorPage() {
                                 <select
                                   value={newLessonUrl}
                                   onChange={(e) => setNewLessonUrl(e.target.value)}
-                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                  className="w-full px-3 py-2 border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 >
                                   <option value="">-- Chọn bài Quiz --</option>
                                   {availableQuizzes.map(q => (
@@ -896,13 +897,13 @@ export default function CourseEditorPage() {
                           <button
                             onClick={() => handleAddLesson(section.id)}
                             disabled={!newLessonTitle.trim()}
-                            className="px-4 py-1.5 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 disabled:opacity-50"
+                            className="px-4 py-1.5 bg-primary/50 text-white rounded-lg text-sm font-medium hover:bg-primary-dim disabled:opacity-50"
                           >
                             Thêm bài
                           </button>
                           <button
                             onClick={() => { setAddingLessonTo(null); setNewLessonTitle(''); setNewLessonUrl(''); setNewLessonBody(''); }}
-                            className="px-4 py-1.5 text-slate-500 text-sm"
+                            className="px-4 py-1.5 text-on-surface-variant/70 text-sm"
                           >
                             Hủy
                           </button>
@@ -911,7 +912,7 @@ export default function CourseEditorPage() {
                     ) : (
                       <button
                         onClick={() => setAddingLessonTo(section.id)}
-                        className="flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700 font-medium px-3 py-2 hover:bg-sky-50 rounded-lg transition-colors"
+                        className="flex items-center gap-2 text-sm text-primary hover:text-sky-700 font-medium px-3 py-2 hover:bg-primary/5 rounded-lg transition-colors"
                       >
                         <span className="material-symbols-outlined text-base">add</span>
                         Thêm bài học
@@ -924,19 +925,19 @@ export default function CourseEditorPage() {
           </div>
 
           {/* Add section */}
-          <div className="p-6 border-t border-slate-100">
+          <div className="p-6 border-t border-outline-variant/20">
             <div className="flex items-center gap-3">
               <input
                 value={newSectionTitle}
                 onChange={(e) => setNewSectionTitle(e.target.value)}
-                className="flex-1 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="flex-1 px-4 py-2 border border-outline-variant/50 rounded-xl text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder="Tên phần mới..."
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSection()}
               />
               <button
                 onClick={handleAddSection}
                 disabled={!newSectionTitle.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-xl text-sm font-semibold hover:bg-sky-600 disabled:opacity-50 transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-primary/50 text-white rounded-xl text-sm font-semibold hover:bg-primary-dim disabled:opacity-50 transition-all"
               >
                 <span className="material-symbols-outlined text-base">add</span>
                 Thêm phần

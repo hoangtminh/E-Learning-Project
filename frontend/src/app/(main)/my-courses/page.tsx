@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BookOpen, User, AlertCircle, LogOut } from 'lucide-react';
 import { EnrolledCourse, getMyEnrolledCourses } from '@/api/enrollment';
 import { getMyTeachingCourses, InstructorCourse } from '@/api/instructor';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +10,7 @@ import { useCourses } from '@/contexts/CourseContext';
 import { appConfirm } from '@/components/ui/app-dialog-provider';
 import { toast } from 'sonner';
 import { stripHtml } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 type CourseCardData = {
   id: string;
@@ -36,7 +37,7 @@ function CourseCard({
   onLeave?: (id: string) => void;
 }) {
   return (
-    <div className='bg-white border border-slate-200 rounded-2xl overflow-hidden group flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative'>
+    <div className='bg-white border border-outline-variant/30 rounded-2xl overflow-hidden group flex flex-col hover:shadow-xs hover:border-primary/45 transition-all duration-300 relative h-full'>
       {/* Leave Course button */}
       {onLeave && (
         <div className='absolute top-2 right-2 sm:top-3 sm:right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity'>
@@ -47,12 +48,10 @@ function CourseCard({
               e.stopPropagation();
               onLeave(course.id);
             }}
-            className='bg-red-500/90 hover:bg-red-600 text-white px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg flex items-center justify-center transition-colors shadow-md text-[10px] sm:text-xs font-bold gap-1 cursor-pointer border-0'
+            className='bg-error hover:bg-error/90 text-white px-2 py-1.5 rounded-lg flex items-center justify-center transition-colors shadow-md text-[10px] sm:text-xs font-bold gap-1 cursor-pointer border-0 active:scale-95'
             title='Rời khóa học'
           >
-            <span className='material-symbols-outlined text-[10px] sm:text-xs font-bold'>
-              logout
-            </span>
+            <LogOut className='size-3 sm:size-3.5' />
             <span className='hidden xs:inline'>Rời khóa</span>
           </button>
         </div>
@@ -60,76 +59,75 @@ function CourseCard({
 
       <Link
         href={href}
-        className='relative h-24 sm:h-40 overflow-hidden bg-slate-100 block'
+        className='relative h-24 sm:h-36 overflow-hidden bg-slate-100 block shrink-0'
       >
         {course.thumbnailUrl ? (
           <img
             src={course.thumbnailUrl}
             alt={course.title}
-            className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
+            className='w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500'
           />
         ) : (
-          <div className='w-full h-full bg-sky-50 flex flex-col items-center justify-center gap-1 sm:gap-2 p-2 sm:p-4 text-sky-500'>
-            <span className='material-symbols-outlined text-xl sm:text-4xl'>
-              menu_book
-            </span>
-            <span className='text-[8px] sm:text-xs font-bold uppercase tracking-wider text-center line-clamp-2 px-2 sm:px-4'>
+          <div className='w-full h-full bg-primary/5 flex flex-col items-center justify-center gap-1 sm:gap-2 p-2 sm:p-4 text-primary'>
+            <BookOpen className='size-5 sm:size-8 text-primary/45' />
+            <span className='text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-center line-clamp-2 px-2 sm:px-4'>
               {course.title}
             </span>
           </div>
         )}
-        <div className='absolute top-2 left-2 px-1.5 py-0.5 sm:top-3 sm:left-3 sm:px-2 sm:py-1 bg-slate-900/70 backdrop-blur-md rounded flex items-center gap-1'>
-          <span className='text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-wider'>
+        <div className='absolute top-2 left-2 px-1.5 py-0.5 sm:top-3 sm:left-3 sm:px-2.5 sm:py-1 bg-slate-950/70 backdrop-blur-md rounded-lg flex items-center gap-1 border border-white/10'>
+          <span className='text-white text-[8px] sm:text-[9px] font-bold uppercase tracking-wider'>
             {badge}
           </span>
         </div>
       </Link>
 
-      <div className='p-2.5 sm:p-4 flex flex-col flex-1'>
+      <div className='p-2.5 sm:p-4.5 flex flex-col flex-1'>
         <Link href={href}>
-          <h3 className='font-bold text-slate-800 leading-snug group-hover:text-sky-600 transition-colors line-clamp-2 mb-1 sm:mb-2 text-xs sm:text-base'>
+          <h3 className='font-bold text-on-surface leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-1 sm:mb-1.5 h-8 sm:h-10 text-xs sm:text-base'>
             {course.title}
           </h3>
         </Link>
-        <p className='text-slate-500 text-xs line-clamp-2 mb-4 hidden sm:block'>
-          {stripHtml(course.description) || 'Chưa có mô tả cho khóa học này.'}
+        <p className='text-on-surface-variant/80 text-xs line-clamp-2 mb-4 h-8 leading-relaxed hidden sm:block'>
+          {stripHtml(course.description) || 'Chưa có mô tả chi tiết cho khóa học này.'}
         </p>
 
         {/* Dynamic Progress Bar for Enrolled Courses */}
         {course.enrolledAt && course.progressPercent !== undefined && (
-          <div className="space-y-1 sm:space-y-1.5 mb-3 sm:mb-4">
-            <div className="flex justify-between items-center text-[8px] sm:text-[10px] font-bold text-slate-500">
+          <div className="space-y-1.5 mb-4">
+            <div className="flex justify-between items-center text-[9px] sm:text-[10px] font-bold text-on-surface-variant/75 uppercase tracking-wider">
               <span>Tiến độ</span>
-              <span>{course.progressPercent}%</span>
+              <span className='text-primary'>{course.progressPercent}%</span>
             </div>
-            <div className="w-full h-1 sm:h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
               <div 
-                className="h-full bg-sky-500 rounded-full transition-all duration-300"
+                className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${course.progressPercent}%` }}
               />
             </div>
           </div>
         )}
 
-        <div className='mt-auto flex items-center justify-between pt-2.5 sm:pt-4 border-t border-slate-100 gap-2 sm:gap-3'>
-          <div className='min-w-0'>
-            <p className='text-[10px] sm:text-xs text-slate-500 truncate'>
-              {course.instructor?.fullName || 'Giảng viên'}
+        <div className='mt-auto flex items-center justify-between pt-2.5 sm:pt-4 border-t border-outline-variant/20 gap-2 sm:gap-3'>
+          <div className='min-w-0 flex-1'>
+            <p className='text-[8px] sm:text-[10px] text-on-surface-variant/70 truncate flex items-center gap-1 sm:gap-1.5 mb-1'>
+              <User className='size-2.5 sm:size-3 text-on-surface-variant/50' />
+              <span className='truncate'>{course.instructor?.fullName || 'Chưa cập nhật'}</span>
             </p>
             {course.enrolledAt && (
-              <p className='text-[9px] sm:text-[11px] text-slate-400'>
-                {new Date(course.enrolledAt).toLocaleDateString('vi-VN')}
+              <p className='text-[9px] sm:text-[11px] font-bold text-on-surface-variant/85'>
+                Đã tham gia: {new Date(course.enrolledAt).toLocaleDateString('vi-VN')}
               </p>
             )}
             {course.visibility && !course.enrolledAt && (
-              <p className='text-[9px] sm:text-[11px] text-slate-400 uppercase'>
-                {course.visibility}
+              <p className='text-[9px] sm:text-[11px] font-bold text-on-surface-variant/85 uppercase'>
+                {course.visibility === 'public' ? 'Công khai' : course.visibility}
               </p>
             )}
           </div>
           <Link
             href={href}
-            className='px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-lg bg-sky-600 text-white text-[10px] sm:text-xs font-bold hover:bg-sky-700 transition-all active:scale-95 shrink-0'
+            className='px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-lg sm:rounded-xl bg-primary text-white text-[10px] sm:text-xs font-bold hover:bg-primary-dim shadow-xs transition-all active:scale-[0.97] shrink-0'
           >
             {actionLabel}
           </Link>
@@ -209,112 +207,142 @@ export default function MyCoursesPage() {
   };
 
   return (
-    <div className='space-y-6 sm:space-y-10 pb-12 transition-all p-4 sm:p-6 md:p-12'>
-      <div className='flex min-h-[92px] flex-col justify-between gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center'>
-        <div className='min-w-0'>
-          <h1 className='text-xl sm:text-3xl font-black text-slate-900'>
+    <div className='pb-16 transition-all p-4 sm:p-6 md:p-12 space-y-6 sm:space-y-8 bg-surface-container-lowest min-h-screen text-on-surface relative'>
+      <div className='absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none' />
+
+      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/30 pb-6 relative z-10'>
+        <div>
+          <h1 className='text-xl sm:text-2xl font-black text-on-surface tracking-tight'>
             Khóa học của tôi
           </h1>
-          <p className='text-slate-500 text-xs sm:text-sm mt-1'>
+          <p className='text-xs sm:text-sm text-on-surface-variant/85 mt-1 max-w-2xl'>
             Theo dõi khóa học đã tham gia và khóa học bạn đang quản lý.
           </p>
         </div>
         <Link
           href='/courses'
-          className='inline-flex h-9 sm:h-10 shrink-0 items-center gap-1.5 rounded-lg border-0 bg-sky-50 px-4 text-xs sm:text-sm font-semibold text-sky-600 shadow-xs transition-colors hover:bg-sky-100'
+          className='inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border-0 bg-primary/10 hover:bg-primary/15 px-4 text-xs font-bold text-primary shadow-xs transition-all active:scale-[0.98] self-start sm:self-center'
         >
           Khám phá thêm
-          <ArrowRight className='size-3.5 sm:size-4' />
+          <ArrowRight className='size-3.5' />
         </Link>
       </div>
 
       {isLoading ? (
-        <div className='flex items-center justify-center py-20 text-slate-400'>
-          <span className='material-symbols-outlined animate-spin mr-2 text-3xl'>
-            progress_activity
-          </span>
-          <span className='font-medium'>Đang tải dữ liệu...</span>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 relative z-10'>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className='h-48 sm:h-64 bg-slate-100 animate-pulse rounded-2xl border border-outline-variant/25'
+            />
+          ))}
         </div>
       ) : error ? (
-        <div className='rounded-xl bg-red-50 p-6 text-red-600 text-center border border-red-100'>
-          <span className='material-symbols-outlined text-4xl mb-2'>
-            error
-          </span>
-          <p className='font-bold text-lg'>Không thể tải khóa học</p>
-          <p className='text-sm mt-1'>{error}</p>
+        <div className='rounded-2xl bg-error/5 p-8 text-center border border-error/15 max-w-md mx-auto relative z-10'>
+          <div className='w-12 h-12 rounded-xl bg-error/10 flex items-center justify-center text-error mx-auto mb-3'>
+            <AlertCircle className='size-6' />
+          </div>
+          <p className='font-bold text-sm text-on-surface uppercase tracking-wider mb-1'>Không thể tải khóa học</p>
+          <p className='text-xs text-error/85 leading-relaxed'>{error}</p>
         </div>
       ) : (
-        <div className='space-y-12'>
+        <div className='space-y-12 relative z-10'>
           <section>
-            <h2 className='text-xl font-bold text-slate-800 mb-6 flex items-center gap-2'>
-              <span className='material-symbols-outlined text-sky-500'>
-                menu_book
-              </span>
-              Khóa học đã tham gia
-            </h2>
+            <div className='flex items-center gap-2 mb-5'>
+              <BookOpen className='size-5 text-primary' />
+              <h2 className='text-sm sm:text-base font-black text-on-surface uppercase tracking-wider'>
+                Khóa học đã tham gia
+              </h2>
+            </div>
 
             {enrolledCourses.length === 0 ? (
-              <div className='text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200'>
-                <span className='material-symbols-outlined text-4xl text-slate-300 mb-2 block'>
-                  history_edu
-                </span>
-                <p className='text-slate-500 font-medium'>
+              <div className='text-center py-16 bg-white rounded-2xl border border-dashed border-outline-variant/40 relative z-10'>
+                <BookOpen className='size-8 text-on-surface-variant/35 mx-auto mb-3' />
+                <p className='text-sm text-on-surface-variant font-bold mb-1'>
                   Bạn chưa tham gia khóa học nào.
                 </p>
                 <Link
                   href='/courses'
-                  className='text-sky-600 text-sm hover:underline mt-1 inline-block'
+                  className='text-primary text-xs font-bold hover:underline mt-2 inline-block'
                 >
                   Khám phá các khóa học ngay
                 </Link>
               </div>
             ) : (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
+              <motion.div 
+                className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  visible: { transition: { staggerChildren: 0.05 } }
+                }}
+              >
                 {enrolledCourses.map((course) => (
-                  <CourseCard
+                  <motion.div
                     key={course.id}
-                    course={course}
-                    badge='Đang học'
-                    href={`/courses/${course.id}`}
-                    actionLabel='Vào học'
-                    onLeave={handleLeaveCourse}
-                  />
+                    variants={{
+                      hidden: { opacity: 0, y: 12 },
+                      visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } }
+                    }}
+                  >
+                    <CourseCard
+                      course={course}
+                      badge='Đang học'
+                      href={`/courses/${course.id}`}
+                      actionLabel='Vào học'
+                      onLeave={handleLeaveCourse}
+                    />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </section>
 
-          <section>
-            <h2 className='text-xl font-bold text-slate-800 mb-6 flex items-center gap-2'>
-              <span className='material-symbols-outlined text-indigo-500'>
-                video_library
-              </span>
-              Khóa học của tôi
-            </h2>
+          {canManageCourses && (
+            <section>
+              <div className='flex items-center gap-2 mb-5'>
+                <User className='size-5 text-indigo-500' />
+                <h2 className='text-sm sm:text-base font-black text-on-surface uppercase tracking-wider'>
+                  Khóa học của tôi (Quản lý)
+                </h2>
+              </div>
 
-            {teachingCourses.length === 0 ? (
-              <div className='text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200'>
-                <span className='material-symbols-outlined text-4xl text-slate-300 mb-2 block'>
-                  school
-                </span>
-                <p className='text-slate-500 font-medium'>
-                  Bạn chưa có khóa học nào để quản lý.
-                </p>
-              </div>
-            ) : (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
-                {teachingCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    badge='Của tôi'
-                    href={`/instructor/studio/${course.id}`}
-                    actionLabel='Quản lý'
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+              {teachingCourses.length === 0 ? (
+                <div className='text-center py-16 bg-white rounded-2xl border border-dashed border-outline-variant/40 relative z-10'>
+                  <User className='size-8 text-on-surface-variant/35 mx-auto mb-3' />
+                  <p className='text-sm text-on-surface-variant font-bold mb-1'>
+                    Bạn chưa có khóa học nào để quản lý.
+                  </p>
+                </div>
+              ) : (
+                <motion.div 
+                  className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    visible: { transition: { staggerChildren: 0.05 } }
+                  }}
+                >
+                  {teachingCourses.map((course) => (
+                    <motion.div
+                      key={course.id}
+                      variants={{
+                        hidden: { opacity: 0, y: 12 },
+                        visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } }
+                      }}
+                    >
+                      <CourseCard
+                        course={course}
+                        badge='Của tôi'
+                        href={`/instructor/studio/${course.id}`}
+                        actionLabel='Quản lý'
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </section>
+          )}
         </div>
       )}
     </div>

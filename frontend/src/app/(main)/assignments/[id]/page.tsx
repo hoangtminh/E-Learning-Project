@@ -38,7 +38,7 @@ function AssignmentDetailContent({
       <div className='flex items-center justify-between'>
         <button
           onClick={() => router.back()}
-          className='inline-flex items-center text-sm font-bold text-slate-600 hover:text-sky-600 transition-colors group'
+          className='inline-flex items-center text-sm font-bold text-on-surface-variant/80 hover:text-primary transition-colors group'
         >
           <ArrowLeft size={16} className='mr-2 group-hover:-translate-x-0.5 transition-transform' />
           Quay lại
@@ -46,7 +46,7 @@ function AssignmentDetailContent({
 
         {!isOwnerOrAdmin && (
           <div className='flex items-center gap-3'>
-            <span className='text-xs font-bold text-slate-500 flex items-center gap-1.5'>
+            <span className='text-xs font-bold text-on-surface-variant/70 flex items-center gap-1.5'>
               <Clock size={14} />
               {isGraded ? 'Đã chấm điểm' : isSubmitted ? 'Đã nộp bài' : 'Chưa nộp bài'}
             </span>
@@ -77,15 +77,15 @@ function AssignmentDetailContent({
 
           {/* Graded Display for student */}
           {!isOwnerOrAdmin && isGraded && (
-            <div className='glass-panel rounded-3xl p-8 shadow-sm border border-emerald-200/50 bg-emerald-50/20 space-y-4'>
-              <h3 className='text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 text-emerald-800'>
+            <div className='glass-panel rounded-3xl p-8 shadow-xs border border-emerald-200/50 bg-emerald-50/20 space-y-4'>
+              <h3 className='text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 text-emerald-800'>
                 <Award size={15} /> Điểm của bạn
               </h3>
               <div className='flex items-end gap-2'>
                 <span className='text-4xl font-black text-emerald-700 leading-none'>{Number(existingSub?.grade).toFixed(0)}</span>
-                <span className='text-sm font-bold text-slate-400 mb-1'>/ 100 điểm</span>
+                <span className='text-sm font-bold text-on-surface-variant/50 mb-1'>/ 100 điểm</span>
               </div>
-              <p className='text-xs text-slate-500 font-medium'>Bài tập của bạn đã được giáo viên chấm điểm thành công.</p>
+              <p className='text-xs text-on-surface-variant/70 font-medium'>Bài tập của bạn đã được giáo viên chấm điểm thành công.</p>
             </div>
           )}
         </div>
@@ -93,13 +93,13 @@ function AssignmentDetailContent({
         {/* Right Side: Submission Form for Student, or Redirect Card for Teacher */}
         <div className='lg:col-span-1'>
           {isOwnerOrAdmin ? (
-            <div className='glass-panel rounded-2xl p-6 shadow-sm border border-white/50 space-y-6'>
-              <div className='border-b border-slate-100 pb-3'>
-                <h2 className='text-sm font-bold text-slate-800 tracking-wide uppercase flex items-center gap-1.5'>
-                  <Users size={16} className='text-sky-500' /> Quản lý bài tập
+            <div className='glass-panel rounded-2xl p-6 shadow-xs border border-white/50 space-y-6'>
+              <div className='border-b border-outline-variant/20 pb-3'>
+                <h2 className='text-sm font-bold text-on-surface tracking-wide uppercase flex items-center gap-1.5'>
+                  <Users size={16} className='text-primary' /> Quản lý bài tập
                 </h2>
               </div>
-              <div className='space-y-4 text-slate-600 text-sm leading-relaxed'>
+              <div className='space-y-4 text-on-surface-variant/80 text-sm leading-relaxed'>
                 <p>
                   Bạn đang xem bài tập này với tư cách là <strong>Giảng viên / Quản trị viên</strong> của lớp học.
                 </p>
@@ -110,7 +110,7 @@ function AssignmentDetailContent({
               <div className='pt-2'>
                 <Link
                   href={`/assignments/${assignment.id}/submissions`}
-                  className='w-full py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-sm shadow-md shadow-sky-100 hover:shadow-lg transition-all flex items-center justify-center gap-1.5'
+                  className='w-full py-3 bg-primary/50 hover:bg-primary-dim text-white font-bold rounded-xl text-sm shadow-md shadow-sky-100 hover:shadow-lg transition-all flex items-center justify-center gap-1.5'
                 >
                   Xem danh sách & Chấm điểm
                   <ChevronRight size={16} />
@@ -170,9 +170,9 @@ export default function AssignmentDetailPage() {
 
   if (loading) {
     return (
-      <div className='flex flex-col items-center justify-center min-h-[70vh] text-slate-400 gap-2.5'>
-        <Loader2 className='w-8 h-8 animate-spin text-sky-500' />
-        <p className='text-sm font-semibold text-slate-500'>Đang tải thông tin bài tập...</p>
+      <div className='flex flex-col items-center justify-center min-h-[70vh] text-on-surface-variant/50 gap-2.5'>
+        <Loader2 className='w-8 h-8 animate-spin text-primary' />
+        <p className='text-sm font-semibold text-on-surface-variant/70'>Đang tải thông tin bài tập...</p>
       </div>
     );
   }
@@ -184,8 +184,8 @@ export default function AssignmentDetailPage() {
           <ArrowLeft size={24} />
         </div>
         <div>
-          <h2 className='text-lg font-bold text-slate-800'>Lỗi tải dữ liệu</h2>
-          <p className='text-sm text-slate-500 max-w-sm mt-1'>{error || 'Không tìm thấy bài tập được yêu cầu.'}</p>
+          <h2 className='text-lg font-bold text-on-surface'>Lỗi tải dữ liệu</h2>
+          <p className='text-sm text-on-surface-variant/70 max-w-sm mt-1'>{error || 'Không tìm thấy bài tập được yêu cầu.'}</p>
         </div>
       </div>
     );
@@ -193,12 +193,17 @@ export default function AssignmentDetailPage() {
 
   return (
     <TaskProvider>
-      <AssignmentDetailContent
-        assignment={assignment}
-        classroomId={assignment.classroomId}
-        isOwnerOrAdmin={isOwnerOrAdmin}
-        onRefresh={() => setRefreshKey((k) => k + 1)}
-      />
+      <div className='pb-16 transition-all p-4 sm:p-6 md:p-12 space-y-6 sm:space-y-8 bg-surface-container-lowest min-h-screen text-on-surface relative'>
+        <div className='absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none' />
+        <div className='max-w-5xl mx-auto w-full relative z-10'>
+          <AssignmentDetailContent
+            assignment={assignment}
+            classroomId={assignment.classroomId!}
+            isOwnerOrAdmin={isOwnerOrAdmin}
+            onRefresh={() => setRefreshKey((k) => k + 1)}
+          />
+        </div>
+      </div>
     </TaskProvider>
   );
 }

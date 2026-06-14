@@ -36,24 +36,24 @@ export function AssignmentAttachmentCard({
   if (!attachmentKey) return null;
 
   return (
-    <div className='glass-panel rounded-3xl p-8 shadow-sm border border-white/50 space-y-4'>
-      <h3 className='text-xs font-bold text-slate-800 uppercase tracking-wider'>Tài liệu đính kèm</h3>
+    <div className='glass-panel rounded-3xl p-8 shadow-xs border border-white/50 space-y-4'>
+      <h3 className='text-xs font-bold text-on-surface uppercase tracking-wider'>Tài liệu đính kèm</h3>
       <div
         onClick={handleDownload}
-        className='flex items-center justify-between p-4 rounded-2xl border border-slate-150 bg-white/60 hover:bg-white/95 hover:border-sky-300 hover:shadow-sm transition-all group cursor-pointer'
+        className='flex items-center justify-between p-4 rounded-2xl border border-slate-150 bg-white/60 hover:bg-white/95 hover:border-sky-300 hover:shadow-xs transition-all group cursor-pointer'
       >
         <div className='flex items-center gap-3.5 min-w-0'>
           <div className='w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 shrink-0 border border-rose-100'>
             <FileText size={20} />
           </div>
           <div className='min-w-0'>
-            <p className='text-sm font-bold text-slate-800 truncate max-w-sm'>{attachmentName || 'Tệp đính kèm'}</p>
-            <p className='text-[10px] font-bold text-slate-400 uppercase tracking-wider'>Tải tệp đính kèm</p>
+            <p className='text-sm font-bold text-on-surface truncate max-w-sm'>{attachmentName || 'Tệp đính kèm'}</p>
+            <p className='text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-wider'>Tải tệp đính kèm</p>
           </div>
         </div>
         <button
           disabled={downloading}
-          className='w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors group-hover:scale-105 duration-200'
+          className='w-8 h-8 rounded-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant/50 hover:text-on-surface-variant transition-colors group-hover:scale-105 duration-200'
         >
           {downloading ? <Loader2 size={16} className='animate-spin' /> : <Download size={16} />}
         </button>

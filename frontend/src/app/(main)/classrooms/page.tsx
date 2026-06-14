@@ -71,11 +71,11 @@ function CatalogClassroomCard({
               e.stopPropagation();
               handleLeave(classroom.id);
             }}
-            className='bg-error/95 hover:bg-error text-white px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-md sm:rounded-lg flex items-center justify-center transition-colors shadow-xs text-[9px] sm:text-[10px] font-bold gap-1 cursor-pointer border-0 active:scale-95'
+            className='bg-error hover:bg-error/90 text-white px-2 py-1.5 rounded-lg flex items-center justify-center transition-colors shadow-md text-[10px] sm:text-xs font-bold gap-1 cursor-pointer border-0 active:scale-95'
             title='Rời lớp học'
           >
-            <LogOut size={10} />
-            Rời lớp
+            <LogOut className='size-3 sm:size-3.5' />
+            <span className='hidden xs:inline'>Rời lớp</span>
           </button>
         </div>
       )}
@@ -89,7 +89,7 @@ function CatalogClassroomCard({
           alt={classroom.title}
           className='w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500'
         />
-        <div className='absolute top-2 left-2 sm:top-3 sm:left-3 px-1.5 py-0.5 sm:px-2.5 sm:py-1 bg-slate-950/70 backdrop-blur-md rounded-md sm:rounded-lg flex items-center gap-1 border border-white/10'>
+        <div className='absolute top-2 left-2 px-1.5 py-0.5 sm:top-3 sm:left-3 sm:px-2.5 sm:py-1 bg-slate-950/70 backdrop-blur-md rounded-lg flex items-center gap-1 border border-white/10'>
           {classroom.isPublic ? (
             <>
               <Globe className='size-2.5 sm:size-3 text-white' />
@@ -104,7 +104,7 @@ function CatalogClassroomCard({
         </div>
       </Link>
 
-      <div className='p-3 sm:p-4.5 flex flex-col flex-1'>
+      <div className='p-2.5 sm:p-4.5 flex flex-col flex-1'>
         <Link href={`/classrooms/${classroom.id}`}>
           <h3 className='font-bold text-on-surface leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-1.5 h-8 sm:h-10 text-xs sm:text-base'>
             {classroom.title}
@@ -114,19 +114,19 @@ function CatalogClassroomCard({
           {classroom.description || 'Chưa có mô tả chi tiết cho lớp học này.'}
         </p>
 
-        <div className='mt-auto flex items-center justify-between pt-3 sm:pt-4.5 border-t border-outline-variant/20 gap-2 sm:gap-3'>
+        <div className='mt-auto flex items-center justify-between pt-2.5 sm:pt-4.5 border-t border-outline-variant/20 gap-2 sm:gap-3'>
           <div className='min-w-0'>
-            <p className='text-[9px] sm:text-[10px] text-on-surface-variant/70 truncate'>
+            <p className='text-[8px] sm:text-[10px] text-on-surface-variant/70 truncate flex items-center gap-1 sm:gap-1.5'>
               Giảng viên: <span className='font-bold text-on-surface'>{classroom.owner?.fullName || 'Chưa cập nhật'}</span>
             </p>
-            <p className='text-[10px] sm:text-xs font-bold text-on-surface-variant flex items-center gap-1 mt-1'>
-              <Users className='size-3 sm:size-3.5 text-on-surface-variant/60' />
-              <span>{classroom._count?.members ?? classroom.members?.length ?? 0} học viên</span>
+            <p className='text-xs sm:text-sm font-black text-on-surface mt-0.5 sm:mt-1 flex items-center gap-1 sm:gap-1.5'>
+              <Users className='size-3 sm:size-4 text-on-surface-variant/50 hidden sm:block' />
+              {classroom._count?.members ?? classroom.members?.length ?? 0} học viên
             </p>
           </div>
           <Link
             href={`/classrooms/${classroom.id}`}
-            className='px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-primary text-white text-[10px] sm:text-xs font-bold hover:bg-primary-dim shadow-xs transition-all active:scale-[0.97] shrink-0'
+            className='px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-lg sm:rounded-xl bg-primary text-white text-[10px] sm:text-xs font-bold hover:bg-primary-dim shadow-xs transition-all active:scale-[0.97] shrink-0'
           >
             Vào lớp
           </Link>
@@ -316,13 +316,13 @@ export default function ClassroomsPage() {
       <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-outline-variant/30 pb-4 sm:pb-6 relative z-10'>
         <div>
           <h1 className='text-xl sm:text-2xl font-black text-on-surface tracking-tight'>Lớp học của tôi</h1>
-          <p className='text-[10px] sm:text-xs sm:text-sm text-on-surface-variant/85 mt-1 max-w-2xl'>
+          <p className='text-xs sm:text-sm text-on-surface-variant/85 mt-1 max-w-2xl'>
             Quản lý các lớp học của bạn và tham gia phòng học mới để trao đổi thảo luận.
           </p>
         </div>
         <div className='flex shrink-0 items-center gap-3 self-start sm:self-center'>
           <button
-            className='inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border-0 bg-primary/10 hover:bg-primary/15 px-3.5 sm:px-4 text-[10px] sm:text-xs font-bold text-primary active:scale-[0.98] transition-all'
+            className='inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border-0 bg-primary/10 hover:bg-primary/15 px-4 text-xs font-bold text-primary active:scale-[0.98] shadow-xs transition-all'
             onClick={openJoinModal}
           >
             <Plus className='size-3.5' />
@@ -344,7 +344,7 @@ export default function ClassroomsPage() {
         </div>
 
         <div className='flex items-center gap-2 self-end sm:self-center'>
-          <span className='text-[10px] sm:text-xs font-bold text-on-surface-variant/75 uppercase tracking-wider flex items-center gap-1.5 shrink-0'>
+          <span className='text-xs font-bold text-on-surface-variant/75 uppercase tracking-wider flex items-center gap-1.5 shrink-0'>
             <Filter className='size-3.5' /> Lọc
           </span>
           <div className='flex gap-1 bg-surface-container p-1 rounded-xl text-xs border border-outline-variant/20'>
@@ -356,7 +356,7 @@ export default function ClassroomsPage() {
               <button
                 key={item.value}
                 onClick={() => setFilterType(item.value as 'all' | 'public' | 'private')}
-                className={`px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg font-bold cursor-pointer border-0 transition-all text-[10px] sm:text-[11px] ${filterType === item.value
+                className={`px-3 py-1.5 rounded-lg font-bold cursor-pointer border-0 transition-all text-[11px] ${filterType === item.value
                     ? 'bg-white text-primary shadow-xs'
                     : 'text-on-surface-variant/75 hover:text-on-surface'
                   }`}

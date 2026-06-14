@@ -49,17 +49,20 @@ export class AuthController {
   ) {}
 
   private setRefreshCookie(res: Response, token: string, rememberMe?: boolean) {
-    if (!rememberMe) {
-      return;
-    }
     const isProduction = this.config.get('NODE_ENV') === 'production';
-    res.cookie('refresh_token', token, {
+    
+    const cookieOptions: any = {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'strict' : 'lax',
-      maxAge: REFRESH_COOKIE_MAX_AGE_MS,
       path: '/auth', // Only sent to /auth/* routes
-    });
+    };
+
+    if (rememberMe) {
+      cookieOptions.maxAge = REFRESH_COOKIE_MAX_AGE_MS;
+    }
+
+    res.cookie('refresh_token', token, cookieOptions);
   }
 
   private clearRefreshCookie(res: Response) {
