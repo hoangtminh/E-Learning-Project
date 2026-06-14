@@ -16,6 +16,7 @@ import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { UpdateClassroomDto } from './dto/update-classroom.dto';
 import { IsString, IsNotEmpty } from 'class-validator';
 import { AssignCourseGuard } from './guards/assign-course.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 class JoinByCodeDto {
   @IsString()
@@ -33,6 +34,7 @@ export class ClassroomsController {
     return userId;
   }
 
+  @Roles('instructor', 'admin')
   @Post()
   create(@Req() req: any, @Body() createClassroomDto: CreateClassroomDto) {
     return this.classroomsService.create(

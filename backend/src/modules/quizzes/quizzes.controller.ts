@@ -14,6 +14,7 @@ import { QuizzesService } from './quizzes.service';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto, ShareQuizDto } from './dto/update-quiz.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 @Controller('quizzes')
 export class QuizzesController {
@@ -25,6 +26,7 @@ export class QuizzesController {
     return userId;
   }
 
+  @Roles('instructor', 'admin')
   @Post()
   createQuiz(@Req() req: any, @Body() dto: CreateQuizDto) {
     return this.quizzesService.createQuiz(this.getUserId(req), dto);
@@ -56,6 +58,7 @@ export class QuizzesController {
     return this.quizzesService.getQuiz(this.getUserId(req), id);
   }
 
+  @Roles('instructor', 'admin')
   @Patch(':id')
   updateQuiz(
     @Req() req: any,
@@ -65,11 +68,13 @@ export class QuizzesController {
     return this.quizzesService.updateQuiz(this.getUserId(req), id, dto);
   }
 
+  @Roles('instructor', 'admin')
   @Delete(':id')
   deleteQuiz(@Req() req: any, @Param('id') id: string) {
     return this.quizzesService.deleteQuiz(this.getUserId(req), id);
   }
 
+  @Roles('instructor', 'admin')
   @Post(':id/share')
   shareQuiz(
     @Req() req: any,

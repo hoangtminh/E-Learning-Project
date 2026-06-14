@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { getCourse, CourseDetail } from '@/api/courses';
+import { getCourse, CourseDetail, getLessonVideoUrl } from '@/api/courses';
 import { checkEnrollment } from '@/api/enrollment';
 import { SectionWithLessons, LessonItem } from '@/api/instructor';
 import { getCourseProgress, saveLessonProgress, UserProgress } from '@/api/progress';
@@ -39,6 +39,8 @@ export default function LearningLessonPage() {
   const playerRef = useRef<any>(null);
   const textContainerRef = useRef<HTMLDivElement>(null);
   const textSentinelRef = useRef<HTMLDivElement>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoUrlError, setVideoUrlError] = useState<string | null>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -56,7 +58,44 @@ export default function LearningLessonPage() {
     setHasSeeked(false);
     setTextCompleted(false);
     setDuration(0);
+    setVideoUrl(null);
+    setVideoUrlError(null);
   }, [courseId, lessonId]);
+
+  useEffect(() => {
+    if (currentLesson?.type !== 'video') {
+      setVideoUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadVideoUrl = async () => {
+      setVideoUrlError(null);
+
+      if (currentLesson.contentUrl) {
+        if (!cancelled) setVideoUrl(currentLesson.contentUrl);
+        return;
+      }
+
+      try {
+        const res = await getLessonVideoUrl(courseId, lessonId);
+        if (cancelled) return;
+        if (res.success && res.data?.url) {
+          setVideoUrl(res.data.url);
+        } else {
+          setVideoUrlError(res.error || 'Không thể tải video');
+        }
+      } catch {
+        if (!cancelled) setVideoUrlError('Không thể tải video');
+      }
+    };
+
+    loadVideoUrl();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentLesson, courseId, lessonId]);
 
   // Re-fetch progress when user returns to tab (e.g., after submitting quiz in another tab)
   useEffect(() => {
@@ -265,11 +304,11 @@ export default function LearningLessonPage() {
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
           {/* Video player */}
           <div className="relative aspect-video w-full bg-black shrink-0">
-            {currentLesson?.type === 'video' && currentLesson?.contentUrl ? (
+            {currentLesson?.type === 'video' && videoUrl ? (
               <ReactPlayer
                 ref={playerRef}
-                url={currentLesson.contentUrl}
-                src={currentLesson.contentUrl}
+                url={videoUrl}
+                src={videoUrl}
                 width="100%"
                 height="100%"
                 controls
@@ -294,6 +333,22 @@ export default function LearningLessonPage() {
                   });
                 }}
               />
+            ) : currentLesson?.type === 'video' ? (
+              <div className="absolute inset-0 flex items-center justify-center text-slate-500">
+                <div className="text-center space-y-2">
+                  {videoUrlError ? (
+                    <>
+                      <span className="material-symbols-outlined text-4xl text-red-400">error</span>
+                      <p className="text-sm text-red-300">{videoUrlError}</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-8 h-8 border-2 border-slate-600 border-t-white rounded-full animate-spin mx-auto" />
+                      <p className="text-sm">Đang tải video…</p>
+                    </>
+                  )}
+                </div>
+              </div>
             ) : currentLesson?.type === 'quiz' && currentLesson?.contentUrl ? (
               <div className="absolute inset-0 flex items-center justify-center text-slate-500 bg-[#1a2235]">
                 {(() => {
