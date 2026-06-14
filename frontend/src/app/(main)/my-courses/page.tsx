@@ -269,7 +269,7 @@ export default function MyCoursesPage() {
                 </Link>
               </div>
             ) : (
-              <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
                 {enrolledCourses.map((course) => (
                   <CourseCard
                     key={course.id}
@@ -302,7 +302,7 @@ export default function MyCoursesPage() {
                 </p>
               </div>
             ) : (
-              <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
                 {teachingCourses.map((course) => (
                   <CourseCard
                     key={course.id}

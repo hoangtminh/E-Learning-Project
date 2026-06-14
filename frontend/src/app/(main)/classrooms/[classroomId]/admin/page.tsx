@@ -9,7 +9,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (classroomId) {
-      router.replace(`/classrooms/${classroomId}/admin/courses`);
+      router.replace(`/classrooms/${classroomId}/admin/tasks`);
     }
   }, [classroomId, router]);
 

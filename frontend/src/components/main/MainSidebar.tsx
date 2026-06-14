@@ -22,7 +22,7 @@ const NAV_SECTIONS = [
       { name: 'Lớp học', icon: 'groups', path: '/classrooms' },
       { name: 'Bài tập', icon: 'assignment', path: '/assignments' },
       { name: 'Bài kiểm tra', icon: 'quiz', path: '/quizzes' },
-      { name: 'Ghi chú', icon: 'edit_note', path: '/notes' },
+
     ],
   },
   {

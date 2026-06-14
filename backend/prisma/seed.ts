@@ -535,29 +535,7 @@ async function main() {
   }
   console.log('✅ Đã xong: ClassroomFile');
 
-  // SEED CLASSROOMLINKEDCOURSE
-  const classroomLinkedCourses = [
-    {
-      classroomId: "85a46e75-41b0-4b2b-9aa4-d0cf1483cb70",
-      courseId: "course_reactjs_001",
-      createdAt: new Date('2026-05-24T00:00:00.000Z'),
-    }
-  ];
 
-  for (const record of classroomLinkedCourses) {
-    const { classroomId, courseId, ...updateData } = record;
-    await prisma.classroomLinkedCourse.upsert({
-      where: {
-        classroomId_courseId: {
-          classroomId: record.classroomId,
-          courseId: record.courseId,
-        },
-      },
-      update: updateData,
-      create: record,
-    });
-  }
-  console.log('✅ Đã xong: ClassroomLinkedCourse');
 
   // SEED NOTE
   const notes = [

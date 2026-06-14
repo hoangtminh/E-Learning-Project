@@ -375,7 +375,7 @@ export default function ClassroomsPage() {
             <School className='size-4 animate-pulse' />
             Đang chờ duyệt ({pendingClassrooms.length})
           </h4>
-          <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'>
             {pendingClassrooms.map((pr) => (
               <div
                 key={pr.requestId}
@@ -424,7 +424,7 @@ export default function ClassroomsPage() {
 
       {/* Classroom Grid */}
       {loading ? (
-        <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 relative z-10'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 relative z-10'>
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -463,7 +463,7 @@ export default function ClassroomsPage() {
             </div>
 
             <motion.div 
-              className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'
+              className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6'
               initial="hidden"
               animate="visible"
               variants={{

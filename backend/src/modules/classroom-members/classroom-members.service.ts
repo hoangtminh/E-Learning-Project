@@ -513,12 +513,7 @@ export class ClassroomMembersService {
     });
 
     if (remainingMembersCount === 0) {
-      // 1. Find all linked courses
-      const linkedCourses = await this.prisma.classroomLinkedCourse.findMany({
-        where: { classroomId },
-        select: { courseId: true },
-      });
-      const courseIds = linkedCourses.map((lc) => lc.courseId);
+
 
       // 2. Delete S3 folder
       try {
@@ -579,24 +574,7 @@ export class ClassroomMembersService {
           where: { classroomId },
         });
 
-        // G. Delete Linked Courses relations
-        await tx.classroomLinkedCourse.deleteMany({
-          where: { classroomId },
-        });
 
-        // H. Delete the Linked Courses themselves
-        if (courseIds.length > 0) {
-          for (const courseId of courseIds) {
-            try {
-              // Delete UserProgress first
-              await tx.userProgress.deleteMany({ where: { courseId } });
-              // Delete Course itself (which cascade deletes Section, CourseMember, CourseInvitation, etc.)
-              await tx.course.delete({ where: { id: courseId } });
-            } catch (err) {
-              console.error(`Failed to delete course ${courseId} inside transaction:`, err);
-            }
-          }
-        }
 
         // I. Delete Notes
         await tx.note.deleteMany({

@@ -26,7 +26,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   chat: 'Tin nhắn',
   profile: 'Hồ sơ',
   settings: 'Cài đặt',
-  notes: 'Ghi chú',
+
   quizzes: 'Bài kiểm tra',
   resources: 'Tài nguyên',
   pathway: 'Lộ trình',
