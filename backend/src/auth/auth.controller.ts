@@ -50,11 +50,10 @@ export class AuthController {
 
   private setRefreshCookie(res: Response, token: string, rememberMe?: boolean) {
     const isProduction = this.config.get('NODE_ENV') === 'production';
-    
     const cookieOptions: any = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? 'strict' : 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/auth', // Only sent to /auth/* routes
     };
 

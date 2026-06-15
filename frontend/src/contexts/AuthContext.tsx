@@ -89,6 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const getUser = async () => {
+    // Proactively refresh token to extend session
+    const refreshed = await refreshTokenApi();
+    if (refreshed?.accessToken) {
+      setAuthToken(refreshed.accessToken);
+    }
+
     const res = await apiGetUser();
 
     if (res.success && res.data) {
@@ -97,20 +103,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (res.status === 401 || res.status === 403) {
-      // Access token missing/expired — try silent refresh
-      const refreshed = await refreshTokenApi();
-      if (refreshed?.accessToken) {
-        setAuthToken(refreshed.accessToken);
-        const retryRes = await apiGetUser();
-        if (retryRes.success && retryRes.data) {
-          setMappedUser(retryRes.data);
-          return;
-        }
-      }
-
-      // Refresh also failed — user must log in again
+      // Refresh failed or current token is invalid
       setAuthToken(null);
       setMappedUser(null);
+
+      // Redirect to login if currently on a protected route
+      const publicRoutes = ['/', '/login', '/register', '/resources', '/pathway', '/community', '/courses'];
+      const isPublicRoute = publicRoutes.includes(window.location.pathname);
+      if (!isPublicRoute) {
+        window.location.href = '/login';
+      }
       return;
     }
 
