@@ -34,14 +34,14 @@ function StatCard({
   href?: string;
 }) {
   const content = (
-    <div className={`bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all group`}>
+    <div className={`bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all group`}>
       <div className="flex items-start justify-between mb-4">
-        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center text-white shadow-sm`}>
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 ${color} rounded-xl flex items-center justify-center text-white shadow-sm shrink-0`}>
           {icon}
         </div>
         {href && <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />}
       </div>
-      <p className="text-3xl font-black text-slate-900 mb-1">{value}</p>
+      <p className="text-2xl sm:text-3xl font-black text-slate-900 mb-1">{value}</p>
       <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</p>
       {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
     </div>
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Hero */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 sm:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-sky-500/10 to-indigo-500/10 pointer-events-none" />
         <div className="relative">
           <div className="flex items-center gap-3 mb-3">
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
             </div>
             <span className="text-sky-400 font-bold text-sm uppercase tracking-wider">Admin Control Center</span>
           </div>
-          <h1 className="text-3xl font-black mb-2">Tổng quan hệ thống</h1>
+          <h1 className="text-2xl sm:text-3xl font-black mb-2">Tổng quan hệ thống</h1>
           <p className="text-slate-400 text-sm">
             {stats?.newUsersThisMonth ?? 0} người dùng mới trong 30 ngày qua •{' '}
             {stats?.totalLogs ?? 0} hoạt động được ghi nhận
@@ -185,9 +185,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Secondary stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-4">
-          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex items-center gap-4">
+          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center shrink-0">
             <ShieldCheck className="w-5 h-5 text-indigo-600" />
           </div>
           <div>
@@ -195,8 +195,8 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500 font-medium">Quản trị viên</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-4">
-          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex items-center gap-4">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
             <Users className="w-5 h-5 text-slate-600" />
           </div>
           <div>
@@ -204,8 +204,8 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500 font-medium">Học viên</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-4">
-          <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex items-center gap-4">
+          <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
             <UserX className="w-5 h-5 text-red-600" />
           </div>
           <div>
@@ -319,19 +319,21 @@ export default function AdminDashboard() {
             <div className="px-6 py-8 text-center text-slate-400 text-sm">Chưa có hoạt động nào</div>
           ) : (
             recentLogs.map((log) => (
-              <div key={log.id} className="px-6 py-3 flex items-center gap-4 hover:bg-slate-50/50">
-                <div className="flex-shrink-0">
-                  {log.level === 'error' ? (
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                  ) : log.level === 'warn' ? (
-                    <AlertCircle className="w-4 h-4 text-amber-500" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  )}
+              <div key={log.id} className="px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 hover:bg-slate-50/50">
+                <div className="flex items-center gap-2">
+                  <div className="flex-shrink-0">
+                    {log.level === 'error' ? (
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                    ) : log.level === 'warn' ? (
+                      <AlertCircle className="w-4 h-4 text-amber-500" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    )}
+                  </div>
+                  <ActionBadge action={log.action} />
                 </div>
-                <ActionBadge action={log.action} />
-                <span className="text-sm text-slate-600 flex-1 truncate">{log.details}</span>
-                <div className="flex items-center gap-1 text-xs text-slate-400 flex-shrink-0">
+                <span className="text-sm text-slate-600 flex-1 break-words sm:truncate">{log.details}</span>
+                <div className="flex items-center gap-1 text-xs text-slate-400 flex-shrink-0 self-end sm:self-auto">
                   <Clock className="w-3 h-3" />
                   {new Date(log.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
                 </div>

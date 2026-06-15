@@ -25,6 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -39,69 +40,75 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <TooltipProvider delayDuration={0}>
       <div className="h-screen overflow-hidden bg-slate-50 flex font-sans">
-        <motion.aside
-          initial={{ width: 220, opacity: 0, x: -50 }}
-          animate={{ width: isCollapsed ? 60 : 220, opacity: 1, x: 0 }}
-          transition={{ duration: 0.35, ease: 'easeInOut' }}
-          className="h-screen bg-[#0a0e1a] text-slate-300 flex flex-col border-r border-white/10 relative z-20 shrink-0"
+        {/* Backdrop for mobile */}
+        <AnimatePresence>
+          {isMobileOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileOpen(false)}
+              className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Sidebar */}
+        <aside
+          className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-20 h-screen bg-[#0a0e1a] text-slate-300 flex flex-col border-r border-white/10 shrink-0 transition-all duration-300 ease-in-out ${
+            isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          } ${isCollapsed ? 'lg:w-[60px]' : 'lg:w-[220px]'} w-[220px]`}
         >
-          {/* Collapse toggle */}
+          {/* Collapse toggle (Desktop only) */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute -right-3.5 top-6 bg-[#006382] border-2 border-[#0a0e1a] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md hover:bg-[#0091aa] z-50 transition-colors focus:outline-none cursor-pointer"
+            className="absolute -right-3.5 top-6 bg-[#006382] border-2 border-[#0a0e1a] text-white rounded-full w-7 h-7 hidden lg:flex items-center justify-center shadow-md hover:bg-[#0091aa] z-50 transition-colors focus:outline-none cursor-pointer"
           >
             <span className="material-symbols-outlined text-[16px]">
               {isCollapsed ? 'chevron_right' : 'chevron_left'}
             </span>
           </button>
 
-          {/* Logo */}
-          <div className="h-14 flex items-center gap-3 px-4 border-b border-white/10 shrink-0">
-            <div className="w-8 h-8 rounded-xl bg-sky-400/20 border border-sky-400/30 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-sky-400 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                shield
+          {/* Logo & Close Button */}
+          <div className="h-14 flex items-center justify-between px-4 border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-sky-400/20 border border-sky-400/30 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-sky-400 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  shield
+                </span>
+              </div>
+              <span className={`font-black text-lg text-white whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-auto opacity-100'}`}>
+                Glacier <span className="text-sky-400 font-bold text-xs uppercase tracking-wider ml-0.5">Admin</span>
               </span>
             </div>
-            <AnimatePresence>
-              {!isCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: 'auto' }}
-                  exit={{ opacity: 0, width: 0 }}
-                  className="font-black text-lg text-white whitespace-nowrap overflow-hidden"
-                >
-                  Glacier <span className="text-sky-400 font-bold text-xs uppercase tracking-wider ml-0.5">Admin</span>
-                </motion.span>
-              )}
-            </AnimatePresence>
+            
+            {/* Mobile Close Button */}
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="lg:hidden p-1 text-slate-400 hover:text-white transition-colors focus:outline-none cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px] block">close</span>
+            </button>
           </div>
 
           {/* Nav */}
           <nav className="flex-1 py-4 px-2 space-y-4 overflow-y-auto overflow-x-hidden no-scrollbar">
             <div>
-              <AnimatePresence>
-                {!isCollapsed && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1"
-                  >
-                    Quản trị viên
-                  </motion.p>
-                )}
-              </AnimatePresence>
+              <p className={`text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 transition-all duration-300 ${isCollapsed ? 'lg:opacity-0' : 'opacity-100'}`}>
+                Quản trị viên
+              </p>
               <div className="space-y-0.5">
                 {navItems.map((item) => {
                   const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
                   const link = (
                     <Link
                       href={item.href}
+                      onClick={() => setIsMobileOpen(false)}
                       className={`flex items-center gap-3.5 py-2.5 rounded-xl transition-all whitespace-nowrap ${
                         isActive
                           ? 'bg-sky-500/15 text-sky-400 font-semibold'
                           : 'hover:bg-white/5 hover:text-white text-slate-400'
-                      } ${isCollapsed ? 'justify-center px-2' : 'px-3'}`}
+                      } ${isCollapsed ? 'lg:justify-center lg:px-2' : 'px-3'}`}
                     >
                       <span
                         className="material-symbols-outlined text-[20px] shrink-0"
@@ -109,18 +116,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       >
                         {item.icon}
                       </span>
-                      {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                      <span className={`text-sm transition-all duration-300 ${isCollapsed ? 'lg:hidden' : 'block'}`}>{item.label}</span>
                     </Link>
                   );
-                  return isCollapsed ? (
-                    <Tooltip key={item.label}>
-                      <TooltipTrigger asChild>{link}</TooltipTrigger>
-                      <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white font-medium ml-2">
-                        {item.label}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <div key={item.label}>{link}</div>
+                  return (
+                    <div key={item.label}>
+                      {/* Tooltip for desktop collapsed */}
+                      <div className={isCollapsed ? 'hidden lg:block' : 'hidden'}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>{link}</TooltipTrigger>
+                          <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white font-medium ml-2">
+                            {item.label}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      {/* Normal link for mobile & desktop expanded */}
+                      <div className={isCollapsed ? 'block lg:hidden' : 'block'}>
+                        {link}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -129,7 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Sidebar bottom: Về trang chủ */}
           <div className="border-t border-white/10 p-3 shrink-0">
-            {isCollapsed ? (
+            <div className={isCollapsed ? 'hidden lg:block' : 'hidden'}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
@@ -143,7 +157,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   Về trang chủ
                 </TooltipContent>
               </Tooltip>
-            ) : (
+            </div>
+            <div className={isCollapsed ? 'block lg:hidden' : 'block'}>
               <Link
                 href="/"
                 className="flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
@@ -151,14 +166,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <span className="material-symbols-outlined text-[20px]">home</span>
                 <span className="text-sm font-medium">Về trang chủ</span>
               </Link>
-            )}
+            </div>
           </div>
-        </motion.aside>
+        </aside>
 
         <main className="flex-1 flex flex-col overflow-hidden">
-          <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              {navItems.find(n => n.exact ? pathname === n.href : pathname.startsWith(n.href))?.label ?? 'Admin'}
+          <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 shrink-0">
+            <div className="flex items-center gap-3">
+              {/* Hamburger Toggle Button */}
+              <button
+                onClick={() => setIsMobileOpen(true)}
+                className="lg:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors focus:outline-none cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[24px] block">menu</span>
+              </button>
+              <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                {navItems.find(n => n.exact ? pathname === n.href : pathname.startsWith(n.href))?.label ?? 'Admin'}
+              </div>
             </div>
             <div className="flex items-center gap-3 relative">
               <button onClick={() => setMenuOpen(v => !v)}
@@ -194,7 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             {children}
           </div>
         </main>

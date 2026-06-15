@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Search, UserPlus, Trash2, Lock, Unlock, KeyRound, ChevronDown,
   ShieldCheck, GraduationCap, User as UserIcon, X, Eye, Filter,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -70,6 +71,68 @@ function RoleDropdown({
           })}
         </div>
       </>}
+    </div>
+  );
+}
+
+function ConfirmDialog({
+  isOpen,
+  title,
+  message,
+  confirmText,
+  cancelText = 'Hủy',
+  type = 'warning',
+  onConfirm,
+  onCancel,
+  loading = false,
+}: {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText: string;
+  cancelText?: string;
+  type?: 'warning' | 'danger';
+  onConfirm: () => void;
+  onCancel: () => void;
+  loading?: boolean;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+              type === 'danger' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+            }`}>
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-slate-900 text-lg leading-tight">{title}</h3>
+          </div>
+          <p className="text-slate-500 text-sm leading-relaxed">{message}</p>
+        </div>
+        <div className="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-100">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors"
+          >
+            {cancelText}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className={`px-4 py-2 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors ${
+              type === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-sm shadow-red-200' : 'bg-amber-600 hover:bg-amber-700 shadow-sm shadow-amber-200'
+            }`}
+          >
+            {loading ? 'Đang xử lý...' : confirmText}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -202,7 +265,7 @@ function UserDetailModal({ userId, onClose }: { userId: string; onClose: () => v
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
                 { label: 'Lớp học', value: detail._count.classroomMembers },
                 { label: 'Khóa học', value: detail._count.courseMemberships },
@@ -250,6 +313,9 @@ export default function UserManagement() {
   const [showCreate, setShowCreate] = useState(false);
   const [resetUser, setResetUser] = useState<AdminUser | null>(null);
   const [detailUserId, setDetailUserId] = useState<string | null>(null);
+  const [suspendUser, setSuspendUser] = useState<AdminUser | null>(null);
+  const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const currentUserId = currentUser?.id || currentUser?.userId;
 
@@ -270,19 +336,51 @@ export default function UserManagement() {
     else toast.error(res.error || 'Thất bại');
   };
 
-  const handleSuspend = async (user: AdminUser) => {
-    const action = user.isSuspended ? 'mở khóa' : 'khóa';
-    if (!confirm(`Bạn có chắc muốn ${action} tài khoản "${user.fullName || user.email}"?`)) return;
-    const res = await adminSuspendUser(user.id, !user.isSuspended);
-    if (res.success) { toast.success(`Đã ${action} tài khoản`); fetchUsers(meta.page); }
-    else toast.error(res.error || 'Thất bại');
+  const handleSuspend = (user: AdminUser) => {
+    setSuspendUser(user);
   };
 
-  const handleDelete = async (user: AdminUser) => {
-    if (!confirm(`Xóa vĩnh viễn tài khoản "${user.fullName || user.email}"?\nHành động này không thể hoàn tác.`)) return;
-    const res = await adminDeleteUser(user.id);
-    if (res.success) { toast.success('Đã xóa người dùng'); fetchUsers(meta.page); }
-    else toast.error(res.error || 'Thất bại');
+  const handleSuspendConfirm = async () => {
+    if (!suspendUser) return;
+    setActionLoading(true);
+    const action = suspendUser.isSuspended ? 'mở khóa' : 'khóa';
+    try {
+      const res = await adminSuspendUser(suspendUser.id, !suspendUser.isSuspended);
+      if (res.success) {
+        toast.success(`Đã ${action} tài khoản thành công`);
+        fetchUsers(meta.page);
+        setSuspendUser(null);
+      } else {
+        toast.error(res.error || 'Thao tác thất bại');
+      }
+    } catch {
+      toast.error('Đã xảy ra lỗi kết nối');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelete = (user: AdminUser) => {
+    setDeleteUser(user);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteUser) return;
+    setActionLoading(true);
+    try {
+      const res = await adminDeleteUser(deleteUser.id);
+      if (res.success) {
+        toast.success('Đã xóa người dùng thành công');
+        fetchUsers(meta.page);
+        setDeleteUser(null);
+      } else {
+        toast.error(res.error || 'Xóa thất bại');
+      }
+    } catch {
+      toast.error('Đã xảy ra lỗi kết nối');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -290,6 +388,28 @@ export default function UserManagement() {
       {showCreate && <CreateUserModal onClose={() => setShowCreate(false)} onCreated={() => fetchUsers(1)} />}
       {resetUser && <ResetPasswordModal user={resetUser} onClose={() => setResetUser(null)} />}
       {detailUserId && <UserDetailModal userId={detailUserId} onClose={() => setDetailUserId(null)} />}
+
+      <ConfirmDialog
+        isOpen={!!suspendUser}
+        title={suspendUser?.isSuspended ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+        message={`Bạn có chắc chắn muốn ${suspendUser?.isSuspended ? 'mở khóa' : 'khóa'} tài khoản "${suspendUser?.fullName || suspendUser?.email}"?`}
+        confirmText={suspendUser?.isSuspended ? 'Mở khóa' : 'Khóa'}
+        type={suspendUser?.isSuspended ? 'warning' : 'danger'}
+        loading={actionLoading}
+        onConfirm={handleSuspendConfirm}
+        onCancel={() => setSuspendUser(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deleteUser}
+        title="Xóa người dùng"
+        message={`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${deleteUser?.fullName || deleteUser?.email}"? Hành động này không thể hoàn tác.`}
+        confirmText="Xóa vĩnh viễn"
+        type="danger"
+        loading={actionLoading}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteUser(null)}
+      />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -311,44 +431,47 @@ export default function UserManagement() {
               className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20"
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
-              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20">
-              <option value="">Tất cả vai trò</option>
-              {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-            </select>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+              <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+              <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 w-full">
+                <option value="">Tất cả vai trò</option>
+                {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </div>
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20">
+              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 flex-1 sm:flex-initial w-full">
               <option value="">Tất cả trạng thái</option>
               <option value="active">Hoạt động</option>
               <option value="suspended">Bị khóa</option>
             </select>
           </div>
-          <span className="text-sm text-slate-500 ml-auto">{users.length}/{meta.total} người dùng</span>
+          <span className="text-sm text-slate-500 w-full sm:w-auto sm:ml-auto text-right">{users.length}/{meta.total} người dùng</span>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Table for tablet/desktop */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                <th className="px-6 py-4">Người dùng</th>
-                <th className="px-6 py-4">Vai trò</th>
-                <th className="px-6 py-4">Trạng thái</th>
-                <th className="px-6 py-4">Ngày tham gia</th>
-                <th className="px-6 py-4 text-right">Thao tác</th>
+                <th className="px-4 lg:px-6 py-4">Người dùng</th>
+                <th className="px-4 lg:px-6 py-4">Vai trò</th>
+                <th className="px-4 lg:px-6 py-4">Trạng thái</th>
+                <th className="px-4 lg:px-6 py-4">Ngày tham gia</th>
+                <th className="px-4 lg:px-6 py-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading && users.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400">Đang tải...</td></tr>
+                <tr><td colSpan={5} className="px-4 lg:px-6 py-12 text-center text-slate-400">Đang tải...</td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400">Không tìm thấy người dùng nào.</td></tr>
+                <tr><td colSpan={5} className="px-4 lg:px-6 py-12 text-center text-slate-400">Không tìm thấy người dùng nào.</td></tr>
               ) : users.map((user, index) => {
                 const isSelf = user.id === currentUserId;
                 return (
                   <tr key={user.id} className={`hover:bg-slate-50/50 transition-colors ${isSelf ? 'bg-sky-50/30' : ''}`}>
-                    <td className="px-6 py-4">
+                    <td className="px-4 lg:px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || 'U')}&background=random`}
@@ -364,10 +487,10 @@ export default function UserManagement() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 lg:px-6 py-4">
                       <RoleDropdown userId={user.id} currentRole={user.role} isSelf={isSelf} onUpdate={handleRole} index={index} total={users.length} />
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 lg:px-6 py-4">
                       {user.isSuspended ? (
                         <span className="inline-flex items-center gap-1 text-xs font-bold bg-red-100 text-red-700 px-2.5 py-1 rounded-full">
                           <Lock className="w-3 h-3" />Bị khóa
@@ -378,10 +501,10 @@ export default function UserManagement() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-xs text-slate-500">
+                    <td className="px-4 lg:px-6 py-4 text-xs text-slate-500">
                       {new Date(user.createdAt).toLocaleDateString('vi-VN')}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 lg:px-6 py-4">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => setDetailUserId(user.id)} title="Xem chi tiết"
                           className="p-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors">
@@ -408,6 +531,82 @@ export default function UserManagement() {
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Card list for mobile */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {loading && users.length === 0 ? (
+            <div className="px-4 py-8 text-center text-slate-400">Đang tải...</div>
+          ) : users.length === 0 ? (
+            <div className="px-4 py-8 text-center text-slate-400">Không tìm thấy người dùng nào.</div>
+          ) : (
+            users.map((user, index) => {
+              const isSelf = user.id === currentUserId;
+              return (
+                <div key={user.id} className={`p-4 space-y-3 ${isSelf ? 'bg-sky-50/20' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || 'U')}&background=random`}
+                        className={`w-10 h-10 rounded-full border-2 object-cover ${user.isSuspended ? 'border-red-200 opacity-60' : 'border-slate-200'}`} alt="" />
+                      {isSelf && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-sky-500 rounded-full border-2 border-white" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-slate-900 text-sm truncate">{user.fullName || 'Không tên'}</p>
+                        {isSelf && <span className="text-xs bg-sky-100 text-sky-700 font-semibold px-1.5 py-0.5 rounded shrink-0">Bạn</span>}
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <div className="space-y-1">
+                      <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Vai trò</p>
+                      <RoleDropdown userId={user.id} currentRole={user.role} isSelf={isSelf} onUpdate={handleRole} index={index} total={users.length} />
+                    </div>
+                    <div className="space-y-1 text-right">
+                      <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Trạng thái</p>
+                      {user.isSuspended ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                          <Lock className="w-2.5 h-2.5" />Bị khóa
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                          <span className="w-1 h-1 bg-emerald-500 rounded-full" />Hoạt động
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-slate-50 pt-3">
+                    <span className="text-xs text-slate-400">
+                      Tham gia: {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => setDetailUserId(user.id)} title="Xem chi tiết"
+                        className="p-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      {!isSelf && <>
+                        <button onClick={() => handleSuspend(user)} title={user.isSuspended ? 'Mở khóa' : 'Khóa tài khoản'}
+                          className={`p-2 rounded-lg transition-colors ${user.isSuspended ? 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'}`}>
+                          {user.isSuspended ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                        </button>
+                        <button onClick={() => setResetUser(user)} title="Reset mật khẩu"
+                          className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors">
+                          <KeyRound className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(user)} title="Xóa người dùng"
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {meta.totalPages > 1 && (

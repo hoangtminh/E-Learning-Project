@@ -152,28 +152,28 @@ function GradingContent({
   });
 
   return (
-    <div className='flex flex-col h-screen overflow-hidden bg-surface-container-lowest text-on-surface relative z-10'>
+    <div className='flex flex-col h-[100dvh] overflow-hidden bg-surface-container-lowest text-on-surface relative z-10'>
       <div className='absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none' />
       {/* Top App Bar */}
-      <header className='h-16 bg-white border-b border-outline-variant/30 flex items-center justify-between px-8 shrink-0 shadow-xs'>
-        <div className='flex items-center gap-3 text-sm text-on-surface-variant/70'>
+      <header className='h-16 bg-white border-b border-outline-variant/30 flex items-center justify-between px-4 sm:px-8 shrink-0 shadow-xs'>
+        <div className='flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-on-surface-variant/70 min-w-0'>
           <button
             onClick={() => router.back()}
-            className='hover:text-primary transition-colors flex items-center gap-1 font-bold'
+            className='hover:text-primary transition-colors flex items-center gap-1 font-bold shrink-0'
           >
-            <ArrowLeft size={16} /> Chi tiết bài tập
+            <ArrowLeft size={16} /> <span className='hidden xs:inline'>Chi tiết bài tập</span>
           </button>
-          <span className='text-slate-300'>/</span>
-          <span className='text-on-surface font-bold truncate max-w-xs'>{assignment.title}</span>
-          <span className='text-slate-300'>/</span>
-          <span className='text-primary font-bold'>Chấm điểm</span>
+          <span className='text-slate-300 shrink-0'>/</span>
+          <span className='text-on-surface font-bold truncate max-w-[100px] sm:max-w-xs'>{assignment.title}</span>
+          <span className='text-slate-300 shrink-0'>/</span>
+          <span className='text-primary font-bold shrink-0'>Chấm điểm</span>
         </div>
       </header>
 
       {/* Split Pane Layout */}
-      <div className='flex-1 flex overflow-hidden p-6 gap-6 min-h-0'>
+      <div className='flex-1 flex overflow-hidden p-4 sm:p-6 gap-4 sm:gap-6 min-h-0 relative'>
         {/* Left Pane: Student List */}
-        <section className='w-1/3 min-w-[320px] max-w-[400px] rounded-2xl flex flex-col overflow-hidden bg-white border border-outline-variant/30 shadow-xs'>
+        <section className={`${selectedStudent ? 'hidden' : 'flex'} md:flex w-full md:w-1/3 md:min-w-[320px] md:max-w-[400px] rounded-2xl flex-col overflow-hidden bg-white border border-outline-variant/30 shadow-xs`}>
           <div className='p-4 border-b border-outline-variant/20 space-y-4 shrink-0'>
             {/* Search */}
             <div className='relative'>
@@ -269,12 +269,12 @@ function GradingContent({
         </section>
 
         {/* Right Pane: Submissions Preview & Grading */}
-        <section className='flex-1 flex flex-col gap-6 overflow-hidden min-h-0'>
+        <section className={`${selectedStudent ? 'flex' : 'hidden'} md:flex flex-1 flex-col gap-4 sm:gap-6 overflow-hidden min-h-0`}>
           {selectedStudent ? (
             <>
               {/* Grading Input Header Form */}
-              <div className='glass-panel rounded-2xl p-5 flex gap-6 shrink-0 border border-outline-variant/30/80 shadow-xs'>
-                <div className='w-40 flex flex-col gap-2.5 border-r border-outline-variant/20 pr-6 shrink-0'>
+              <div className='glass-panel rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-6 shrink-0 border border-outline-variant/30/80 shadow-xs'>
+                <div className='w-full sm:w-40 flex flex-col gap-2.5 sm:border-r sm:border-outline-variant/20 sm:pr-6 shrink-0'>
                   <label className='text-xs font-bold text-on-surface-variant/70 uppercase tracking-wider'>Điểm số</label>
                   <div className='flex items-end gap-1.5'>
                     <input
@@ -299,15 +299,15 @@ function GradingContent({
                     readOnly
                     value={activeSubmission?.content || ''}
                     placeholder='Học sinh không để lại ghi chú...'
-                    className='w-full flex-1 bg-surface-container-lowest/50 rounded-xl p-3 text-xs border border-outline-variant/30/80 resize-none text-on-surface-variant/80 focus:outline-none no-scrollbar'
+                    className='w-full flex-1 min-h-[60px] sm:min-h-[auto] bg-surface-container-lowest/50 rounded-xl p-3 text-xs border border-outline-variant/30/80 resize-none text-on-surface-variant/80 focus:outline-none no-scrollbar'
                   />
                 </div>
 
-                <div className='w-36 flex flex-col justify-end gap-2.5 pl-2 shrink-0'>
+                <div className='w-full sm:w-36 flex flex-col justify-end gap-2.5 sm:pl-2 shrink-0'>
                   <button
                     onClick={handleGradeSubmit}
                     disabled={gradeSaving || !activeSubmission}
-                    className='w-full py-2.5 bg-primary/50 hover:bg-primary-dim text-white font-bold rounded-xl text-xs shadow-md shadow-sky-100 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-1.5'
+                    className='w-full py-2.5 bg-primary hover:bg-primary-dim text-white font-bold rounded-xl text-xs shadow-md shadow-sky-100 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer'
                   >
                     {gradeSaving ? <Loader2 size={12} className='animate-spin' /> : <Save size={12} />}
                     Lưu điểm
@@ -319,11 +319,18 @@ function GradingContent({
               <div className='flex-1 bg-white border border-outline-variant/30 rounded-2xl flex flex-col overflow-hidden relative shadow-xs min-h-0'>
                 {/* Header */}
                 <div className='p-4 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-lowest shrink-0'>
-                  <div className='flex items-center gap-3'>
+                  <div className='flex items-center gap-2 sm:gap-3 min-w-0'>
+                    <button
+                      onClick={() => setSelectedStudent(null)}
+                      className='md:hidden p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl mr-1 shrink-0'
+                      title="Quay lại danh sách"
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
                     <UserAvatar name={selectedStudent.user?.fullName} url={selectedStudent.user?.avatarUrl} />
-                    <div>
-                      <h2 className='text-sm font-bold text-on-surface'>{selectedStudent.user?.fullName}</h2>
-                      <p className='text-[10px] text-on-surface-variant/50 font-semibold'>
+                    <div className='min-w-0'>
+                      <h2 className='text-sm font-bold text-on-surface truncate'>{selectedStudent.user?.fullName}</h2>
+                      <p className='text-[10px] text-on-surface-variant/50 font-semibold truncate'>
                         {activeSubmission ? `ID bài nộp: #${activeSubmission.id.slice(-6)}` : 'Chưa nộp bài'}
                       </p>
                     </div>

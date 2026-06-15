@@ -101,7 +101,7 @@ export default function SystemLogs() {
           <h1 className="text-2xl font-black text-slate-900">Nhật ký hệ thống</h1>
           <p className="text-slate-500 text-sm">Ghi lại toàn bộ hoạt động quan trọng trong hệ thống.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button onClick={() => setAutoRefresh(v => !v)}
             className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold border transition-colors ${autoRefresh ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
             <RefreshCw className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
@@ -165,27 +165,28 @@ export default function SystemLogs() {
             Xóa bộ lọc
           </button>
         )}
-        <span className="ml-auto text-sm text-slate-500 font-medium">{meta.total} logs</span>
+        <span className="text-sm text-slate-500 font-medium w-full sm:w-auto sm:ml-auto text-right">{meta.total} logs</span>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Table view for tablet/desktop */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                <th className="px-4 py-4 w-8"></th>
-                <th className="px-4 py-4">Thời gian</th>
-                <th className="px-4 py-4">Người dùng</th>
-                <th className="px-4 py-4">Hành động</th>
-                <th className="px-4 py-4">Chi tiết</th>
-                <th className="px-4 py-4">IP</th>
+                <th className="px-3 lg:px-4 py-4 w-8"></th>
+                <th className="px-3 lg:px-4 py-4">Thời gian</th>
+                <th className="px-3 lg:px-4 py-4">Người dùng</th>
+                <th className="px-3 lg:px-4 py-4">Hành động</th>
+                <th className="px-3 lg:px-4 py-4">Chi tiết</th>
+                <th className="px-3 lg:px-4 py-4">IP</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading && logs.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-400">Đang tải nhật ký...</td></tr>
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400">Đang tải nhật ký...</td></tr>
               ) : logs.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-400">Không có nhật ký nào.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400">Không có nhật ký nào.</td></tr>
               ) : logs.map(log => {
                 const levelCfg = LEVEL_CONFIG[log.level as keyof typeof LEVEL_CONFIG] ?? LEVEL_CONFIG.info;
                 const LevelIcon = levelCfg.Icon;
@@ -193,13 +194,13 @@ export default function SystemLogs() {
                 return (
                   <React.Fragment key={log.id}>
                     <tr className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setExpandedLog(isExpanded ? null : log.id)}>
-                      <td className="px-4 py-3">
+                      <td className="px-3 lg:px-4 py-3">
                         <LevelIcon className={`w-4 h-4 ${levelCfg.color.replace('bg-', 'text-').split(' ')[1]}`} />
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                      <td className="px-3 lg:px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
                         {new Date(log.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit' })}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 lg:px-4 py-3">
                         {log.user ? (
                           <div className="flex items-center gap-2">
                             <img src={log.user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(log.user.fullName || 'U')}&size=24&background=random`}
@@ -213,18 +214,18 @@ export default function SystemLogs() {
                           <span className="text-xs text-slate-400 italic">Hệ thống</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 lg:px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold ${actionColor(log.action)}`}>
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{log.details}</td>
-                      <td className="px-4 py-3 text-xs text-slate-400 font-mono">{log.ipAddress || '—'}</td>
+                      <td className="px-3 lg:px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{log.details}</td>
+                      <td className="px-3 lg:px-4 py-3 text-xs text-slate-400 font-mono">{log.ipAddress || '—'}</td>
                     </tr>
                     {isExpanded && (
                       <tr className="bg-slate-50 border-b border-slate-100">
                         <td colSpan={6} className="px-6 py-4">
-                          <div className="grid grid-cols-2 gap-4 text-xs">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                             <div>
                               <p className="font-bold text-slate-500 uppercase tracking-wider mb-1">Chi tiết đầy đủ</p>
                               <p className="text-slate-700">{log.details || '—'}</p>
@@ -254,6 +255,85 @@ export default function SystemLogs() {
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Card list view for mobile */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {loading && logs.length === 0 ? (
+            <div className="px-4 py-8 text-center text-slate-400">Đang tải nhật ký...</div>
+          ) : logs.length === 0 ? (
+            <div className="px-4 py-8 text-center text-slate-400">Không có nhật ký nào.</div>
+          ) : (
+            logs.map((log) => {
+              const levelCfg = LEVEL_CONFIG[log.level as keyof typeof LEVEL_CONFIG] ?? LEVEL_CONFIG.info;
+              const LevelIcon = levelCfg.Icon;
+              const isExpanded = expandedLog === log.id;
+              return (
+                <div key={log.id} className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <LevelIcon className={`w-4 h-4 ${levelCfg.color.replace('bg-', 'text-').split(' ')[1]}`} />
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold ${actionColor(log.action)}`}>
+                        {log.action}
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-400">
+                      {new Date(log.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <div>
+                      {log.user ? (
+                        <div className="flex items-center gap-2">
+                          <img src={log.user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(log.user.fullName || 'U')}&size=24&background=random`}
+                            className="w-5 h-5 rounded-full" alt="" />
+                          <span className="font-bold text-slate-700">{log.user.fullName || 'Không tên'}</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic">Hệ thống</span>
+                      )}
+                    </div>
+                    <span className="font-mono text-slate-400">{log.ipAddress || '—'}</span>
+                  </div>
+
+                  <p className="text-sm text-slate-600 line-clamp-2 break-all">{log.details}</p>
+
+                  <button 
+                    onClick={() => setExpandedLog(isExpanded ? null : log.id)}
+                    className="text-xs text-sky-600 hover:text-sky-700 font-bold focus:outline-none flex items-center gap-1"
+                  >
+                    {isExpanded ? 'Thu gọn' : 'Xem chi tiết'}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="bg-slate-50 rounded-xl p-3 text-xs space-y-2 mt-2 border border-slate-100">
+                      <div>
+                        <p className="font-bold text-slate-500 uppercase tracking-wider mb-0.5">Chi tiết đầy đủ</p>
+                        <p className="text-slate-700 break-all">{log.details || '—'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100/60">
+                        <div>
+                          <span className="text-slate-400 block">Level:</span>
+                          <span className={`px-2 py-0.5 rounded-full font-bold inline-block mt-0.5 ${levelCfg.color}`}>{log.level}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">IP:</span>
+                          <span className="font-mono text-slate-700 block mt-0.5">{log.ipAddress || '—'}</span>
+                        </div>
+                      </div>
+                      {log.userAgent && (
+                        <div className="pt-1 border-t border-slate-100/60 flex items-start gap-1.5">
+                          <Monitor className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                          <span className="text-slate-500 break-all">{log.userAgent}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
 
         {meta.totalPages > 1 && (

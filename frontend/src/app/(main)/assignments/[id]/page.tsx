@@ -110,7 +110,7 @@ function AssignmentDetailContent({
               <div className='pt-2'>
                 <Link
                   href={`/assignments/${assignment.id}/submissions`}
-                  className='w-full py-3 bg-primary/50 hover:bg-primary-dim text-white font-bold rounded-xl text-sm shadow-md shadow-sky-100 hover:shadow-lg transition-all flex items-center justify-center gap-1.5'
+                  className='w-full py-3 bg-primary hover:bg-primary-dim text-white font-bold rounded-xl text-sm shadow-md shadow-sky-100 hover:shadow-lg transition-all flex items-center justify-center gap-1.5'
                 >
                   Xem danh sách & Chấm điểm
                   <ChevronRight size={16} />
