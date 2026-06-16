@@ -366,6 +366,17 @@ export class CoursesService {
     lastWatchedSecond: number,
     isCompleted: boolean,
   ) {
+    const existing = await this.prisma.userProgress.findUnique({
+      where: {
+        userId_lessonId: {
+          userId,
+          lessonId,
+        },
+      },
+    });
+
+    const finalCompleted = existing?.isCompleted || isCompleted;
+
     return this.prisma.userProgress.upsert({
       where: {
         userId_lessonId: {
@@ -375,7 +386,7 @@ export class CoursesService {
       },
       update: {
         lastWatchedSecond,
-        isCompleted,
+        isCompleted: finalCompleted,
         updatedAt: new Date(),
       },
       create: {
@@ -383,7 +394,7 @@ export class CoursesService {
         courseId,
         lessonId,
         lastWatchedSecond,
-        isCompleted,
+        isCompleted: finalCompleted,
       },
     });
   }

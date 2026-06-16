@@ -32,6 +32,11 @@ export default function LearningLessonPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'discuss' | 'notes' | 'resources'>('notes');
   const [progresses, setProgresses] = useState<UserProgress[]>([]);
+  const progressesRef = useRef<UserProgress[]>([]);
+
+  useEffect(() => {
+    progressesRef.current = progresses;
+  }, [progresses]);
   const [hasSeeked, setHasSeeked] = useState(false);
   const [textCompleted, setTextCompleted] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -144,9 +149,12 @@ export default function LearningLessonPage() {
       completed?: boolean;
     }) => {
       try {
+        const wasCompleted = progressesRef.current.find((item) => item.lessonId === p.lessonId)?.isCompleted;
+        const finalCompleted = wasCompleted || (p.completed ?? false);
+
         const res = await saveLessonProgress(p.courseId, p.lessonId, {
           lastWatchedSecond: Math.round(p.lastWatchedSecond),
-          isCompleted: p.completed ?? false,
+          isCompleted: finalCompleted,
         });
         if (res.success && res.data) {
           const progressData = res.data;
@@ -218,14 +226,25 @@ export default function LearningLessonPage() {
   return (
     <div className="min-h-full bg-[#0f1524] text-white flex flex-col">
       {/* Top bar - chỉ back + progress */}
-      <header className="bg-[#161d2e] border-b border-white/10 px-4 py-3 flex items-center justify-between shrink-0">
-        <Link
-          href={`/learning/${courseId}`}
-          className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm"
-        >
-          <span className="material-symbols-outlined text-lg">arrow_back</span>
-          <span className="hidden sm:inline">Danh sách bài</span>
-        </Link>
+      <header className="bg-[#161d2e] border-b border-white/10 px-4 py-3 flex items-center justify-between shrink-0 gap-3">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/courses/${courseId}`}
+            className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm"
+          >
+            <span className="material-symbols-outlined text-lg">arrow_back</span>
+            <span className="hidden sm:inline">Quay lại khóa học</span>
+          </Link>
+
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden flex items-center gap-1 text-slate-400 hover:text-white transition-colors text-xs border border-white/10 bg-white/5 hover:bg-white/10 rounded-lg px-2.5 py-1.5 cursor-pointer shrink-0"
+            aria-label="Toggle lesson syllabus"
+          >
+            <span className="material-symbols-outlined text-[16px]">menu</span>
+            <span>Nội dung</span>
+          </button>
+        </div>
 
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <span>{currentIndex + 1}/{totalLessons}</span>
