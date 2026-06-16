@@ -13,13 +13,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { callsApi, Call, CallType } from '@/api/calls';
 
-const ICE_SERVERS = {
-  iceServers: [
-    {
-      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
-    },
-  ],
-};
+
 
 export interface RemotePeer {
   stream?: MediaStream;
@@ -132,6 +126,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const screenSendersRef = useRef<{ [socketId: string]: RTCRtpSender }>({});
   const screenStreamIdRef = useRef<string | null>(null);
   const screenSharerIdRef = useRef<string | null>(null);
+  const iceServersRef = useRef<RTCIceServer[] | null>(null);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -232,7 +227,36 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createPeerConnection = (targetUserId: string) => {
-    const pc = new RTCPeerConnection(ICE_SERVERS);
+    let parsedIceServers: RTCIceServer[] = [
+      {
+        urls: [
+          'stun:stun1.l.google.com:19302',
+          'stun:stun2.l.google.com:19302',
+        ],
+      },
+    ];
+
+    const rawIce = iceServersRef.current;
+    if (rawIce) {
+      if (Array.isArray(rawIce)) {
+        parsedIceServers = rawIce;
+      } else if (typeof rawIce === 'object') {
+        const obj = rawIce as any;
+        if (obj.urls) {
+          parsedIceServers = [obj as RTCIceServer];
+        } else if (obj.iceServers) {
+          if (Array.isArray(obj.iceServers)) {
+            parsedIceServers = obj.iceServers;
+          } else if (obj.iceServers.urls) {
+            parsedIceServers = [obj.iceServers as RTCIceServer];
+          }
+        }
+      }
+    }
+
+    const pc = new RTCPeerConnection({
+      iceServers: parsedIceServers,
+    });
 
     pc.onicecandidate = (event) =>
       event.candidate &&
@@ -352,8 +376,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       path: '/api/socket.io',
       auth: { userId: currentUserId },
       withCredentials: true,
-      transports: ['polling'],
-      upgrade: false,
+      transports: ['websocket', 'polling'],
+      upgrade: true,
       forceNew: true,
     });
 
@@ -686,7 +710,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const joinCall = () => {
+  const joinCall = async () => {
+    try {
+      const res = await callsApi.getIceServers();
+      if (res.success && res.data) {
+        iceServersRef.current = res.data;
+      }
+    } catch (err) {
+      console.error('Failed to fetch ICE servers from backend:', err);
+    }
     setIsJoined(true);
     setJoinedAt(new Date());
     connectSocket();

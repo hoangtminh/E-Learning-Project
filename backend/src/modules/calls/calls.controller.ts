@@ -52,6 +52,16 @@ export class CallsController {
   }
 
   /**
+   * GET /calls/ice-servers
+   * Get ICE servers for WebRTC (Xirsys or fallback STUN)
+   */
+  @Get('ice-servers')
+  async getIceServers(@Req() req: any) {
+    this.getUserId(req); // Verify user is authenticated
+    return this.callsService.getIceServers();
+  }
+
+  /**
    * GET /calls/:id
    * Get call room details
    */

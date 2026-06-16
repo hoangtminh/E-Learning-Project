@@ -11,8 +11,8 @@ const socketOptions = {
   path: '/api/socket.io',
   autoConnect: false,
   withCredentials: true,
-  transports: ['polling'],
-  upgrade: false,
+  transports: ['websocket', 'polling'],
+  upgrade: true,
   forceNew: true,
 };
 

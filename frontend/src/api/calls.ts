@@ -60,6 +60,8 @@ export const callsApi = {
 
   getCallHistory: () => apiGet<Call[]>('/calls/history'),
 
+  getIceServers: () => apiGet<any[]>('/calls/ice-servers'),
+
   searchUsers: (search: string) =>
     apiGet<
       {

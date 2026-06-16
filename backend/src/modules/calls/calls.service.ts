@@ -141,7 +141,14 @@ export class CallsService {
   /**
    * Check if a user can join a call
    */
-  async canJoin(userId: string, callId: string): Promise<{ allowed: boolean; requiresApproval?: boolean; reason?: string }> {
+  async canJoin(
+    userId: string,
+    callId: string,
+  ): Promise<{
+    allowed: boolean;
+    requiresApproval?: boolean;
+    reason?: string;
+  }> {
     const call = await this.prisma.call.findUnique({
       where: { id: callId },
     });
@@ -184,7 +191,10 @@ export class CallsService {
             },
           });
           if (!member) {
-            return { allowed: false, reason: 'Bạn không phải thành viên của lớp học này!' };
+            return {
+              allowed: false,
+              reason: 'Bạn không phải thành viên của lớp học này!',
+            };
           }
         }
       }
@@ -197,7 +207,10 @@ export class CallsService {
           },
         });
         if (!member) {
-          return { allowed: false, reason: 'Bạn không thuộc nhóm trò chuyện này!' };
+          return {
+            allowed: false,
+            reason: 'Bạn không thuộc nhóm trò chuyện này!',
+          };
         }
       }
 
@@ -210,7 +223,11 @@ export class CallsService {
       if (approvedSet && approvedSet.has(userId)) {
         return { allowed: true };
       }
-      return { allowed: false, requiresApproval: true, reason: 'Cần sự cho phép của chủ phòng' };
+      return {
+        allowed: false,
+        requiresApproval: true,
+        reason: 'Cần sự cho phép của chủ phòng',
+      };
     }
 
     return { allowed: false, reason: 'Unknown call type' };
@@ -293,7 +310,9 @@ export class CallsService {
     const call = await this.findOne(callId);
 
     if (call.creatorId !== currentHostId) {
-      throw new ForbiddenException('Only the current host can transfer host ownership');
+      throw new ForbiddenException(
+        'Only the current host can transfer host ownership',
+      );
     }
 
     const updated = await this.prisma.call.update({
@@ -334,9 +353,14 @@ export class CallsService {
       if (approvedSet) {
         approvedSet.add(newHostId);
       }
-      console.log(`Auto transferred host of call ${callId} to user ${newHostId}`);
+      console.log(
+        `Auto transferred host of call ${callId} to user ${newHostId}`,
+      );
     } catch (err) {
-      console.error(`Failed to auto transfer host of call ${callId} to ${newHostId}:`, err);
+      console.error(
+        `Failed to auto transfer host of call ${callId} to ${newHostId}:`,
+        err,
+      );
     }
   }
 
@@ -346,10 +370,7 @@ export class CallsService {
   async getCallHistory(userId: string) {
     return this.prisma.call.findMany({
       where: {
-        OR: [
-          { creatorId: userId },
-          { status: CallStatus.ended }
-        ]
+        OR: [{ creatorId: userId }, { status: CallStatus.ended }],
       },
       include: {
         creator: {
@@ -366,5 +387,68 @@ export class CallsService {
       },
       take: 30,
     });
+  }
+
+  /**
+   * Get dynamic ICE servers from Xirsys (or fallback to Google STUN)
+   */
+  async getIceServers() {
+    const ident = process.env.XIRSYS_IDENT;
+    const secret = process.env.XIRSYS_SECRET;
+    const channel = process.env.XIRSYS_CHANNEL || 'default';
+
+    const fallbackStun = [
+      {
+        urls: [
+          'stun:stun1.l.google.com:19302',
+          'stun:stun2.l.google.com:19302',
+        ],
+      },
+    ];
+
+    if (!ident || !secret) {
+      console.warn(
+        'Xirsys credentials not found in env. Falling back to Google STUN.',
+      );
+      return fallbackStun;
+    }
+
+    try {
+      const auth = Buffer.from(`${ident}:${secret}`).toString('base64');
+      const response = await fetch(
+        `https://global.xirsys.net/_turn/${channel}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Basic ${auth}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ format: 'urls' }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Xirsys API returned status: ${response.status}`);
+      }
+
+      const data = (await response.json()) as any;
+      if (data && data.s === 'ok' && data.v && data.v.iceServers) {
+        const iceServers = data.v.iceServers;
+        if (Array.isArray(iceServers)) {
+          return iceServers;
+        } else if (iceServers && typeof iceServers === 'object') {
+          if (iceServers.urls) {
+            return [iceServers];
+          }
+        }
+      }
+      throw new Error('Xirsys response status was not ok or iceServers format invalid');
+    } catch (error) {
+      console.error(
+        'Failed to fetch ICE servers from Xirsys, using fallback Google STUN:',
+        error,
+      );
+      return fallbackStun;
+    }
   }
 }
